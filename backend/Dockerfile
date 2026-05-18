@@ -26,5 +26,5 @@ COPY prisma ./prisma/
 
 EXPOSE 4000
 
-# Run migrations then start
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Push schema to DB (creates tables if not exist), then start
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/index.js"]
