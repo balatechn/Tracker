@@ -60,6 +60,13 @@ services:
         condition: service_healthy
     networks:
       - tracker-network
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tracker-app.rule=Host(`kvz9tis1i4zr9v3hrr9uq67z.187.127.134.246.sslip.io`)"
+      - "traefik.http.routers.tracker-app.entrypoints=http"
+      - "traefik.http.services.tracker-app.loadbalancer.server.port=3000"
+      - "traefik.docker.network=coolify"
 
 volumes:
   postgres_data:
@@ -68,3 +75,5 @@ volumes:
 networks:
   tracker-network:
     driver: bridge
+  coolify:
+    external: true
