@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-trackerdb}
+      POSTGRES_USER: ${POSTGRES_USER:-trackeruser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trackerpass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tracker-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trackeruser} -d ${POSTGRES_DB:-trackerdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tracker-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-trackeruser}:${POSTGRES_PASSWORD:-trackerpass}@db:5432/${POSTGRES_DB:-trackerdb}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      PORT: 4000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - tracker-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_NAME: "NGI Tracker"
+    container_name: tracker-frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:4000
+      NODE_ENV: production
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - tracker-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  tracker-network:
+    driver: bridge

@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Entry {
+  id              Int       @id @default(autoincrement())
+  srNo            Int?
+  serviceName     String
+  category        String?   // Domain, SaaS, Microsoft365, Antivirus, AMC, Other
+  billingCompany  String?
+  vendor          String?
+  expiryDate      DateTime?
+  autoRenewal     Boolean   @default(false)
+  owner           String?
+  criticality     String?   // High, Medium, Low
+  lastRenewalDate DateTime?
+  renewalPeriod   Int?
+  annualCost      Float?
+  paymentMethod   String?
+  invoiceRef      String?
+  financeEmail    String?
+  adminEmail      String?
+  vendorEmail     String?
+  remarks         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
