@@ -25,8 +25,9 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY prisma ./prisma/
+COPY start.sh ./start.sh
+RUN chmod +x start.sh
 
 EXPOSE 4000
 
-# Push schema to DB (creates tables if not exist), then start
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/index.js"]
+CMD ["./start.sh"]
