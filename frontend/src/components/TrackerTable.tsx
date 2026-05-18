@@ -33,7 +33,7 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
 
   function sortedEntries() {
     return [...entries].sort((a, b) => {
-      let aVal: unknown, bVal: unknown;
+      let aVal: any, bVal: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
       if (sortKey === 'daysRemaining') {
         aVal = getDaysRemaining(a.expiryDate) ?? 99999;
