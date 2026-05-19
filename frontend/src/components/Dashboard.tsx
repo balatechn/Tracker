@@ -225,7 +225,7 @@ export default function Dashboard() {
                       <Pie data={categoryData} cx="50%" cy="45%" innerRadius="35%" outerRadius="62%" paddingAngle={3} dataKey="value" labelLine={false}>
                         {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={(v: number) => [`${v} asset${v !== 1 ? 's' : ''}`, '']} />
+                      <Tooltip formatter={(v) => { const n = Number(v); return [`${n} asset${n !== 1 ? 's' : ''}`, '']; }} />
                       <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 10 }} />
                     </PieChart>
                   </ResponsiveContainer>
