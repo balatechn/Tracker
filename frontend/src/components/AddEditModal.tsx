@@ -18,6 +18,9 @@ const EMPTY: EntryFormData = {
   criticality: null, lastRenewalDate: null, renewalPeriod: null,
   annualCost: null, paymentMethod: null, invoiceRef: null,
   financeEmail: null, adminEmail: null, vendorEmail: null, remarks: null,
+  // Physical asset fields
+  assetTag: null, serialNumber: null, location: null, condition: null,
+  assetStatus: null, purchaseDate: null, purchasePrice: null, warrantyYears: null,
 };
 
 function toInputDate(v: string | null) {
@@ -60,6 +63,14 @@ export default function AddEditModal({ entry, onClose }: Props) {
         adminEmail: entry.adminEmail,
         vendorEmail: entry.vendorEmail,
         remarks: entry.remarks,
+        assetTag: entry.assetTag,
+        serialNumber: entry.serialNumber,
+        location: entry.location,
+        condition: entry.condition,
+        assetStatus: entry.assetStatus,
+        purchaseDate: toInputDate(entry.purchaseDate),
+        purchasePrice: entry.purchasePrice,
+        warrantyYears: entry.warrantyYears,
       });
     }
   }, [entry]);
@@ -192,6 +203,47 @@ export default function AddEditModal({ entry, onClose }: Props) {
           <Field label="Remarks">
             <textarea className="input resize-none" rows={2} value={form.remarks ?? ''} onChange={(e) => set('remarks', e.target.value || null)} />
           </Field>
+
+          {/* Physical Asset Details section */}
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Physical Asset Details</p>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Asset Tag">
+                <input className="input" type="text" value={form.assetTag ?? ''} onChange={(e) => set('assetTag', e.target.value || null)} placeholder="e.g. NGI-LT-001" />
+              </Field>
+              <Field label="Serial Number">
+                <input className="input" type="text" value={form.serialNumber ?? ''} onChange={(e) => set('serialNumber', e.target.value || null)} />
+              </Field>
+              <Field label="Location">
+                <input className="input" type="text" value={form.location ?? ''} onChange={(e) => set('location', e.target.value || null)} placeholder="Office / Floor" />
+              </Field>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              <Field label="Condition">
+                <select className="input" value={form.condition ?? ''} onChange={(e) => set('condition', e.target.value || null)}>
+                  <option value="">— Select —</option>
+                  {['Good','Fair','Poor','Faulty'].map(c => <option key={c}>{c}</option>)}
+                </select>
+              </Field>
+              <Field label="Asset Status">
+                <select className="input" value={form.assetStatus ?? ''} onChange={(e) => set('assetStatus', e.target.value || null)}>
+                  <option value="">— Select —</option>
+                  {['Available','InUse','InRepair','Retired','Scrapped'].map(s => <option key={s}>{s}</option>)}
+                </select>
+              </Field>
+              <Field label="Warranty (Years)">
+                <input className="input" type="number" min="0" value={form.warrantyYears ?? ''} onChange={(e) => set('warrantyYears', e.target.value ? Number(e.target.value) : null)} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <Field label="Purchase Date">
+                <input className="input" type="date" value={form.purchaseDate ?? ''} onChange={(e) => set('purchaseDate', e.target.value || null)} />
+              </Field>
+              <Field label="Purchase Price (INR)">
+                <input className="input" type="number" min="0" value={form.purchasePrice ?? ''} onChange={(e) => set('purchasePrice', e.target.value ? Number(e.target.value) : null)} />
+              </Field>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>

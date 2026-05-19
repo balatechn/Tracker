@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Entry {
-  id              Int       @id @default(autoincrement())
+  id              Int          @id @default(autoincrement())
   srNo            Int?
   serviceName     String
-  category        String?   // Domain, SaaS, Microsoft365, Antivirus, AMC, Other
+  category        String?
   billingCompany  String?
   vendor          String?
   expiryDate      DateTime?
-  autoRenewal     Boolean   @default(false)
+  autoRenewal     Boolean      @default(false)
   owner           String?
-  criticality     String?   // High, Medium, Low
+  criticality     String?
   lastRenewalDate DateTime?
   renewalPeriod   Int?
   annualCost      Float?
@@ -28,8 +28,76 @@ model Entry {
   adminEmail      String?
   vendorEmail     String?
   remarks         String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  // Physical asset fields
+  assetTag        String?
+  serialNumber    String?
+  location        String?
+  condition       String?      @default("Good")
+  assetStatus     String?      @default("Available")
+  purchaseDate    DateTime?
+  purchasePrice   Float?
+  warrantyYears   Int?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  allocations     Allocation[]
+}
+
+model Employee {
+  id            Int          @id @default(autoincrement())
+  empId         String       @unique
+  name          String
+  email         String       @unique
+  department    String
+  designation   String?
+  phone         String?
+  manager       String?
+  status        String       @default("Active")
+  joiningDate   DateTime?
+  exitDate      DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  allocations   Allocation[]
+}
+
+model Allocation {
+  id           Int       @id @default(autoincrement())
+  assetId      Int
+  asset        Entry     @relation(fields: [assetId], references: [id])
+  employeeId   Int
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  allocatedAt  DateTime  @default(now())
+  returnedAt   DateTime?
+  status       String    @default("Active")
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model AssetRequest {
+  id            Int      @id @default(autoincrement())
+  requestType   String
+  requestedBy   String
+  assetId       Int?
+  description   String
+  status        String   @default("Pending")
+  approvalStage String   @default("Manager")
+  approvedBy    String?
+  rejectedBy    String?
+  comments      String?
+  priority      String?  @default("Medium")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  entityType String
+  entityId   Int
+  entityName String?
+  userId     String   @default("admin")
+  details    String?
+  createdAt  DateTime @default(now())
 }
 
 model User {

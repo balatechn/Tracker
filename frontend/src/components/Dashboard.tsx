@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText } from 'lucide-react';
 import { entriesApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -12,10 +12,14 @@ import StatCard from './StatCard';
 import TrackerTable from './TrackerTable';
 import AddEditModal from './AddEditModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import PeopleTab from './PeopleTab';
+import AllocationsTab from './AllocationsTab';
+import RequestsTab from './RequestsTab';
+import AuditTab from './AuditTab';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker';
+type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -171,6 +175,50 @@ export default function Dashboard() {
           >
             <Table2 size={14} />
             Tracker
+          </button>
+          <button
+            onClick={() => setActiveTab('people')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'people'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Users size={14} />
+            People
+          </button>
+          <button
+            onClick={() => setActiveTab('allocations')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'allocations'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <ArrowLeftRight size={14} />
+            Allocations
+          </button>
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'requests'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <ClipboardList size={14} />
+            Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'audit'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <ScrollText size={14} />
+            Audit Log
           </button>
           <div className="ml-auto text-xs text-gray-400 py-2.5">
             {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -340,6 +388,35 @@ export default function Dashboard() {
                 onEdit={(e) => setEditEntry(e)}
               />
             </div>
+          </div>
+        )}
+      </div>
+
+        {/* ── People tab ── */}
+        {activeTab === 'people' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <PeopleTab />
+          </div>
+        )}
+
+        {/* ── Allocations tab ── */}
+        {activeTab === 'allocations' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <AllocationsTab />
+          </div>
+        )}
+
+        {/* ── Requests tab ── */}
+        {activeTab === 'requests' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <RequestsTab />
+          </div>
+        )}
+
+        {/* ── Audit tab ── */}
+        {activeTab === 'audit' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <AuditTab />
           </div>
         )}
       </div>

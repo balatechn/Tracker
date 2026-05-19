@@ -5,6 +5,10 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import entriesRoutes from './routes/entries';
+import employeesRoutes from './routes/employees';
+import allocationsRoutes from './routes/allocations';
+import requestsRoutes from './routes/requests';
+import auditRoutes from './routes/audit';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,6 +47,10 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/auth', authLimiter, authRoutes);
 app.use('/entries', entriesRoutes);
+app.use('/employees', employeesRoutes);
+app.use('/allocations', allocationsRoutes);
+app.use('/requests', requestsRoutes);
+app.use('/audit', auditRoutes);
 
 // 404 handler
 app.use((_req, res) => {

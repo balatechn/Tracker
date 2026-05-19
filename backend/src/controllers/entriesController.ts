@@ -119,5 +119,14 @@ function sanitizeEntryData(body: Record<string, unknown>) {
     adminEmail: body.adminEmail ? String(body.adminEmail).trim() : null,
     vendorEmail: body.vendorEmail ? String(body.vendorEmail).trim() : null,
     remarks: body.remarks ? String(body.remarks).trim() : null,
+    // Physical asset fields
+    assetTag: body.assetTag ? String(body.assetTag).trim() : null,
+    serialNumber: body.serialNumber ? String(body.serialNumber).trim() : null,
+    location: body.location ? String(body.location).trim() : null,
+    condition: body.condition ? String(body.condition).trim() : null,
+    assetStatus: body.assetStatus ? String(body.assetStatus).trim() : null,
+    purchaseDate: body.purchaseDate ? new Date(String(body.purchaseDate)) : null,
+    purchasePrice: body.purchasePrice ? Number(body.purchasePrice) : null,
+    warrantyYears: body.warrantyYears ? Number(body.warrantyYears) : null,
   };
 }
