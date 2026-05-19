@@ -25,9 +25,16 @@ function toInputDate(v: string | null) {
   return v.slice(0, 10);
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 export default function AddEditModal({ entry, onClose }: Props) {
-  const qc = useQueryClient();
-  const [form, setForm] = useState<EntryFormData>(EMPTY);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -78,15 +85,6 @@ export default function AddEditModal({ entry, onClose }: Props) {
     } finally {
       setSaving(false);
     }
-  }
-
-  function Field({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-      <div>
-        <label className="label">{label}</label>
-        {children}
-      </div>
-    );
   }
 
   return (
