@@ -63,6 +63,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.ngi-tracker.rule=Host(`kvz9tis1i4zr9v3hrr9uq67z.187.127.134.246.sslip.io`)"
       - "traefik.http.routers.ngi-tracker.entrypoints=http"
+      - "traefik.http.routers.ngi-tracker.service=ngi-tracker"
+      - "traefik.http.routers.ngi-tracker.priority=999"
       - "traefik.http.services.ngi-tracker.loadbalancer.server.port=3000"
       - "traefik.docker.network=coolify"
 
