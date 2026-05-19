@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2 } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee } from 'lucide-react';
 import { entriesApi } from '@/lib/api';
-import { computeStats, formatCurrency } from '@/lib/utils';
+import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import StatCard from './StatCard';
 import TrackerTable from './TrackerTable';
 import AddEditModal from './AddEditModal';
@@ -42,6 +43,29 @@ export default function Dashboard() {
   });
 
   const stats = computeStats(entries);
+
+  const CHART_COLORS = ['#0078d4', '#00b050', '#ff8c00', '#d13438', '#8764b8', '#038387', '#ca5010', '#7a7574'];
+
+  const categoryData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    entries.forEach(e => { const cat = e.category || 'Other'; counts[cat] = (counts[cat] || 0) + 1; });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [entries]);
+
+  const statusData = [
+    { name: 'Active',    count: stats.active,       color: '#00b050' },
+    { name: 'Expiring',  count: stats.expiringSoon,  color: '#ff8c00' },
+    { name: 'Expired',   count: stats.expired,       color: '#d13438' },
+    { name: 'No Expiry', count: stats.noExpiry,      color: '#9ca3af' },
+  ];
+
+  const expiringItems = useMemo(() =>
+    entries
+      .filter(e => { const d = getDaysRemaining(e.expiryDate); return d !== null && d <= 90; })
+      .sort((a, b) => (getDaysRemaining(a.expiryDate) ?? 999) - (getDaysRemaining(b.expiryDate) ?? 999))
+      .slice(0, 15),
+    [entries]
+  );
 
   function handleLogout() {
     localStorage.removeItem('token');
@@ -159,31 +183,103 @@ export default function Dashboard() {
 
         {/* ── Overview tab ── */}
         {activeTab === 'overview' && (
-          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-4 flex flex-col gap-3">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <StatCard label="Total Items" value={stats.total} color="blue" />
-              <StatCard label="Active" value={stats.active} color="green" />
-              <StatCard label="Expiring Soon" value={stats.expiringSoon} color="orange" subtitle="≤ 60 days" />
-              <StatCard label="Expired" value={stats.expired} color="red" />
-              <StatCard label="No Expiry Set" value={stats.noExpiry} color="gray" />
-              <StatCard label="Annual Cost" value={formatCurrency(stats.totalAnnualCost)} color="blue" wide />
+          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-3 flex flex-col gap-3 overflow-hidden">
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-6 gap-3 flex-shrink-0">
+              <StatCard label="Total Assets"   value={stats.total}                             color="blue"   icon={<Package size={14} />} />
+              <StatCard label="Active"         value={stats.active}                            color="green"  icon={<CheckCircle2 size={14} />} />
+              <StatCard label="Expiring Soon"  value={stats.expiringSoon} subtitle="≤ 60 days" color="orange" icon={<Clock size={14} />} />
+              <StatCard label="Expired"        value={stats.expired}                           color="red"    icon={<AlertTriangle size={14} />} />
+              <StatCard label="No Expiry Set"  value={stats.noExpiry}                          color="gray"   icon={<MinusCircle size={14} />} />
+              <StatCard label="Annual Cost"    value={formatCurrency(stats.totalAnnualCost)}   color="purple" icon={<IndianRupee size={14} />} />
             </div>
-            {stats.expiringSoon > 0 && (
-              <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-2.5 flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
-                <p className="text-sm text-orange-800">
-                  <strong>{stats.expiringSoon} item{stats.expiringSoon > 1 ? 's' : ''}</strong> expiring within 60 days. Review and renew soon.
-                </p>
+
+            {/* Alert bar */}
+            {(stats.expired > 0 || stats.expiringSoon > 0) && (
+              <div className="flex gap-2 flex-shrink-0">
+                {stats.expired > 0 && (
+                  <div className="flex-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <AlertTriangle size={13} className="text-red-500 flex-shrink-0" />
+                    <p className="text-xs text-red-800"><strong>{stats.expired}</strong> item{stats.expired > 1 ? 's' : ''} expired — immediate action required</p>
+                  </div>
+                )}
+                {stats.expiringSoon > 0 && (
+                  <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <Clock size={13} className="text-orange-400 animate-pulse flex-shrink-0" />
+                    <p className="text-xs text-orange-800"><strong>{stats.expiringSoon}</strong> item{stats.expiringSoon > 1 ? 's' : ''} expiring within 60 days — review and renew soon</p>
+                  </div>
+                )}
               </div>
             )}
-            {stats.expired > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-800">
-                  <strong>{stats.expired} item{stats.expired > 1 ? 's' : ''}</strong> already expired. Immediate action required.
-                </p>
+
+            {/* Charts + Expiry list — fill remaining height */}
+            <div className="flex-1 min-h-0 grid grid-cols-3 gap-3">
+
+              {/* Pie: Category Distribution */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex-shrink-0">Asset by Category</p>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={categoryData} cx="50%" cy="45%" innerRadius="35%" outerRadius="62%" paddingAngle={3} dataKey="value" labelLine={false}>
+                        {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => [`${v} asset${v !== 1 ? 's' : ''}`, '']} />
+                      <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 10 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            )}
+
+              {/* Bar: Status Breakdown */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex-shrink-0">Status Breakdown</p>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statusData} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip cursor={{ fill: '#f9fafb' }} />
+                      <Bar dataKey="count" name="Assets" radius={[4, 4, 0, 0]} maxBarSize={56}>
+                        {statusData.map((item, i) => <Cell key={i} fill={item.color} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Expiring Soon list */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0 overflow-hidden">
+                <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Renewals ≤ 90 Days</p>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${expiringItems.length > 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                    {expiringItems.length} item{expiringItems.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-1">
+                  {expiringItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                      <CheckCircle2 size={24} className="text-green-400" />
+                      <p className="text-xs">All assets up to date</p>
+                    </div>
+                  ) : expiringItems.map(item => {
+                    const days = getDaysRemaining(item.expiryDate);
+                    const s = getStatusInfo(days);
+                    return (
+                      <div key={item.id} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition-colors gap-2 group cursor-default">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-gray-800 truncate group-hover:text-brand-600">{item.serviceName}</p>
+                          <p className="text-xs text-gray-400 truncate">{item.vendor ?? item.category ?? '—'}</p>
+                        </div>
+                        <span className={`flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.color}`}>{s.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
