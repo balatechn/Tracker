@@ -35,6 +35,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function AddEditModal({ entry, onClose }: Props) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<EntryFormData>(EMPTY);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
