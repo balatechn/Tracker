@@ -429,7 +429,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </div>
 
         {/* ── People tab ── */}
         {activeTab === 'people' && (
