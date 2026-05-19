@@ -17,9 +17,9 @@ const colorMap = {
 export default function StatCard({ label, value, color, subtitle, wide }: Props) {
   const c = colorMap[color];
   return (
-    <div className={`bg-white rounded-lg shadow-card border-t-2 ${c.border} ${c.bg} px-4 py-3 ${wide ? 'col-span-1' : ''}`}>
+    <div className={`bg-white rounded-lg shadow-card border-t-2 ${c.border} ${c.bg} px-3 py-2.5 ${wide ? 'col-span-1' : ''}`}>
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${c.text} leading-none`}>{value}</p>
+      <p className={`text-xl font-bold mt-0.5 ${c.text} leading-none`}>{value}</p>
       {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
     </div>
   );

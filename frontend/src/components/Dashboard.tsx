@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2 } from 'lucide-react';
 import { entriesApi } from '@/lib/api';
 import { computeStats, formatCurrency } from '@/lib/utils';
 import StatCard from './StatCard';
@@ -14,9 +14,12 @@ import ChangePasswordModal from './ChangePasswordModal';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
+type Tab = 'overview' | 'tracker';
+
 export default function Dashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [criticality, setCriticality] = useState('All');
@@ -82,13 +85,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
-      {/* Top navigation */}
-      <header className="bg-brand-700 shadow-md sticky top-0 z-20">
-        <div className="max-w-screen-2xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+      {/* Header */}
+      <header className="bg-brand-700 shadow-md flex-shrink-0">
+        <div className="max-w-screen-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 bg-white rounded flex items-center justify-center flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <rect x="1" y="1" width="6" height="6" fill="#0078d4" />
                 <rect x="9" y="1" width="6" height="6" fill="#0078d4" opacity="0.7" />
                 <rect x="1" y="9" width="6" height="6" fill="#0078d4" opacity="0.7" />
@@ -104,124 +107,146 @@ export default function Dashboard() {
             <span className="text-brand-100 text-xs hidden sm:block">{username}</span>
             <button
               onClick={() => setChangePwOpen(true)}
-              className="text-brand-100 hover:text-white p-2 rounded hover:bg-brand-600 transition-colors"
+              className="text-brand-100 hover:text-white p-1.5 rounded hover:bg-brand-600 transition-colors"
               title="Change Password"
             >
-              <Key size={15} />
+              <Key size={14} />
             </button>
             <button
               onClick={handleLogout}
-              className="text-brand-100 hover:text-white p-2 rounded hover:bg-brand-600 transition-colors"
+              className="text-brand-100 hover:text-white p-1.5 rounded hover:bg-brand-600 transition-colors"
               title="Sign out"
             >
-              <LogOut size={15} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-screen-2xl mx-auto w-full px-4 py-5 space-y-4">
-        {/* Page title */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-800">Domain / SaaS / AMC Tracker</h1>
-            <p className="text-sm text-gray-500">Manage renewals, subscriptions and IT asset expiry</p>
-          </div>
-          <div className="text-xs text-gray-400">
-            Last updated: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+      {/* Tab bar */}
+      <div className="bg-white border-b border-gray-200 flex-shrink-0">
+        <div className="max-w-screen-2xl mx-auto px-4 flex items-center">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'overview'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <LayoutDashboard size={14} />
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('tracker')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'tracker'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Table2 size={14} />
+            Tracker
+          </button>
+          <div className="ml-auto text-xs text-gray-400 py-2.5">
+            {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
           </div>
         </div>
+      </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatCard label="Total Items" value={stats.total} color="blue" />
-          <StatCard label="Active" value={stats.active} color="green" />
-          <StatCard label="Expiring Soon" value={stats.expiringSoon} color="orange" subtitle="≤ 60 days" />
-          <StatCard label="Expired" value={stats.expired} color="red" />
-          <StatCard label="No Expiry Set" value={stats.noExpiry} color="gray" />
-          <StatCard
-            label="Annual Cost"
-            value={formatCurrency(stats.totalAnnualCost)}
-            color="blue"
-            wide
-          />
-        </div>
+      {/* Tab content — fills remaining viewport height */}
+      <div className="flex-1 min-h-0 overflow-hidden">
 
-        {/* Expiry warning banner */}
-        {stats.expiringSoon > 0 && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
-            <p className="text-sm text-orange-800">
-              <strong>{stats.expiringSoon} item{stats.expiringSoon > 1 ? 's' : ''}</strong> expiring within 60 days.
-              Review and renew soon.
-            </p>
+        {/* ── Overview tab ── */}
+        {activeTab === 'overview' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-4 flex flex-col gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <StatCard label="Total Items" value={stats.total} color="blue" />
+              <StatCard label="Active" value={stats.active} color="green" />
+              <StatCard label="Expiring Soon" value={stats.expiringSoon} color="orange" subtitle="≤ 60 days" />
+              <StatCard label="Expired" value={stats.expired} color="red" />
+              <StatCard label="No Expiry Set" value={stats.noExpiry} color="gray" />
+              <StatCard label="Annual Cost" value={formatCurrency(stats.totalAnnualCost)} color="blue" wide />
+            </div>
+            {stats.expiringSoon > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-2.5 flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+                <p className="text-sm text-orange-800">
+                  <strong>{stats.expiringSoon} item{stats.expiringSoon > 1 ? 's' : ''}</strong> expiring within 60 days. Review and renew soon.
+                </p>
+              </div>
+            )}
+            {stats.expired > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                <p className="text-sm text-red-800">
+                  <strong>{stats.expired} item{stats.expired > 1 ? 's' : ''}</strong> already expired. Immediate action required.
+                </p>
+              </div>
+            )}
           </div>
         )}
-        {stats.expired > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-            <p className="text-sm text-red-800">
-              <strong>{stats.expired} item{stats.expired > 1 ? 's' : ''}</strong> already expired. Immediate action required.
-            </p>
-          </div>
-        )}
 
-        {/* Table card */}
-        <div className="card !p-0 overflow-hidden">
-          {/* Toolbar */}
-          <div className="px-4 py-3 border-b border-gray-200 flex flex-wrap items-center gap-2">
-            <input
-              className="input flex-1 min-w-[180px] max-w-xs"
-              placeholder="Search by name, vendor, owner…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <select
-              className="input w-auto min-w-[130px]"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {['All', 'Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Other'].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <select
-              className="input w-auto min-w-[120px]"
-              value={criticality}
-              onChange={(e) => setCriticality(e.target.value)}
-            >
-              {['All', 'High', 'Medium', 'Low'].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-
-            <div className="flex items-center gap-2 ml-auto">
-              <button
-                className="btn-secondary"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['entries'] })}
-                title="Refresh"
+        {/* ── Tracker tab ── */}
+        {activeTab === 'tracker' && (
+          <div className="h-full flex flex-col max-w-screen-2xl mx-auto w-full px-4 py-3 gap-3">
+            {/* Toolbar */}
+            <div className="bg-white rounded-lg shadow-card border border-gray-200 px-3 py-2 flex flex-wrap items-center gap-2 flex-shrink-0">
+              <input
+                className="input flex-1 min-w-[160px] max-w-xs py-1.5 text-sm"
+                placeholder="Search by name, vendor, owner…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <select
+                className="input w-auto min-w-[120px] py-1.5 text-sm"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
               >
-                <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-              <button className="btn-secondary" onClick={handleExport}>
-                <Download size={14} />
-                <span className="hidden sm:inline">Export</span>
-              </button>
-              <button className="btn-primary" onClick={() => setAddOpen(true)}>
-                <Plus size={14} />
-                <span className="hidden sm:inline">Add New</span>
-              </button>
+                {['All', 'Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Other'].map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+              <select
+                className="input w-auto min-w-[110px] py-1.5 text-sm"
+                value={criticality}
+                onChange={(e) => setCriticality(e.target.value)}
+              >
+                {['All', 'High', 'Medium', 'Low'].map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  className="btn-secondary py-1.5 px-3 text-xs"
+                  onClick={() => queryClient.invalidateQueries({ queryKey: ['entries'] })}
+                  title="Refresh"
+                >
+                  <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+                <button className="btn-secondary py-1.5 px-3 text-xs" onClick={handleExport}>
+                  <Download size={13} />
+                  <span className="hidden sm:inline">Export</span>
+                </button>
+                <button className="btn-primary py-1.5 px-3 text-xs" onClick={() => setAddOpen(true)}>
+                  <Plus size={13} />
+                  <span className="hidden sm:inline">Add New</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Table card — fills remaining height, rows scroll inside */}
+            <div className="flex-1 min-h-0 bg-white rounded-lg shadow-card border border-gray-200 overflow-hidden flex flex-col">
+              <TrackerTable
+                entries={entries}
+                isLoading={isLoading}
+                onEdit={(e) => setEditEntry(e)}
+              />
             </div>
           </div>
-
-          <TrackerTable
-            entries={entries}
-            isLoading={isLoading}
-            onEdit={(e) => setEditEntry(e)}
-          />
-        </div>
-      </main>
+        )}
+      </div>
 
       {(addOpen || editEntry) && (
         <AddEditModal

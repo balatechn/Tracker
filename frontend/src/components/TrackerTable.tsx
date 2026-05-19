@@ -91,7 +91,7 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
+      <div className="flex items-center justify-center h-full text-gray-400">
         <span className="animate-spin h-6 w-6 border-2 border-brand-500 border-t-transparent rounded-full mr-3" />
         Loading entries…
       </div>
@@ -100,7 +100,7 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div className="flex flex-col items-center justify-center h-full text-gray-400">
         <p className="text-lg font-medium">No entries found</p>
         <p className="text-sm">Try adjusting your search or filters, or add a new entry.</p>
       </div>
@@ -109,9 +109,9 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-brand-500 sticky top-[56px] z-10">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead className="bg-brand-500 sticky top-0 z-10">
             <tr>
               <Th k="srNo" className="pl-4 w-12">#</Th>
               <Th k="serviceName">Service / Domain</Th>
@@ -138,37 +138,37 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
                   key={entry.id}
                   className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
                 >
-                  <td className="px-3 py-2 pl-4 text-gray-400 text-xs">{entry.srNo ?? idx + 1}</td>
-                  <td className="px-3 py-2 font-medium text-gray-800 whitespace-nowrap max-w-[200px] truncate" title={entry.serviceName}>
+                  <td className="px-2 py-1.5 pl-3 text-gray-400">{entry.srNo ?? idx + 1}</td>
+                  <td className="px-2 py-1.5 font-medium text-gray-800 whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
                     {entry.serviceName}
                     {entry.billingCompany && (
-                      <span className="text-xs text-gray-400 ml-1">({entry.billingCompany})</span>
+                      <span className="text-gray-400 ml-1">({entry.billingCompany})</span>
                     )}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-1.5">
                     {entry.category && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                         {entry.category}
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{entry.vendor ?? '—'}</td>
-                  <td className="px-3 py-2 whitespace-nowrap text-gray-600">{formatDate(entry.expiryDate)}</td>
-                  <td className="px-3 py-2">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${status.bg} ${status.color} whitespace-nowrap`}>
+                  <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap">{entry.vendor ?? '—'}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-600">{formatDate(entry.expiryDate)}</td>
+                  <td className="px-2 py-1.5">
+                    <span className={`inline-flex items-center gap-1 font-medium px-1.5 py-0.5 rounded-full ${status.bg} ${status.color} whitespace-nowrap`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                       {status.label}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${entry.autoRenewal ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <td className="px-2 py-1.5 text-center">
+                    <span className={`px-1.5 py-0.5 rounded-full font-medium ${entry.autoRenewal ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {entry.autoRenewal ? 'Yes' : 'No'}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{entry.owner ?? '—'}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-1.5 text-gray-600 whitespace-nowrap">{entry.owner ?? '—'}</td>
+                  <td className="px-2 py-1.5">
                     {entry.criticality && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
+                      <span className={`px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap ${
                         entry.criticality === 'High' ? 'bg-red-100 text-red-700' :
                         entry.criticality === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-gray-100 text-gray-500'
@@ -177,15 +177,15 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-right whitespace-nowrap text-gray-700 font-medium">
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap text-gray-700 font-medium">
                     {formatCurrency(entry.annualCost)}
                   </td>
-                  <td className="px-3 py-2 text-gray-500 text-xs whitespace-nowrap">{entry.paymentMethod ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs whitespace-nowrap">{entry.invoiceRef ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs max-w-[180px] truncate" title={entry.remarks ?? ''}>
+                  <td className="px-2 py-1.5 text-gray-500 whitespace-nowrap">{entry.paymentMethod ?? '—'}</td>
+                  <td className="px-2 py-1.5 text-gray-500 whitespace-nowrap">{entry.invoiceRef ?? '—'}</td>
+                  <td className="px-2 py-1.5 text-gray-500 max-w-[150px] truncate" title={entry.remarks ?? ''}>
                     {entry.remarks ?? '—'}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-1.5">
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => onEdit(entry)}
