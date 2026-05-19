@@ -30,6 +30,13 @@ export async function getEntries(req: AuthRequest, res: Response): Promise<void>
   const entries = await prisma.entry.findMany({
     where,
     orderBy: [{ srNo: 'asc' }, { createdAt: 'asc' }],
+    include: {
+      allocations: {
+        where: { status: 'Active' },
+        include: { employee: { select: { id: true, name: true, empId: true } } },
+        take: 1,
+      },
+    },
   });
 
   res.json(entries);
@@ -42,7 +49,16 @@ export async function getEntry(req: AuthRequest, res: Response): Promise<void> {
     return;
   }
 
-  const entry = await prisma.entry.findUnique({ where: { id } });
+  const entry = await prisma.entry.findUnique({
+    where: { id },
+    include: {
+      allocations: {
+        where: { status: 'Active' },
+        include: { employee: { select: { id: true, name: true, empId: true } } },
+        take: 1,
+      },
+    },
+  });
   if (!entry) {
     res.status(404).json({ error: 'Entry not found' });
     return;

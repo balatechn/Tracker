@@ -32,7 +32,7 @@ export async function getEmployees(req: AuthRequest, res: Response): Promise<voi
     include: {
       allocations: {
         where: { status: 'Active' },
-        include: { asset: { select: { id: true, serviceName: true, category: true } } },
+        include: { asset: { select: { id: true, serviceName: true, category: true, assetTag: true } } },
       },
     },
   });

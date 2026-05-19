@@ -27,6 +27,12 @@ export interface Entry {
   purchaseDate: string | null;
   purchasePrice: number | null;
   warrantyYears: number | null;
+  // Active allocation (included in API responses)
+  allocations?: {
+    id: number;
+    employee: { id: number; name: string; empId: string };
+    allocatedAt: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -56,7 +62,7 @@ export interface Employee {
   exitDate: string | null;
   allocations?: {
     id: number;
-    asset: { id: number; serviceName: string; category: string | null };
+    asset: { id: number; serviceName: string; category: string | null; assetTag: string | null };
   }[];
   createdAt: string;
   updatedAt: string;

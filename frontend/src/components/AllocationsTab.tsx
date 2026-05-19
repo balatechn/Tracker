@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { allocationsApi, employeesApi, entriesApi } from '@/lib/api';
 import { Allocation } from '@/types';
 import toast from 'react-hot-toast';
-import { ArrowLeftRight, Plus, RotateCcw, X, Package } from 'lucide-react';
+import { ArrowLeftRight, Plus, RotateCcw, X, Package, Printer } from 'lucide-react';
+import { printHandover } from '@/lib/handover';
 
 const STATUS_COLORS: Record<string, string> = {
   Active:   'bg-green-100 text-green-700',
@@ -161,12 +162,21 @@ export default function AllocationsTab() {
                   </td>
                   <td className="px-3 py-2">
                     {a.status === 'Active' && (
-                      <button
-                        onClick={() => openReturn(a)}
-                        className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded"
-                      >
-                        <RotateCcw className="w-3 h-3" /> Return
-                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openReturn(a)}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Return
+                        </button>
+                        <button
+                          onClick={() => printHandover(a)}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
+                          title="Print Handover Report"
+                        >
+                          <Printer className="w-3 h-3" /> Handover
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

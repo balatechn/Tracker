@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText } from 'lucide-react';
-import { entriesApi } from '@/lib/api';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X } from 'lucide-react';
+import { entriesApi, employeesApi, allocationsApi, requestsApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import StatCard from './StatCard';
@@ -31,6 +31,8 @@ export default function Dashboard() {
   const [addOpen, setAddOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [changePwOpen, setChangePwOpen] = useState(false);
+  const [allocateEntry, setAllocateEntry] = useState<Entry | null>(null);
+  const [allocEmpId, setAllocEmpId] = useState('');
 
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') || 'Admin' : 'Admin';
 
@@ -44,6 +46,34 @@ export default function Dashboard() {
           criticality: criticality !== 'All' ? criticality : undefined,
         })
         .then((r) => r.data),
+  });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => employeesApi.list().then((r) => r.data),
+  });
+
+  const { data: activeAllocCount = 0 } = useQuery({
+    queryKey: ['alloc-count'],
+    queryFn: () => allocationsApi.list({ status: 'Active' }).then((r) => r.data.length),
+  });
+
+  const { data: pendingReqCount = 0 } = useQuery({
+    queryKey: ['req-count'],
+    queryFn: () => requestsApi.list({ status: 'Pending' }).then((r) => r.data.length),
+  });
+
+  const allocateMut = useMutation({
+    mutationFn: (empId: number) =>
+      allocationsApi.create({ assetId: allocateEntry!.id, employeeId: empId }),
+    onSuccess: () => {
+      toast.success('Asset allocated successfully');
+      queryClient.invalidateQueries({ queryKey: ['entries'] });
+      queryClient.invalidateQueries({ queryKey: ['alloc-count'] });
+      setAllocateEntry(null);
+      setAllocEmpId('');
+    },
+    onError: () => toast.error('Allocation failed'),
   });
 
   const stats = computeStats(entries);
@@ -243,6 +273,14 @@ export default function Dashboard() {
               <StatCard label="Annual Cost"    value={formatCurrency(stats.totalAnnualCost)}   color="purple" icon={<IndianRupee size={14} />} />
             </div>
 
+            {/* Hardware KPI row */}
+            <div className="grid grid-cols-4 gap-3 flex-shrink-0">
+              <StatCard label="Total Employees" value={employees.length || 0} color="blue" icon={<Users size={14} />} />
+              <StatCard label="Active Allocations" value={activeAllocCount} color="green" icon={<ArrowLeftRight size={14} />} />
+              <StatCard label="Pending Requests" value={pendingReqCount} color="orange" icon={<ClipboardList size={14} />} />
+              <StatCard label="Hardware In Use" value={entries.filter(e => e.assetStatus === 'InUse').length} color="gray" icon={<Monitor size={14} />} />
+            </div>
+
             {/* Alert bar */}
             {(stats.expired > 0 || stats.expiringSoon > 0) && (
               <div className="flex gap-2 flex-shrink-0">
@@ -347,7 +385,7 @@ export default function Dashboard() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {['All', 'Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Other'].map((c) => (
+                {['All', 'Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Laptop', 'Desktop', 'Phone', 'Printer', 'Server', 'Network Equipment', 'Other'].map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>
@@ -386,6 +424,7 @@ export default function Dashboard() {
                 entries={entries}
                 isLoading={isLoading}
                 onEdit={(e) => setEditEntry(e)}
+                onAllocate={(e) => { setAllocateEntry(e); setAllocEmpId(''); }}
               />
             </div>
           </div>
@@ -429,6 +468,52 @@ export default function Dashboard() {
       )}
 
       {changePwOpen && <ChangePasswordModal onClose={() => setChangePwOpen(false)} />}
+
+      {/* Quick Allocate Modal */}
+      {allocateEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <UserPlus size={16} className="text-brand-500" />
+                Allocate Asset
+              </h2>
+              <button onClick={() => setAllocateEntry(null)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">{allocateEntry.serviceName}</span>
+                {allocateEntry.assetTag && <span className="ml-1 text-xs text-gray-400">({allocateEntry.assetTag})</span>}
+              </p>
+              <div>
+                <label className="label">Assign to Employee <span className="text-red-500">*</span></label>
+                <select
+                  className="input mt-1"
+                  value={allocEmpId}
+                  onChange={e => setAllocEmpId(e.target.value)}
+                >
+                  <option value="">— Select employee —</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.empId})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-100">
+              <button className="btn-secondary text-sm py-1.5 px-3" onClick={() => setAllocateEntry(null)}>Cancel</button>
+              <button
+                className="btn-primary text-sm py-1.5 px-3"
+                disabled={!allocEmpId || allocateMut.isPending}
+                onClick={() => allocateMut.mutate(Number(allocEmpId))}
+              >
+                {allocateMut.isPending ? 'Allocating…' : 'Allocate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

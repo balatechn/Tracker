@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown, UserPlus } from 'lucide-react';
 import { Entry } from '@/types';
 import { getDaysRemaining, getStatusInfo, formatDate, formatCurrency } from '@/lib/utils';
 import { entriesApi } from '@/lib/api';
@@ -13,6 +13,7 @@ interface Props {
   entries: Entry[];
   isLoading: boolean;
   onEdit: (entry: Entry) => void;
+  onAllocate?: (entry: Entry) => void;
 }
 
 type SortKey = keyof Entry | 'daysRemaining';
@@ -20,7 +21,7 @@ type SortDir = 'asc' | 'desc';
 
 const CRITICALITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
-export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
+export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }: Props) {
   const queryClient = useQueryClient();
   const [sortKey, setSortKey] = useState<SortKey>('srNo');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -126,6 +127,9 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
               <Th k="paymentMethod">Payment</Th>
               <Th k="invoiceRef">Invoice Ref</Th>
               <Th k="remarks">Remarks</Th>
+              <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Asset Tag</th>
+              <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Status</th>
+              <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Allocated To</th>
               <th className="px-3 py-2.5 text-center text-xs font-semibold text-white uppercase tracking-wide w-20">Actions</th>
             </tr>
           </thead>
@@ -185,6 +189,22 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
                   <td className="px-2 py-1.5 text-gray-500 max-w-[150px] truncate" title={entry.remarks ?? ''}>
                     {entry.remarks ?? '—'}
                   </td>
+                  <td className="px-2 py-1.5 font-mono text-xs text-gray-600 whitespace-nowrap">
+                    {entry.assetTag ?? '—'}
+                  </td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    {entry.assetStatus ? (
+                      <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                        entry.assetStatus === 'InUse' ? 'bg-green-100 text-green-700' :
+                        entry.assetStatus === 'Available' ? 'bg-blue-100 text-blue-700' :
+                        entry.assetStatus === 'InRepair' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>{entry.assetStatus}</span>
+                    ) : '—'}
+                  </td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-700">
+                    {entry.allocations?.[0]?.employee.name ?? '—'}
+                  </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center justify-center gap-1">
                       <button
@@ -201,6 +221,15 @@ export default function TrackerTable({ entries, isLoading, onEdit }: Props) {
                       >
                         <Trash2 size={13} />
                       </button>
+                      {onAllocate && entry.assetTag && entry.assetStatus !== 'InUse' && (
+                        <button
+                          onClick={() => onAllocate(entry)}
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="Allocate Asset"
+                        >
+                          <UserPlus size={13} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -125,7 +125,7 @@ export default function AddEditModal({ entry, onClose }: Props) {
             <Field label="Category">
               <select className="input" value={form.category ?? ''} onChange={(e) => set('category', e.target.value || null)}>
                 <option value="">— Select —</option>
-                {['Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Other'].map((c) => (
+                {['Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Laptop', 'Desktop', 'Phone', 'Printer', 'Server', 'Network Equipment', 'Other'].map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>
