@@ -21,9 +21,7 @@ export function printHandover(allocation: Allocation): void {
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:24px;max-width:820px;margin:0 auto}
-    .logo-bar{background:#1a1a2e;color:#fff;text-align:center;padding:18px 0 14px;margin-bottom:6px}
-    .logo-n{font-size:32px;font-weight:bold;font-style:italic;border:2px solid #fff;display:inline-block;padding:2px 12px;margin-bottom:4px;letter-spacing:2px}
-    .logo-company{font-size:13px;letter-spacing:4px;text-transform:uppercase}
+    .logo-bar{text-align:center;padding:18px 0 14px;margin-bottom:6px}
     .report-title{text-align:center;font-size:20px;font-weight:bold;padding:12px 0 10px;border-bottom:2px solid #000;margin-bottom:10px}
     .info-grid{width:100%;border-collapse:collapse;margin-bottom:12px}
     .info-grid td{border:1px solid #999;padding:6px 8px;vertical-align:middle}
@@ -46,8 +44,7 @@ export function printHandover(allocation: Allocation): void {
 </head>
 <body>
   <div class="logo-bar">
-    <div class="logo-n">N</div>
-    <div class="logo-company">National</div>
+    <img src="https://nationalgroupindia.com/logo_full.webp" alt="National Group" style="height:50px">
   </div>
 
   <div class="report-title">Asset Handover Report</div>
