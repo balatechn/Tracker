@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { allocationsApi, employeesApi, entriesApi } from '@/lib/api';
 import { Allocation } from '@/types';
 import toast from 'react-hot-toast';
-import { ArrowLeftRight, Plus, RotateCcw, X, Package, Printer } from 'lucide-react';
+import { ArrowLeftRight, Plus, RotateCcw, X, Package, Printer, Pencil } from 'lucide-react';
 import { printHandover } from '@/lib/handover';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -16,10 +16,11 @@ export default function AllocationsTab() {
   const qc = useQueryClient();
   const [statusF, setStatusF]   = useState('Active');
   const [search, setSearch]     = useState('');
-  const [modal, setModal]       = useState<'allocate' | 'return' | null>(null);
+  const [modal, setModal]       = useState<'allocate' | 'return' | 'edit' | null>(null);
   const [selected, setSelected] = useState<Allocation | null>(null);
   const [form, setForm]         = useState({ assetId: '', employeeId: '', notes: '', allocatedAt: '' });
   const [returnNote, setReturnNote] = useState('');
+  const [editForm, setEditForm]     = useState({ employeeId: '', allocatedAt: '', notes: '' });
 
   const { data: allocations = [], isLoading } = useQuery({
     queryKey: ['allocations', statusF],
@@ -56,6 +57,20 @@ export default function AllocationsTab() {
     onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
+  const editMut = useMutation({
+    mutationFn: () => allocationsApi.update(selected!.id, {
+      employeeId: editForm.employeeId ? parseInt(editForm.employeeId) : undefined,
+      allocatedAt: editForm.allocatedAt || undefined,
+      notes: editForm.notes,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['allocations'] });
+      toast.success('Allocation updated');
+      closeModal();
+    },
+    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Failed'),
+  });
+
   const returnMut = useMutation({
     mutationFn: () => allocationsApi.return(selected!.id, { returnNotes: returnNote || undefined }),
     onSuccess: () => {
@@ -69,6 +84,15 @@ export default function AllocationsTab() {
 
   function openAllocate() { setForm({ assetId: '', employeeId: '', notes: '', allocatedAt: '' }); setModal('allocate'); }
   function openReturn(a: Allocation) { setSelected(a); setReturnNote(''); setModal('return'); }
+  function openEdit(a: Allocation) {
+    setSelected(a);
+    setEditForm({
+      employeeId: String(a.employee.id),
+      allocatedAt: a.allocatedAt ? new Date(a.allocatedAt).toISOString().slice(0, 10) : '',
+      notes: a.notes || '',
+    });
+    setModal('edit');
+  }
   function closeModal() { setModal(null); setSelected(null); }
 
   const filtered = search
@@ -164,6 +188,12 @@ export default function AllocationsTab() {
                     {a.status === 'Active' && (
                       <div className="flex gap-1">
                         <button
+                          onClick={() => openEdit(a)}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+                        >
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                        <button
                           onClick={() => openReturn(a)}
                           className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded"
                         >
@@ -232,6 +262,92 @@ export default function AllocationsTab() {
                 disabled={createMut.isPending}
               >
                 {createMut.isPending ? 'Allocating…' : 'Allocate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {modal === 'edit' && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Edit Allocation</h2>
+              <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-3">Asset: <strong className="text-gray-800">{selected.asset.serviceName}{selected.asset.assetTag ? ` [${selected.asset.assetTag}]` : ''}</strong></p>
+              </div>
+              <div>
+                <label className="label">Employee <span className="text-red-500">*</span></label>
+                <select className="input" value={editForm.employeeId} onChange={e => setEditForm(p => ({ ...p, employeeId: e.target.value }))}>
+                  <option value="">Select employee…</option>
+                  {employees.map(e => (
+                    <option key={e.id} value={e.id}>{e.name} ({e.empId}) — {e.department}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Allocation Date</label>
+                <input className="input" type="date" value={editForm.allocatedAt} onChange={e => setEditForm(p => ({ ...p, allocatedAt: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label">Notes</label>
+                <textarea className="input resize-none" rows={2} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+              <button onClick={closeModal} className="btn-secondary">Cancel</button>
+              <button
+                onClick={() => { if (!editForm.employeeId) { toast.error('Employee is required'); return; } editMut.mutate(); }}
+                className="btn-primary"
+                disabled={editMut.isPending}
+              >
+                {editMut.isPending ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {modal === 'edit' && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Edit Allocation</h2>
+              <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <p className="text-sm text-gray-500">Asset: <strong className="text-gray-800">{selected.asset.serviceName}{selected.asset.assetTag ? ` [${selected.asset.assetTag}]` : ''}</strong></p>
+              <div>
+                <label className="label">Employee <span className="text-red-500">*</span></label>
+                <select className="input" value={editForm.employeeId} onChange={e => setEditForm(p => ({ ...p, employeeId: e.target.value }))}>
+                  <option value="">Select employee…</option>
+                  {employees.map(e => (
+                    <option key={e.id} value={e.id}>{e.name} ({e.empId}) — {e.department}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Allocation Date</label>
+                <input className="input" type="date" value={editForm.allocatedAt} onChange={e => setEditForm(p => ({ ...p, allocatedAt: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label">Notes</label>
+                <textarea className="input resize-none" rows={2} value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+              <button onClick={closeModal} className="btn-secondary">Cancel</button>
+              <button
+                onClick={() => { if (!editForm.employeeId) { toast.error('Employee is required'); return; } editMut.mutate(); }}
+                className="btn-primary"
+                disabled={editMut.isPending}
+              >
+                {editMut.isPending ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>

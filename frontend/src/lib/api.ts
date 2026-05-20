@@ -61,6 +61,8 @@ export const allocationsApi = {
     api.post<Allocation>('/allocations', data),
   return: (id: number, data?: { returnNotes?: string }) =>
     api.put<Allocation>(`/allocations/${id}/return`, data || {}),
+  update: (id: number, data: { employeeId?: number; allocatedAt?: string; notes?: string }) =>
+    api.patch<Allocation>(`/allocations/${id}`, data),
 };
 
 export const requestsApi = {

@@ -112,3 +112,41 @@ export async function returnAsset(req: AuthRequest, res: Response): Promise<void
   await triggerN8n('allocation.returned', updated);
   res.json(updated);
 }
+
+export async function updateAllocation(req: AuthRequest, res: Response): Promise<void> {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: 'Invalid ID' }); return; }
+
+  const allocation = await prisma.allocation.findUnique({ where: { id }, include: { asset: ASSET_SEL, employee: EMP_SEL } });
+  if (!allocation) { res.status(404).json({ error: 'Allocation not found' }); return; }
+
+  const { employeeId, allocatedAt, notes } = req.body;
+
+  const updateData: Record<string, unknown> = {};
+  if (notes !== undefined) updateData.notes = notes ? String(notes) : null;
+  if (allocatedAt) updateData.allocatedAt = new Date(String(allocatedAt));
+  if (employeeId) {
+    const empIdNum = parseInt(String(employeeId));
+    const employee = await prisma.employee.findUnique({ where: { id: empIdNum } });
+    if (!employee) { res.status(404).json({ error: 'Employee not found' }); return; }
+    updateData.employeeId = empIdNum;
+  }
+
+  const updated = await prisma.allocation.update({
+    where: { id },
+    data: updateData,
+    include: { asset: ASSET_SEL, employee: EMP_SEL },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: 'UPDATED',
+      entityType: 'Allocation',
+      entityId: id,
+      entityName: allocation.asset.serviceName,
+      details: `Allocation #${id} updated`,
+    },
+  });
+
+  res.json(updated);
+}
