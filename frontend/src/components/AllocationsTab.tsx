@@ -30,8 +30,13 @@ export default function AllocationsTab() {
   const { data: employees = [] } = useQuery({
     queryKey: ['employees', '', 'Active'],
     queryFn: () => employeesApi.list({ status: 'Active' }).then(r => r.data),
-    enabled: modal === 'allocate',
+    enabled: modal === 'allocate' || modal === 'edit',
   });
+
+  // Ensure current employee always appears in the edit dropdown even while list is loading
+  const editEmployeeOptions = modal === 'edit' && selected
+    ? [selected.employee, ...employees.filter(e => e.id !== selected.employee.id)]
+    : employees;
 
   const { data: entries = [] } = useQuery({
     queryKey: ['entries'],
@@ -321,13 +326,19 @@ export default function AllocationsTab() {
               <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
             </div>
             <div className="px-6 py-4 space-y-4">
-              <p className="text-sm text-gray-500">Asset: <strong className="text-gray-800">{selected.asset.serviceName}{selected.asset.assetTag ? ` [${selected.asset.assetTag}]` : ''}</strong></p>
+              {/* Asset info — read only */}
+              <div className="bg-gray-50 rounded-lg px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <div><span className="text-gray-500">Asset:</span> <strong className="text-gray-800">{selected.asset.serviceName}</strong></div>
+                {selected.asset.assetTag && <div><span className="text-gray-500">Tag:</span> <span className="text-gray-700">{selected.asset.assetTag}</span></div>}
+                {selected.asset.category && <div><span className="text-gray-500">Category:</span> <span className="text-gray-700">{selected.asset.category}</span></div>}
+                {selected.asset.location && <div><span className="text-gray-500">Location:</span> <span className="text-gray-700">{selected.asset.location}</span></div>}
+              </div>
               <div>
                 <label className="label">Employee <span className="text-red-500">*</span></label>
                 <select className="input" value={editForm.employeeId} onChange={e => setEditForm(p => ({ ...p, employeeId: e.target.value }))}>
                   <option value="">Select employee…</option>
-                  {employees.map(e => (
-                    <option key={e.id} value={e.id}>{e.name} ({e.empId}) — {e.department}</option>
+                  {editEmployeeOptions.map(e => (
+                    <option key={e.id} value={String(e.id)}>{e.name} ({e.empId}) — {e.department}</option>
                   ))}
                 </select>
               </div>
