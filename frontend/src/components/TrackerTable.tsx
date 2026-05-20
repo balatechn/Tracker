@@ -140,7 +140,11 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
               return (
                 <tr
                   key={entry.id}
-                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${
+                    entry.assetTag && !entry.allocations?.[0]
+                      ? 'bg-amber-50'
+                      : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                  }`}
                 >
                   <td className="px-2 py-1.5 pl-3 text-gray-400">{entry.srNo ?? idx + 1}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-gray-700">
