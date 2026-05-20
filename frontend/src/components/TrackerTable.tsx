@@ -115,6 +115,8 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
           <thead className="bg-brand-500 sticky top-0 z-10">
             <tr>
               <Th k="srNo" className="pl-4 w-12">#</Th>
+              <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Allocated To</th>
+              <th className="px-3 py-2.5 text-center text-xs font-semibold text-white uppercase tracking-wide w-20">Actions</th>
               <Th k="serviceName">Service / Domain</Th>
               <Th k="category">Category</Th>
               <Th k="vendor">Vendor</Th>
@@ -129,8 +131,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
               <Th k="remarks">Remarks</Th>
               <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Asset Tag</th>
               <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Status</th>
-              <th className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Allocated To</th>
-              <th className="px-3 py-2.5 text-center text-xs font-semibold text-white uppercase tracking-wide w-20">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,6 +143,36 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                   className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
                 >
                   <td className="px-2 py-1.5 pl-3 text-gray-400">{entry.srNo ?? idx + 1}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-700">
+                    {entry.allocations?.[0]?.employee.name ?? '—'}
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => onEdit(entry)}
+                        className="p-1.5 text-gray-400 hover:text-brand-500 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(entry)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                      {onAllocate && entry.assetTag && entry.assetStatus !== 'InUse' && (
+                        <button
+                          onClick={() => onAllocate(entry)}
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="Allocate Asset"
+                        >
+                          <UserPlus size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-2 py-1.5 font-medium text-gray-800 whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
                     {entry.serviceName}
                     {entry.billingCompany && (
@@ -201,36 +231,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                         'bg-gray-100 text-gray-500'
                       }`}>{entry.assetStatus}</span>
                     ) : '—'}
-                  </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap text-gray-700">
-                    {entry.allocations?.[0]?.employee.name ?? '—'}
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => onEdit(entry)}
-                        className="p-1.5 text-gray-400 hover:text-brand-500 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(entry)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                      {onAllocate && entry.assetTag && entry.assetStatus !== 'InUse' && (
-                        <button
-                          onClick={() => onAllocate(entry)}
-                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                          title="Allocate Asset"
-                        >
-                          <UserPlus size={13} />
-                        </button>
-                      )}
-                    </div>
                   </td>
                 </tr>
               );
