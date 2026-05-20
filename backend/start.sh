@@ -136,5 +136,131 @@ seedHW()
   .finally(() => prisma.\$disconnect());
 "
 
+echo "Seeding National Group HO hardware data if needed..."
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+async function seedHO() {
+  if (await prisma.employee.findFirst({ where: { empId: 'HO-001' } })) {
+    console.log('HO data already present, skipping.');
+    return;
+  }
+
+  const emps = [
+    {empId:'HO-001',name:'Real Estate Dept',email:'realestate.dept@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-002',name:'Shruthi D',email:'shruthi.d@nationalgroupindia.com',department:'HO-HR',status:'Active'},
+    {empId:'HO-003',name:'Armaan',email:'armaan@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-004',name:'Suresh N',email:'suresh.n@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-005',name:'Babu Puttanna',email:'babu.puttanna@nationalgroupindia.com',department:'HO-LEGAL',status:'Active'},
+    {empId:'HO-006',name:'Jegan',email:'jegan@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-007',name:'Deepti',email:'deepti@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-008',name:'Gupta',email:'gupta@nationalgroupindia.com',department:'ISKY',status:'Active'},
+    {empId:'HO-009',name:'Lincy Chandra',email:'lincy.chandra@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-010',name:'Madan M',email:'madan.m@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-011',name:'Abhiram',email:'abhiram@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-012',name:'Harsdeep',email:'harsdeep@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-013',name:'Deepanshi',email:'deepanshi@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-014',name:'Aadityaa',email:'aadityaa@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-015',name:'Yahya',email:'yahya@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-016',name:'Sanjay',email:'sanjay@nationalgroupindia.com',department:'ISKY',status:'Active'},
+    {empId:'HO-017',name:'Munavar',email:'munavar@nationalgroupindia.com',department:'HO-BD',status:'Active'},
+    {empId:'HO-018',name:'ESSL',email:'essl@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-019',name:'Atique',email:'atique@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-020',name:'Prasanna H',email:'prasanna.h@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-021',name:'Jaykrishnan',email:'jaykrishnan@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-022',name:'Nirup',email:'nirup@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-023',name:'Anil',email:'anil@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-024',name:'Manish',email:'manish@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-025',name:'Mahesh',email:'mahesh@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-026',name:'Siddharth',email:'siddharth@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-027',name:'Neehar',email:'neehar@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-028',name:'Intern 1',email:'intern1@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-029',name:'Intern 2',email:'intern2@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-030',name:'Shwetha',email:'shwetha@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-031',name:'Siri',email:'siri@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-032',name:'Balasubramanian',email:'balasubramanian@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-033',name:'Salman',email:'salman@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-034',name:'Farooq',email:'farooq@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-035',name:'Rajeev',email:'rajeev@nationalgroupindia.com',department:'HO-HR',status:'Active'},
+    {empId:'HO-036',name:'Meeting Room 4th',email:'meetingroom4th@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-037',name:'Meeting Room 7th',email:'meetingroom7th@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-038',name:'IT Infra',email:'itinfra@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-039',name:'Kartik',email:'kartik@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-040',name:'Srikanath',email:'srikanath@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+  ];
+
+  const ids = {};
+  for (const e of emps) { const r = await prisma.employee.create({data:e}); ids[e.empId]=r.id; }
+
+  const allocDate = new Date('2026-05-20');
+  const returnDate = new Date('2026-05-01');
+
+  const assets = [
+    {srNo:50,serviceName:'MSI Laptop',category:'Laptop',vendor:'MSI',location:'BANGALORE-HO',assetTag:'NAT-HO-001',assetStatus:'InUse',condition:'Good',_e:'HO-001',_s:'Active'},
+    {srNo:51,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-002',assetStatus:'Available',condition:'Good',_e:'HO-002',_s:'Returned'},
+    {srNo:52,serviceName:'Laptop',category:'Laptop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-003',assetStatus:'InUse',condition:'Good',_e:'HO-003',_s:'Active'},
+    {srNo:53,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-004',assetStatus:'Available',condition:'Good',_e:'HO-004',_s:'Returned'},
+    {srNo:54,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-005',assetStatus:'InUse',condition:'Good',_e:'HO-005',_s:'Active'},
+    {srNo:55,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-006',assetStatus:'InUse',condition:'Good',_e:'HO-006',_s:'Active'},
+    {srNo:56,serviceName:'Laptop',category:'Laptop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-007',assetStatus:'Available',condition:'Good',_e:null,_s:null},
+    {srNo:57,serviceName:'Microsoft Surface Pro 11',category:'Laptop',vendor:'Microsoft',location:'BANGALORE-HO',assetTag:'NAT-HO-008',assetStatus:'Available',condition:'Good',_e:'HO-008',_s:'Returned'},
+    {srNo:58,serviceName:'MSI Laptop',category:'Laptop',vendor:'MSI',location:'BANGALORE-HO',assetTag:'NAT-HO-009',assetStatus:'InUse',condition:'Good',_e:'HO-009',_s:'Active'},
+    {srNo:59,serviceName:'MSI Laptop',category:'Laptop',vendor:'MSI',location:'BANGALORE-HO',assetTag:'NAT-HO-010',assetStatus:'Available',condition:'Good',_e:'HO-010',_s:'Returned'},
+    {srNo:60,serviceName:'Apple MacBook',category:'Laptop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-011',assetStatus:'Available',condition:'Good',_e:'HO-011',_s:'Returned'},
+    {srNo:61,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-012',assetStatus:'InUse',condition:'Good',_e:'HO-012',_s:'Active'},
+    {srNo:62,serviceName:'Apple MacBook',category:'Laptop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-013',assetStatus:'InUse',condition:'Good',invoiceRef:'GSI/2526/905',purchaseDate:new Date('2025-07-15'),_e:'HO-013',_s:'Active'},
+    {srNo:63,serviceName:'Apple MacBook Pro',category:'Laptop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-014',assetStatus:'InUse',condition:'Good',invoiceRef:'ITZ2501223',purchaseDate:new Date('2025-05-09'),_e:'HO-014',_s:'Active'},
+    {srNo:64,serviceName:'Apple MacBook',category:'Laptop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-015',assetStatus:'InUse',condition:'Good',_e:'HO-015',_s:'Active'},
+    {srNo:65,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-016',assetStatus:'InUse',condition:'Good',_e:'HO-016',_s:'Active'},
+    {srNo:66,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-017',assetStatus:'Available',condition:'Good',_e:'HO-017',_s:'Returned'},
+    {srNo:67,serviceName:'Desktop',category:'Desktop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-018',assetStatus:'InUse',condition:'Good',_e:'HO-018',_s:'Active'},
+    {srNo:68,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-019',assetStatus:'InUse',condition:'Good',_e:'HO-019',_s:'Active'},
+    {srNo:69,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-020',assetStatus:'InUse',condition:'Good',_e:'HO-020',_s:'Active'},
+    {srNo:70,serviceName:'Microsoft Surface Pro 11',category:'Laptop',vendor:'Microsoft',location:'BANGALORE-HO',assetTag:'NAT-HO-021',assetStatus:'InUse',condition:'Good',_e:'HO-021',_s:'Active'},
+    {srNo:71,serviceName:'Microsoft Surface Pro 11',category:'Laptop',vendor:'Microsoft',location:'BANGALORE-HO',assetTag:'NAT-HO-022',assetStatus:'InUse',condition:'Good',_e:'HO-022',_s:'Active'},
+    {srNo:72,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-023',assetStatus:'InUse',condition:'Good',_e:'HO-023',_s:'Active'},
+    {srNo:73,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-024',assetStatus:'InUse',condition:'Good',_e:'HO-024',_s:'Active'},
+    {srNo:74,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-025',assetStatus:'InUse',condition:'Good',_e:'HO-025',_s:'Active'},
+    {srNo:75,serviceName:'Desktop',category:'Desktop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-026',assetStatus:'InUse',condition:'Good',_e:'HO-026',_s:'Active'},
+    {srNo:76,serviceName:'Desktop',category:'Desktop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-027',assetStatus:'InUse',condition:'Good',invoiceRef:'GSI/2526/922',purchaseDate:new Date('2025-07-17'),_e:'HO-027',_s:'Active'},
+    {srNo:77,serviceName:'Desktop',category:'Desktop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-028',assetStatus:'InUse',condition:'Good',_e:'HO-028',_s:'Active'},
+    {srNo:78,serviceName:'Desktop',category:'Desktop',vendor:null,location:'BANGALORE-HO',assetTag:'NAT-HO-029',assetStatus:'InUse',condition:'Good',_e:'HO-029',_s:'Active'},
+    {srNo:79,serviceName:'Lenovo Desktop',category:'Desktop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-030',assetStatus:'InUse',condition:'Good',_e:'HO-030',_s:'Active'},
+    {srNo:80,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-031',assetStatus:'InUse',condition:'Good',_e:'HO-031',_s:'Active'},
+    {srNo:81,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-032',assetStatus:'InUse',condition:'Good',_e:'HO-032',_s:'Active'},
+    {srNo:82,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-033',assetStatus:'InUse',condition:'Good',_e:'HO-033',_s:'Active'},
+    {srNo:83,serviceName:'Apple MacBook',category:'Laptop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-034',assetStatus:'Available',condition:'Good',_e:'HO-034',_s:'Returned'},
+    {srNo:84,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-035',assetStatus:'Available',condition:'Good',_e:'HO-035',_s:'Returned'},
+    {srNo:85,serviceName:'Apple Mac Mini',category:'Desktop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-036',assetStatus:'InUse',condition:'Good',_e:'HO-036',_s:'Active'},
+    {srNo:86,serviceName:'Apple Mac Mini',category:'Desktop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-037',assetStatus:'InUse',condition:'Good',_e:'HO-037',_s:'Active'},
+    {srNo:87,serviceName:'Apple Mac Mini',category:'Desktop',vendor:'Apple',location:'BANGALORE-HO',assetTag:'NAT-HO-038',assetStatus:'InUse',condition:'Good',_e:'HO-038',_s:'Active'},
+    {srNo:88,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-039',assetStatus:'InUse',condition:'Good',_e:'HO-039',_s:'Active'},
+    {srNo:89,serviceName:'Lenovo Laptop',category:'Laptop',vendor:'Lenovo',location:'BANGALORE-HO',assetTag:'NAT-HO-040',assetStatus:'InUse',condition:'Good',_e:'HO-040',_s:'Active'},
+  ];
+
+  for (const a of assets) {
+    const {_e, _s, ...d} = a;
+    const entry = await prisma.entry.create({data:d});
+    if (_e && _s) {
+      await prisma.allocation.create({
+        data:{
+          assetId:entry.id,
+          employeeId:ids[_e],
+          allocatedAt:allocDate,
+          status:_s,
+          returnedAt:_s === 'Returned' ? returnDate : null
+        }
+      });
+    }
+  }
+  console.log('Seeded: 40 NGI HO employees + 40 assets + allocations');
+}
+
+seedHO()
+  .catch(e => { console.error('HO seed error:', e.message); })
+  .finally(() => prisma.\$disconnect());
+"
+
 echo "Starting API server..."
 exec node dist/index.js
