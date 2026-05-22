@@ -106,3 +106,58 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Task {
+  id              Int              @id @default(autoincrement())
+  taskName        String
+  projectName     String?
+  location        String?
+  department      String?
+  description     String?
+  assignedTo      String?
+  startDate       DateTime
+  endDate         DateTime
+  priority        String           @default("Medium")
+  status          String           @default("Planned")
+  dependencyIds   String?
+  estimatedHours  Float?
+  actualHours     Float?
+  notes           String?
+  completionPct   Int              @default(0)
+  milestone       Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  comments        TaskComment[]
+  attachments     TaskAttachment[]
+  activities      TaskActivity[]
+}
+
+model TaskComment {
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    String   @default("admin")
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model TaskAttachment {
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  filename  String
+  filesize  Int?
+  mimetype  String?
+  data      Bytes?
+  createdAt DateTime @default(now())
+}
+
+model TaskActivity {
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  createdBy String   @default("admin")
+  createdAt DateTime @default(now())
+}

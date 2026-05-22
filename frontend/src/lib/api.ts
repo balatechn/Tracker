@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog } from '@/types';
+import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog, Task, TaskComment, TaskAttachment, TaskStats } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -80,6 +80,25 @@ export const requestsApi = {
 export const auditApi = {
   list: (params?: { entityType?: string; limit?: number }) =>
     api.get<AuditLog[]>('/audit', { params }),
+};
+
+export const tasksApi = {
+  list: (params?: { status?: string; location?: string; priority?: string; assignedTo?: string; search?: string }) =>
+    api.get<Task[]>('/tasks', { params }),
+  get: (id: number) =>
+    api.get<Task>(`/tasks/${id}`),
+  stats: () =>
+    api.get<TaskStats>('/tasks/stats'),
+  create: (data: Partial<Task> & { startDate: string; endDate: string; taskName: string }) =>
+    api.post<Task>('/tasks', data),
+  update: (id: number, data: Partial<Task> & Record<string, unknown>) =>
+    api.patch<Task>(`/tasks/${id}`, data),
+  delete: (id: number) =>
+    api.delete(`/tasks/${id}`),
+  addComment: (taskId: number, data: { content: string; author?: string }) =>
+    api.post<TaskComment>(`/tasks/${taskId}/comments`, data),
+  addAttachment: (taskId: number, data: { filename: string; mimetype?: string; data: string }) =>
+    api.post<TaskAttachment>(`/tasks/${taskId}/attachments`, data),
 };
 
 export default api;

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo } from 'lucide-react';
 import { entriesApi, employeesApi, allocationsApi, requestsApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -16,10 +16,11 @@ import PeopleTab from './PeopleTab';
 import AllocationsTab from './AllocationsTab';
 import RequestsTab from './RequestsTab';
 import AuditTab from './AuditTab';
+import TaskMgtTab from './TaskMgtTab';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit';
+type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit' | 'tasks';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -250,6 +251,17 @@ export default function Dashboard() {
             <ScrollText size={14} />
             Audit Log
           </button>
+          <button
+            onClick={() => setActiveTab('tasks')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'tasks'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <ListTodo size={14} />
+            Task Mgt
+          </button>
           <div className="ml-auto text-xs text-gray-400 py-2.5">
             {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
           </div>
@@ -455,6 +467,12 @@ export default function Dashboard() {
         {activeTab === 'audit' && (
           <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
             <AuditTab />
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <TaskMgtTab />
           </div>
         )}
       </div>

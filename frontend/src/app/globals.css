@@ -31,3 +31,9 @@
     @apply bg-white rounded-lg shadow-card p-4;
   }
 }
+
+/* ─── Gantt chart overrides ─────────────────────────────── */
+._CZjuD { font-family: inherit !important; }
+._WuQ0f { height: auto !important; }
+.gantt-container { overflow-x: auto; }
+
