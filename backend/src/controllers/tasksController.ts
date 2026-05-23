@@ -12,11 +12,12 @@ const TASK_INCLUDE = {
 
 /* ── List / filter ── */
 export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
-  const { status, location, priority, assignedTo, search } = req.query;
+  const { status, location, priority, assignedTo, search, projectName } = req.query;
   const where: Record<string, unknown> = {};
-  if (status   && status   !== 'All') where.status   = status;
-  if (location && location !== 'All') where.location = location;
-  if (priority && priority !== 'All') where.priority = priority;
+  if (status      && status      !== 'All') where.status      = status;
+  if (location    && location    !== 'All') where.location    = location;
+  if (priority    && priority    !== 'All') where.priority    = priority;
+  if (projectName && projectName !== 'All') where.projectName = String(projectName);
   if (assignedTo) where.assignedTo = { contains: String(assignedTo), mode: 'insensitive' };
   if (search) where.taskName = { contains: String(search), mode: 'insensitive' };
 

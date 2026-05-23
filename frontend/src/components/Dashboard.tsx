@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo } from 'lucide-react';
-import { entriesApi, employeesApi, allocationsApi, requestsApi } from '@/lib/api';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown } from 'lucide-react';
+import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import StatCard from './StatCard';
@@ -17,10 +17,11 @@ import AllocationsTab from './AllocationsTab';
 import RequestsTab from './RequestsTab';
 import AuditTab from './AuditTab';
 import TaskMgtTab from './TaskMgtTab';
+import TaskDashboardTab from './TaskDashboardTab';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit' | 'tasks';
+type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const [changePwOpen, setChangePwOpen] = useState(false);
   const [allocateEntry, setAllocateEntry] = useState<Entry | null>(null);
   const [allocEmpId, setAllocEmpId] = useState('');
+  const [projectFilter, setProjectFilter] = useState('All');
 
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') || 'Admin' : 'Admin';
 
@@ -63,6 +65,16 @@ export default function Dashboard() {
     queryKey: ['req-count'],
     queryFn: () => requestsApi.list({ status: 'Pending' }).then((r) => r.data.length),
   });
+
+  const { data: allTasksForProjects = [] } = useQuery({
+    queryKey: ['tasks-projects'],
+    queryFn: () => tasksApi.list().then(r => r.data),
+    staleTime: 60_000,
+  });
+  const projectNames = useMemo(() => {
+    const names = Array.from(new Set(allTasksForProjects.map(t => t.projectName).filter(Boolean) as string[])).sort();
+    return names;
+  }, [allTasksForProjects]);
 
   const allocateMut = useMutation({
     mutationFn: (empId: number) =>
@@ -147,8 +159,9 @@ export default function Dashboard() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       {/* Header */}
       <header className="bg-brand-700 shadow-md flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-screen-2xl mx-auto px-4 h-12 flex items-center gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
             <div className="w-6 h-6 bg-white rounded flex items-center justify-center flex-shrink-0">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <rect x="1" y="1" width="6" height="6" fill="#0078d4" />
@@ -157,11 +170,33 @@ export default function Dashboard() {
                 <rect x="9" y="9" width="6" height="6" fill="#0078d4" opacity="0.4" />
               </svg>
             </div>
-            <div>
+            <div className="hidden sm:block">
               <span className="text-white font-semibold text-sm">National Group India</span>
-              <span className="text-brand-100 text-xs opacity-70 ml-2">IT Asset Tracker</span>
+              <span className="text-brand-200 text-xs opacity-70 ml-2">IT Asset Tracker</span>
             </div>
           </div>
+
+          {/* Global project filter */}
+          <div className="flex items-center gap-1.5 ml-4">
+            <FolderKanban size={13} className="text-brand-200" />
+            <span className="text-brand-200 text-xs hidden md:inline">Project:</span>
+            <div className="relative">
+              <select
+                value={projectFilter}
+                onChange={e => setProjectFilter(e.target.value)}
+                className="appearance-none bg-brand-600 hover:bg-brand-500 text-white text-xs rounded-md pl-2 pr-6 py-1 border border-brand-500 focus:outline-none cursor-pointer transition-colors"
+              >
+                <option value="All">All Projects</option>
+                {projectNames.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-brand-200 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* User actions */}
           <div className="flex items-center gap-2">
             <span className="text-brand-100 text-xs hidden sm:block">{username}</span>
             <button
@@ -183,86 +218,102 @@ export default function Dashboard() {
       </header>
 
       {/* Tab bar */}
-      <div className="bg-white border-b border-gray-200 flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-4 flex items-center">
+      <div className="bg-gray-100 border-b border-gray-200 flex-shrink-0">
+        <div className="max-w-screen-2xl mx-auto px-3 flex items-center gap-0.5 py-1">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'overview'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <LayoutDashboard size={14} />
+            <LayoutDashboard size={17} />
             Overview
           </button>
           <button
             onClick={() => setActiveTab('tracker')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'tracker'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <Table2 size={14} />
+            <Table2 size={17} />
             Tracker
           </button>
           <button
             onClick={() => setActiveTab('people')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'people'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <Users size={14} />
+            <Users size={17} />
             People
           </button>
           <button
             onClick={() => setActiveTab('allocations')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'allocations'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <ArrowLeftRight size={14} />
+            <ArrowLeftRight size={17} />
             Allocations
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'requests'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <ClipboardList size={14} />
+            <ClipboardList size={17} />
             Requests
           </button>
           <button
             onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'audit'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <ScrollText size={14} />
+            <ScrollText size={17} />
             Audit Log
+          </button>
+
+          {/* Task section separator */}
+          <div className="h-6 w-px bg-gray-300 mx-1" />
+
+          <button
+            onClick={() => setActiveTab('task-dashboard')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
+              activeTab === 'task-dashboard'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+            }`}
+          >
+            <FolderKanban size={17} />
+            Task Dashboard
           </button>
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
               activeTab === 'tasks'
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
             }`}
           >
-            <ListTodo size={14} />
+            <ListTodo size={17} />
             Task Mgt
           </button>
-          <div className="ml-auto text-xs text-gray-400 py-2.5">
+
+          <div className="ml-auto text-xs text-gray-400">
             {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
           </div>
         </div>
@@ -470,9 +521,15 @@ export default function Dashboard() {
           </div>
         )}
 
+        {activeTab === 'task-dashboard' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <TaskDashboardTab projectFilter={projectFilter} projectNames={projectNames} onProjectChange={setProjectFilter} />
+          </div>
+        )}
+
         {activeTab === 'tasks' && (
           <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
-            <TaskMgtTab />
+            <TaskMgtTab projectFilter={projectFilter} onProjectChange={setProjectFilter} projectNames={projectNames} />
           </div>
         )}
       </div>

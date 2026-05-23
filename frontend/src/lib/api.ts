@@ -83,7 +83,7 @@ export const auditApi = {
 };
 
 export const tasksApi = {
-  list: (params?: { status?: string; location?: string; priority?: string; assignedTo?: string; search?: string }) =>
+  list: (params?: { status?: string; location?: string; priority?: string; assignedTo?: string; search?: string; projectName?: string }) =>
     api.get<Task[]>('/tasks', { params }),
   get: (id: number) =>
     api.get<Task>(`/tasks/${id}`),

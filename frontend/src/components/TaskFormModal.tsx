@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Task } from '@/types';
-import { tasksApi } from '@/lib/api';
+import { tasksApi, employeesApi } from '@/lib/api';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Props {
   task: Task | null;
   allTasks: Task[];
+  defaultProject?: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -24,9 +26,14 @@ const empty = {
   completionPct: '0', milestone: false,
 };
 
-export default function TaskFormModal({ task, allTasks, onClose, onSaved }: Props) {
+export default function TaskFormModal({ task, allTasks, defaultProject, onClose, onSaved }: Props) {
   const [form, setForm]       = useState(empty);
   const [saving, setSaving]   = useState(false);
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => employeesApi.list({ status: 'Active' }).then(r => r.data),
+  });
 
   useEffect(() => {
     if (task) {
@@ -49,9 +56,9 @@ export default function TaskFormModal({ task, allTasks, onClose, onSaved }: Prop
         milestone:      task.milestone,
       });
     } else {
-      setForm(empty);
+      setForm({ ...empty, projectName: defaultProject || '' });
     }
-  }, [task]);
+  }, [task, defaultProject]);
 
   const set = (k: string, v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
 
@@ -142,7 +149,12 @@ export default function TaskFormModal({ task, allTasks, onClose, onSaved }: Prop
             </div>
             <div>
               <label className="label">Assigned To</label>
-              <input className="input" value={form.assignedTo} onChange={e => set('assignedTo', e.target.value)} placeholder="Name or team" />
+              <select className="input" value={form.assignedTo} onChange={e => set('assignedTo', e.target.value)}>
+                <option value="">— Unassigned —</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.name}>{emp.name} ({emp.empId})</option>
+                ))}
+              </select>
             </div>
           </div>
 

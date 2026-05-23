@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { tasksApi } from '@/lib/api';
 import { Task } from '@/types';
-import { BarChart2, Columns, List, Plus, RefreshCw, LayoutDashboard } from 'lucide-react';
+import { BarChart2, Columns, List, Plus, RefreshCw, FolderKanban } from 'lucide-react';
 import TaskGanttView from './TaskGanttView';
 import TaskKanbanView from './TaskKanbanView';
 import TaskListView from './TaskListView';
@@ -16,7 +16,13 @@ type SubView = 'gantt' | 'kanban' | 'list';
 const LOCATIONS = ['All Locations', 'Mangaluru', 'Shivamogga', 'Hassan', 'Chikkamagaluru'];
 const STATUSES  = ['All', 'Planned', 'In Progress', 'Completed', 'Delayed', 'On Hold', 'Waiting Approval'];
 
-export default function TaskMgtTab() {
+interface Props {
+  projectFilter?: string;
+  projectNames?: string[];
+  onProjectChange?: (p: string) => void;
+}
+
+export default function TaskMgtTab({ projectFilter = 'All', projectNames = [], onProjectChange }: Props) {
   const qc = useQueryClient();
   const [view, setView]           = useState<SubView>('gantt');
   const [locationF, setLocationF] = useState('All Locations');
@@ -26,10 +32,11 @@ export default function TaskMgtTab() {
   const [detailTask, setDetailTask] = useState<Task | null>(null);
 
   const { data: tasks = [], isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['tasks', locationF, statusF],
+    queryKey: ['tasks', locationF, statusF, projectFilter],
     queryFn: () => tasksApi.list({
-      location: locationF !== 'All Locations' ? locationF : undefined,
-      status:   statusF   !== 'All'           ? statusF   : undefined,
+      location:    locationF    !== 'All Locations' ? locationF    : undefined,
+      status:      statusF      !== 'All'           ? statusF      : undefined,
+      projectName: projectFilter !== 'All'          ? projectFilter : undefined,
     }).then(r => r.data),
   });
 
@@ -137,7 +144,16 @@ export default function TaskMgtTab() {
             })}
           </div>
 
-          <div className="ml-auto flex gap-2">
+          <div className="ml-auto flex gap-2 items-center">
+            {projectFilter !== 'All' && (
+              <div className="flex items-center gap-1 bg-brand-50 border border-brand-200 rounded-full px-2.5 py-1">
+                <FolderKanban size={11} className="text-brand-500" />
+                <span className="text-xs font-medium text-brand-700 max-w-[120px] truncate">{projectFilter}</span>
+                {onProjectChange && (
+                  <button onClick={() => onProjectChange('All')} className="ml-0.5 text-brand-400 hover:text-brand-700 text-xs leading-none">&times;</button>
+                )}
+              </div>
+            )}
             <button
               onClick={() => refetch()}
               className="btn-secondary text-xs py-1.5 flex items-center gap-1"
@@ -214,6 +230,7 @@ export default function TaskMgtTab() {
         <TaskFormModal
           task={editTask}
           allTasks={tasks}
+          defaultProject={projectFilter !== 'All' ? projectFilter : undefined}
           onClose={closeForm}
           onSaved={onSaved}
         />
