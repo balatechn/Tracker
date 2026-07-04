@@ -12,9 +12,9 @@ import { Subscription, SubscriptionFormData } from '@/types';
 import * as XLSX from 'xlsx';
 import dayjs from 'dayjs';
 
-const TYPES = ['All', 'Domain', 'SAAS', 'AMC'];
-const CRITICALITIES = ['All', 'High', 'Medium', 'Low'];
-const TYPE_OPTS = ['Domain', 'SAAS', 'AMC'];
+const TYPES = ['All', 'Domain', 'SAAS', 'AMC', 'Software', 'License', 'Microsoft 365', 'Antivirus', 'Cloud', 'Email Service', 'Security', 'ERP/CRM', 'Other'];
+const CRITICALITIES = ['All', 'Critical', 'High', 'Medium', 'Low'];
+const TYPE_OPTS = ['Domain', 'SAAS', 'AMC', 'Software', 'License', 'Microsoft 365', 'Antivirus', 'Cloud', 'Email Service', 'Security', 'ERP/CRM', 'Other'];
 const PAYMENT_METHODS = ['Online', 'Cheque', 'NEFT', 'IMPS', 'Credit Card', 'Other'];
 
 const EMPTY: SubscriptionFormData = {
@@ -53,8 +53,22 @@ function CritBadge({ v }: { v: string | null }) {
   return <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c}`}>{v || '—'}</span>;
 }
 
+const TYPE_COLORS: Record<string, string> = {
+  'Domain':        'bg-blue-100 text-blue-700',
+  'SAAS':          'bg-purple-100 text-purple-700',
+  'AMC':           'bg-teal-100 text-teal-700',
+  'Software':      'bg-indigo-100 text-indigo-700',
+  'License':       'bg-violet-100 text-violet-700',
+  'Microsoft 365': 'bg-sky-100 text-sky-700',
+  'Antivirus':     'bg-green-100 text-green-700',
+  'Cloud':         'bg-cyan-100 text-cyan-700',
+  'Email Service': 'bg-orange-100 text-orange-700',
+  'Security':      'bg-red-100 text-red-700',
+  'ERP/CRM':       'bg-pink-100 text-pink-700',
+};
+
 function TypeBadge({ v }: { v: string }) {
-  const c = v === 'Domain' ? 'bg-blue-100 text-blue-700' : v === 'SAAS' ? 'bg-purple-100 text-purple-700' : 'bg-teal-100 text-teal-700';
+  const c = TYPE_COLORS[v] ?? 'bg-gray-100 text-gray-600';
   return <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${c}`}>{v}</span>;
 }
 

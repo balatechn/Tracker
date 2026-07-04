@@ -245,7 +245,7 @@ export default function Dashboard() {
             }`}
           >
             <Table2 size={17} />
-            Tracker
+            Hardware Assets
           </button>
           <button
             onClick={() => setActiveTab('subscriptions')}
@@ -256,7 +256,7 @@ export default function Dashboard() {
             }`}
           >
             <Globe size={17} />
-            Subscriptions
+            Software & Subscriptions
           </button>
           <button
             onClick={() => setActiveTab('people')}
@@ -481,7 +481,7 @@ export default function Dashboard() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {['All', 'Domain', 'SaaS', 'Microsoft365', 'Antivirus', 'AMC', 'Laptop', 'Desktop', 'Phone', 'Printer', 'Server', 'Network Equipment', 'Other'].map((c) => (
+                {['All', 'Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'].map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>
