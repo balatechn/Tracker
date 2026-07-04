@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog, Task, TaskComment, TaskAttachment, TaskStats } from '@/types';
+import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog, Task, TaskComment, TaskAttachment, TaskStats, Subscription, SubscriptionFormData } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -99,6 +99,15 @@ export const tasksApi = {
     api.post<TaskComment>(`/tasks/${taskId}/comments`, data),
   addAttachment: (taskId: number, data: { filename: string; mimetype?: string; data: string }) =>
     api.post<TaskAttachment>(`/tasks/${taskId}/attachments`, data),
+};
+
+export const subscriptionsApi = {
+  list: (params?: { search?: string; type?: string; criticality?: string }) =>
+    api.get<Subscription[]>('/subscriptions', { params }),
+  create: (data: SubscriptionFormData) => api.post<Subscription>('/subscriptions', data),
+  update: (id: number, data: SubscriptionFormData) => api.put<Subscription>(`/subscriptions/${id}`, data),
+  delete: (id: number) => api.delete(`/subscriptions/${id}`),
+  export: () => api.get<Subscription[]>('/subscriptions/export'),
 };
 
 export default api;

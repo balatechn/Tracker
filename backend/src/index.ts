@@ -10,6 +10,7 @@ import allocationsRoutes from './routes/allocations';
 import requestsRoutes from './routes/requests';
 import auditRoutes from './routes/audit';
 import tasksRoutes from './routes/tasks';
+import subscriptionsRoutes from './routes/subscriptions';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -53,6 +54,7 @@ app.use('/allocations', allocationsRoutes);
 app.use('/requests', requestsRoutes);
 app.use('/audit', auditRoutes);
 app.use('/tasks', tasksRoutes);
+app.use('/subscriptions', subscriptionsRoutes);
 
 // 404 handler
 app.use((_req, res) => {

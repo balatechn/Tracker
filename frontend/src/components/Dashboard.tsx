@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe } from 'lucide-react';
 import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -18,10 +18,11 @@ import RequestsTab from './RequestsTab';
 import AuditTab from './AuditTab';
 import TaskMgtTab from './TaskMgtTab';
 import TaskDashboardTab from './TaskDashboardTab';
+import SubscriptionsTab from './SubscriptionsTab';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks';
+type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -241,6 +242,17 @@ export default function Dashboard() {
           >
             <Table2 size={17} />
             Tracker
+          </button>
+          <button
+            onClick={() => setActiveTab('subscriptions')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
+              activeTab === 'subscriptions'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+            }`}
+          >
+            <Globe size={17} />
+            Subscriptions
           </button>
           <button
             onClick={() => setActiveTab('people')}
@@ -490,6 +502,13 @@ export default function Dashboard() {
                 onAllocate={(e) => { setAllocateEntry(e); setAllocEmpId(''); }}
               />
             </div>
+          </div>
+        )}
+
+        {/* ── Subscriptions tab ── */}
+        {activeTab === 'subscriptions' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <SubscriptionsTab />
           </div>
         )}
 

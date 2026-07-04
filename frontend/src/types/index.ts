@@ -173,6 +173,32 @@ export interface Task {
   updatedAt: string;
 }
 
+export interface Subscription {
+  id: number;
+  srNo: number | null;
+  name: string;
+  type: string;
+  billingCompany: string | null;
+  registrar: string | null;
+  expiryDate: string | null;
+  autoRenewal: boolean;
+  owner: string | null;
+  criticality: string | null;
+  lastRenewalDate: string | null;
+  renewalPeriod: number | null;
+  annualCost: number | null;
+  paymentMethod: string | null;
+  invoiceRef: string | null;
+  financeEmail: string | null;
+  adminEmail: string | null;
+  vendorEmail: string | null;
+  remarks: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SubscriptionFormData = Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>;
+
 export interface TaskStats {
   total: number;
   byStatus: Record<string, number>;

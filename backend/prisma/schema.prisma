@@ -152,6 +152,30 @@ model TaskAttachment {
   createdAt DateTime @default(now())
 }
 
+model Subscription {
+  id              Int       @id @default(autoincrement())
+  srNo            Int?
+  name            String
+  type            String    @default("SAAS")
+  billingCompany  String?
+  registrar       String?
+  expiryDate      DateTime?
+  autoRenewal     Boolean   @default(false)
+  owner           String?
+  criticality     String?   @default("High")
+  lastRenewalDate DateTime?
+  renewalPeriod   Int?
+  annualCost      Float?
+  paymentMethod   String?
+  invoiceRef      String?
+  financeEmail    String?
+  adminEmail      String?
+  vendorEmail     String?
+  remarks         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
 model TaskActivity {
   id        Int      @id @default(autoincrement())
   taskId    Int
