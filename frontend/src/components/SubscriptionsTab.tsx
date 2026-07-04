@@ -135,16 +135,22 @@ export default function SubscriptionsTab() {
 
   const sorted = useMemo(() => {
     return [...subs].sort((a, b) => {
-      let av: unknown, bv: unknown;
+      let av: string | number, bv: string | number;
       if (sortKey === 'expiryDate') {
         av = getDays(a.expiryDate) ?? 999999;
         bv = getDays(b.expiryDate) ?? 999999;
       } else if (sortKey === 'criticality') {
         av = CRIT_ORDER[a.criticality ?? ''] ?? 3;
         bv = CRIT_ORDER[b.criticality ?? ''] ?? 3;
+      } else if (sortKey === 'annualCost') {
+        av = a.annualCost ?? 0;
+        bv = b.annualCost ?? 0;
+      } else if (sortKey === 'srNo') {
+        av = a.srNo ?? 999999;
+        bv = b.srNo ?? 999999;
       } else {
-        av = a[sortKey] ?? '';
-        bv = b[sortKey] ?? '';
+        av = (a[sortKey] as string | null) ?? '';
+        bv = (b[sortKey] as string | null) ?? '';
       }
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
       if (av > bv) return sortDir === 'asc' ? 1 : -1;
