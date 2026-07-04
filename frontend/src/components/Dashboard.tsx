@@ -43,7 +43,9 @@ export default function Dashboard() {
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') || 'viewer' : 'viewer';
   const isAdmin = userRole === 'admin';
 
-  const { data: entries = [], isLoading, isFetching } = useQuery({
+  const HARDWARE_CATEGORIES = ['Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'];
+
+  const { data: allEntries = [], isLoading, isFetching } = useQuery({
     queryKey: ['entries', search, category, criticality],
     queryFn: () =>
       entriesApi
@@ -54,6 +56,11 @@ export default function Dashboard() {
         })
         .then((r) => r.data),
   });
+
+  const entries = useMemo(
+    () => allEntries.filter((e) => !e.category || HARDWARE_CATEGORIES.includes(e.category)),
+    [allEntries]
+  );
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
