@@ -67,8 +67,17 @@ services:
       - coolify
     labels:
       - "traefik.enable=true"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.ngi-tracker-http.rule=Host(`itasset.nationalgroupindia.com`)"
+      - "traefik.http.routers.ngi-tracker-http.entrypoints=http"
+      - "traefik.http.routers.ngi-tracker-http.middlewares=ngi-redirect-https"
+      - "traefik.http.middlewares.ngi-redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.ngi-redirect-https.redirectscheme.permanent=true"
+      # HTTPS with Let's Encrypt
       - "traefik.http.routers.ngi-tracker.rule=Host(`itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-tracker.entrypoints=http"
+      - "traefik.http.routers.ngi-tracker.entrypoints=https"
+      - "traefik.http.routers.ngi-tracker.tls=true"
+      - "traefik.http.routers.ngi-tracker.tls.certresolver=letsencrypt"
       - "traefik.http.routers.ngi-tracker.service=ngi-tracker"
       - "traefik.http.routers.ngi-tracker.priority=999"
       - "traefik.http.services.ngi-tracker.loadbalancer.server.port=3000"
