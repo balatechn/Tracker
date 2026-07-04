@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe, Shield } from 'lucide-react';
-import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi } from '@/lib/api';
+import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi, subscriptionsApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import StatCard from './StatCard';
@@ -104,25 +104,53 @@ export default function Dashboard() {
 
   const CHART_COLORS = ['#0078d4', '#00b050', '#ff8c00', '#d13438', '#8764b8', '#038387', '#ca5010', '#7a7574'];
 
+  // Hardware charts
   const categoryData = useMemo(() => {
     const counts: Record<string, number> = {};
     entries.forEach(e => { const cat = e.category || 'Other'; counts[cat] = (counts[cat] || 0) + 1; });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [entries]);
 
-  const statusData = [
-    { name: 'Active',    count: stats.active,       color: '#00b050' },
-    { name: 'Expiring',  count: stats.expiringSoon,  color: '#ff8c00' },
-    { name: 'Expired',   count: stats.expired,       color: '#d13438' },
-    { name: 'No Expiry', count: stats.noExpiry,      color: '#9ca3af' },
+  const hwStatusData = [
+    { name: 'In Use',    count: entries.filter(e => e.assetStatus === 'InUse').length,    color: '#0078d4' },
+    { name: 'Available', count: entries.filter(e => e.assetStatus === 'Available').length, color: '#00b050' },
+    { name: 'In Repair', count: entries.filter(e => e.assetStatus === 'InRepair').length,  color: '#ff8c00' },
+    { name: 'Retired',   count: entries.filter(e => e.assetStatus === 'Retired').length,   color: '#9ca3af' },
   ];
 
-  const expiringItems = useMemo(() =>
-    entries
-      .filter(e => { const d = getDaysRemaining(e.expiryDate); return d !== null && d <= 90; })
-      .sort((a, b) => (getDaysRemaining(a.expiryDate) ?? 999) - (getDaysRemaining(b.expiryDate) ?? 999))
-      .slice(0, 15),
-    [entries]
+  // Subscription data for overview
+  const { data: overviewSubs = [] } = useQuery({
+    queryKey: ['overview-subs'],
+    queryFn: () => subscriptionsApi.list({}).then(r => r.data),
+    staleTime: 60_000,
+  });
+
+  const now = new Date();
+  const subStats = useMemo(() => {
+    const expiring30 = overviewSubs.filter(s => { if (!s.expiryDate) return false; const d = Math.ceil((new Date(s.expiryDate).getTime() - now.getTime()) / 86400000); return d >= 0 && d <= 30; });
+    const expiring90 = overviewSubs.filter(s => { if (!s.expiryDate) return false; const d = Math.ceil((new Date(s.expiryDate).getTime() - now.getTime()) / 86400000); return d > 30 && d <= 90; });
+    const expired    = overviewSubs.filter(s => s.expiryDate && new Date(s.expiryDate) < now);
+    const totalCost  = overviewSubs.reduce((sum, s) => sum + (s.annualCost ?? 0), 0);
+    return { total: overviewSubs.length, expiring30, expiring90, expired, totalCost };
+  }, [overviewSubs]);
+
+  const subsByType = useMemo(() => {
+    const counts: Record<string, { count: number; cost: number }> = {};
+    overviewSubs.forEach(s => {
+      const t = s.type || 'Other';
+      if (!counts[t]) counts[t] = { count: 0, cost: 0 };
+      counts[t].count++;
+      counts[t].cost += s.annualCost ?? 0;
+    });
+    return Object.entries(counts).map(([name, v]) => ({ name, count: v.count, cost: v.cost })).sort((a, b) => b.cost - a.cost);
+  }, [overviewSubs]);
+
+  const upcomingRenewals = useMemo(() =>
+    overviewSubs
+      .filter(s => { if (!s.expiryDate) return false; const d = Math.ceil((new Date(s.expiryDate).getTime() - now.getTime()) / 86400000); return d >= 0 && d <= 90; })
+      .sort((a, b) => new Date(a.expiryDate!).getTime() - new Date(b.expiryDate!).getTime())
+      .slice(0, 8),
+    [overviewSubs]
   );
 
   function handleLogout() {
@@ -364,111 +392,175 @@ export default function Dashboard() {
 
         {/* ── Overview tab ── */}
         {activeTab === 'overview' && (
-          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-3 flex flex-col gap-3 overflow-hidden">
+          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-3 overflow-y-auto space-y-5">
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-6 gap-3 flex-shrink-0">
-              <StatCard label="Total Assets"   value={stats.total}                             color="blue"   icon={<Package size={14} />} />
-              <StatCard label="Active"         value={stats.active}                            color="green"  icon={<CheckCircle2 size={14} />} />
-              <StatCard label="Expiring Soon"  value={stats.expiringSoon} subtitle="≤ 60 days" color="orange" icon={<Clock size={14} />} />
-              <StatCard label="Expired"        value={stats.expired}                           color="red"    icon={<AlertTriangle size={14} />} />
-              <StatCard label="No Expiry Set"  value={stats.noExpiry}                          color="gray"   icon={<MinusCircle size={14} />} />
-              <StatCard label="Annual Cost"    value={formatCurrency(stats.totalAnnualCost)}   color="purple" icon={<IndianRupee size={14} />} />
+            {/* ── SECTION 1: Hardware Assets ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Monitor size={14} className="text-brand-600" />
+                <h2 className="text-xs font-bold text-brand-700 uppercase tracking-widest">Hardware Assets</h2>
+                <div className="flex-1 h-px bg-brand-100" />
+              </div>
+
+              {/* Hardware KPI row */}
+              <div className="grid grid-cols-6 gap-3 mb-3">
+                <StatCard label="Total Hardware"      value={entries.length}                                               color="blue"   icon={<Package size={14} />} />
+                <StatCard label="In Use"              value={entries.filter(e => e.assetStatus === 'InUse').length}        color="green"  icon={<Monitor size={14} />} />
+                <StatCard label="Available"           value={entries.filter(e => e.assetStatus === 'Available').length}    color="gray"   icon={<CheckCircle2 size={14} />} />
+                <StatCard label="Active Allocations"  value={activeAllocCount}                                             color="purple" icon={<ArrowLeftRight size={14} />} />
+                <StatCard label="Pending Requests"    value={pendingReqCount}                                              color="orange" icon={<ClipboardList size={14} />} />
+                <StatCard label="Total Employees"     value={employees.length}                                             color="blue"   icon={<Users size={14} />} />
+              </div>
+
+              {/* Hardware Charts */}
+              <div className="grid grid-cols-2 gap-3" style={{ height: 220 }}>
+                {/* Pie: By Category */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Asset by Category</p>
+                  <div className="flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={categoryData} cx="50%" cy="45%" innerRadius="30%" outerRadius="58%" paddingAngle={3} dataKey="value" labelLine={false}>
+                          {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(v) => { const n = Number(v); return [`${n} asset${n !== 1 ? 's' : ''}`, '']; }} />
+                        <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 10 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Bar: Allocation Status */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Allocation Status</p>
+                  <div className="flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={hwStatusData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip cursor={{ fill: '#f9fafb' }} />
+                        <Bar dataKey="count" name="Assets" radius={[4, 4, 0, 0]} maxBarSize={52}>
+                          {hwStatusData.map((item, i) => <Cell key={i} fill={item.color} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Hardware KPI row */}
-            <div className="grid grid-cols-4 gap-3 flex-shrink-0">
-              <StatCard label="Total Employees" value={employees.length || 0} color="blue" icon={<Users size={14} />} />
-              <StatCard label="Active Allocations" value={activeAllocCount} color="green" icon={<ArrowLeftRight size={14} />} />
-              <StatCard label="Pending Requests" value={pendingReqCount} color="orange" icon={<ClipboardList size={14} />} />
-              <StatCard label="Hardware In Use" value={entries.filter(e => e.assetStatus === 'InUse').length} color="gray" icon={<Monitor size={14} />} />
-            </div>
-
-            {/* Alert bar */}
-            {(stats.expired > 0 || stats.expiringSoon > 0) && (
-              <div className="flex gap-2 flex-shrink-0">
-                {stats.expired > 0 && (
-                  <div className="flex-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <AlertTriangle size={13} className="text-red-500 flex-shrink-0" />
-                    <p className="text-xs text-red-800"><strong>{stats.expired}</strong> item{stats.expired > 1 ? 's' : ''} expired — immediate action required</p>
-                  </div>
-                )}
-                {stats.expiringSoon > 0 && (
-                  <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <Clock size={13} className="text-orange-400 animate-pulse flex-shrink-0" />
-                    <p className="text-xs text-orange-800"><strong>{stats.expiringSoon}</strong> item{stats.expiringSoon > 1 ? 's' : ''} expiring within 60 days — review and renew soon</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Charts + Expiry list — fill remaining height */}
-            <div className="flex-1 min-h-0 grid grid-cols-3 gap-3">
-
-              {/* Pie: Category Distribution */}
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex-shrink-0">Asset by Category</p>
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={categoryData} cx="50%" cy="45%" innerRadius="35%" outerRadius="62%" paddingAngle={3} dataKey="value" labelLine={false}>
-                        {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(v) => { const n = Number(v); return [`${n} asset${n !== 1 ? 's' : ''}`, '']; }} />
-                      <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 10 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+            {/* ── SECTION 2: Software & Subscriptions ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Globe size={14} className="text-purple-600" />
+                <h2 className="text-xs font-bold text-purple-700 uppercase tracking-widest">Software &amp; Subscriptions</h2>
+                <div className="flex-1 h-px bg-purple-100" />
               </div>
 
-              {/* Bar: Status Breakdown */}
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex-shrink-0">Status Breakdown</p>
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statusData} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip cursor={{ fill: '#f9fafb' }} />
-                      <Bar dataKey="count" name="Assets" radius={[4, 4, 0, 0]} maxBarSize={56}>
-                        {statusData.map((item, i) => <Cell key={i} fill={item.color} />)}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+              {/* Subscription KPI row */}
+              <div className="grid grid-cols-5 gap-3 mb-3">
+                <StatCard label="Total Subscriptions" value={subStats.total}                                        color="blue"   icon={<Package size={14} />} />
+                <StatCard label="Expiring ≤ 30d"      value={subStats.expiring30.length}                           color="red"    icon={<AlertTriangle size={14} />} />
+                <StatCard label="Expiring ≤ 90d"      value={subStats.expiring90.length}                           color="orange" icon={<Clock size={14} />} />
+                <StatCard label="Expired"             value={subStats.expired.length}                              color="red"    icon={<MinusCircle size={14} />} />
+                <StatCard label="Total Annual Cost"   value={formatCurrency(subStats.totalCost)}                   color="purple" icon={<IndianRupee size={14} />} />
               </div>
 
-              {/* Expiring Soon list */}
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0 overflow-hidden">
-                <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Renewals ≤ 90 Days</p>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${expiringItems.length > 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
-                    {expiringItems.length} item{expiringItems.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="flex-1 overflow-y-auto min-h-0 space-y-1">
-                  {expiringItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-                      <CheckCircle2 size={24} className="text-green-400" />
-                      <p className="text-xs">All assets up to date</p>
+              {/* Alert bar */}
+              {(subStats.expiring30.length > 0 || subStats.expired.length > 0) && (
+                <div className="flex gap-2 mb-3">
+                  {subStats.expired.length > 0 && (
+                    <div className="flex-1 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                      <AlertTriangle size={12} className="text-red-500 flex-shrink-0" />
+                      <p className="text-xs text-red-800"><strong>{subStats.expired.length}</strong> subscription{subStats.expired.length > 1 ? 's' : ''} expired — immediate action required</p>
                     </div>
-                  ) : expiringItems.map(item => {
-                    const days = getDaysRemaining(item.expiryDate);
-                    const s = getStatusInfo(days);
-                    return (
-                      <div key={item.id} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition-colors gap-2 group cursor-default">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-gray-800 truncate group-hover:text-brand-600">{item.serviceName}</p>
-                          <p className="text-xs text-gray-400 truncate">{item.vendor ?? item.category ?? '—'}</p>
-                        </div>
-                        <span className={`flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.color}`}>{s.label}</span>
+                  )}
+                  {subStats.expiring30.length > 0 && (
+                    <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                      <Clock size={12} className="text-orange-400 animate-pulse flex-shrink-0" />
+                      <p className="text-xs text-orange-800"><strong>{subStats.expiring30.length}</strong> subscription{subStats.expiring30.length > 1 ? 's' : ''} expiring within 30 days</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Subscription Charts + Renewals */}
+              <div className="grid grid-cols-3 gap-3" style={{ height: 240 }}>
+
+                {/* Bar: Cost by Type */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Annual Cost by Type</p>
+                  <div className="flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={subsByType} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => v >= 100000 ? `₹${(v/100000).toFixed(1)}L` : `₹${(v/1000).toFixed(0)}K`} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} width={70} />
+                        <Tooltip formatter={(v) => [`₹${Number(v).toLocaleString('en-IN')}`, 'Annual Cost']} />
+                        <Bar dataKey="cost" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                          {subsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Pie: Count by Type */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Subscriptions by Type</p>
+                  <div className="flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={subsByType} dataKey="count" cx="50%" cy="45%" innerRadius="30%" outerRadius="58%" paddingAngle={3} labelLine={false}>
+                          {subsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(v, _, p) => [`${v} (${p.payload.name})`, '']} />
+                        <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 9 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Upcoming Renewals list + cost summary */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between mb-1.5 flex-shrink-0">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Upcoming Renewals ≤ 90d</p>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${upcomingRenewals.length > 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                      {upcomingRenewals.length} items
+                    </span>
+                  </div>
+                  {/* Cost summary */}
+                  {upcomingRenewals.length > 0 && (
+                    <div className="flex-shrink-0 mb-1.5 bg-purple-50 rounded px-2 py-1 flex justify-between items-center">
+                      <span className="text-xs text-purple-700 font-medium">Total renewal cost</span>
+                      <span className="text-xs font-bold text-purple-900">{formatCurrency(upcomingRenewals.reduce((s, r) => s + (r.annualCost ?? 0), 0))}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 overflow-y-auto min-h-0 space-y-0.5">
+                    {upcomingRenewals.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-1">
+                        <CheckCircle2 size={22} className="text-green-400" />
+                        <p className="text-xs">All subscriptions up to date</p>
                       </div>
-                    );
-                  })}
+                    ) : upcomingRenewals.map(s => {
+                      const days = Math.ceil((new Date(s.expiryDate!).getTime() - now.getTime()) / 86400000);
+                      const badgeCls = days <= 7 ? 'bg-red-100 text-red-700' : days <= 30 ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700';
+                      return (
+                        <div key={s.id} className="flex items-center justify-between px-2 py-1 rounded hover:bg-gray-50 gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-800 truncate">{s.name}</p>
+                            <p className="text-xs text-gray-400">{s.type} · {s.annualCost ? formatCurrency(s.annualCost) : '—'}</p>
+                          </div>
+                          <span className={`flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full ${badgeCls}`}>{days}d</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
         )}
 
