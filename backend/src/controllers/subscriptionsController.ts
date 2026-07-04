@@ -50,7 +50,7 @@ export async function createSubscription(req: AuthRequest, res: Response): Promi
       entityType: 'Subscription',
       entityId: sub.id,
       entityName: sub.name,
-      userId: req.userId || 'admin',
+      userId: req.userId != null ? String(req.userId) : 'admin',
       details: `Created ${sub.type} subscription: ${sub.name}`,
     },
   });
@@ -74,7 +74,7 @@ export async function updateSubscription(req: AuthRequest, res: Response): Promi
       entityType: 'Subscription',
       entityId: sub.id,
       entityName: sub.name,
-      userId: req.userId || 'admin',
+      userId: req.userId != null ? String(req.userId) : 'admin',
       details: `Updated ${sub.type} subscription: ${sub.name}`,
     },
   });
@@ -97,7 +97,7 @@ export async function deleteSubscription(req: AuthRequest, res: Response): Promi
       entityType: 'Subscription',
       entityId: id,
       entityName: exists.name,
-      userId: req.userId || 'admin',
+      userId: req.userId != null ? String(req.userId) : 'admin',
       details: `Deleted ${exists.type} subscription: ${exists.name}`,
     },
   });
