@@ -146,3 +146,102 @@ export async function deleteEmployee(req: AuthRequest, res: Response): Promise<v
 
   res.json({ message: 'Deleted successfully' });
 }
+
+export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): Promise<void> {
+  const tenantId = process.env.AZURE_TENANT_ID;
+  const clientId = process.env.AZURE_CLIENT_ID;
+  const clientSecret = process.env.AZURE_CLIENT_SECRET;
+
+  if (!tenantId || !clientId || !clientSecret) {
+    res.status(503).json({ error: 'Azure credentials not configured' });
+    return;
+  }
+
+  // Get access token
+  const tokenRes = await fetch(
+    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: clientId,
+        client_secret: clientSecret,
+        scope: 'https://graph.microsoft.com/.default',
+      }),
+    }
+  );
+
+  if (!tokenRes.ok) {
+    res.status(502).json({ error: 'Failed to get Microsoft access token' });
+    return;
+  }
+
+  const { access_token } = await tokenRes.json() as { access_token: string };
+
+  // Fetch all users from Graph API (paginate)
+  let added = 0, updated = 0, skipped = 0;
+  let nextUrl: string | null =
+    'https://graph.microsoft.com/v1.0/users?$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation&$top=999';
+
+  while (nextUrl) {
+    const usersRes = await fetch(nextUrl, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    if (!usersRes.ok) {
+      res.status(502).json({ error: 'Failed to fetch users from Microsoft Graph' });
+      return;
+    }
+
+    const data = await usersRes.json() as {
+      value: Array<{
+        id: string; displayName: string; mail?: string;
+        userPrincipalName?: string; jobTitle?: string;
+        department?: string; mobilePhone?: string; officeLocation?: string;
+      }>;
+      '@odata.nextLink'?: string;
+    };
+
+    for (const u of data.value) {
+      const email = (u.mail ?? u.userPrincipalName ?? '').toLowerCase();
+      if (!email || !u.displayName) { skipped++; continue; }
+
+      // Skip service accounts / external guests
+      if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
+
+      const existing = await prisma.employee.findUnique({ where: { email } });
+
+      if (existing) {
+        await prisma.employee.update({
+          where: { email },
+          data: {
+            name: u.displayName,
+            department: u.department || existing.department || 'General',
+            designation: u.jobTitle || existing.designation,
+            phone: u.mobilePhone || existing.phone,
+          },
+        });
+        updated++;
+      } else {
+        const empId = await nextEmpId();
+        await prisma.employee.create({
+          data: {
+            empId,
+            name: u.displayName,
+            email,
+            department: u.department || 'General',
+            designation: u.jobTitle || null,
+            phone: u.mobilePhone || null,
+            status: 'Active',
+          },
+        });
+        added++;
+      }
+    }
+
+    nextUrl = data['@odata.nextLink'] ?? null;
+  }
+
+  res.json({ added, updated, skipped, total: added + updated + skipped });
+}

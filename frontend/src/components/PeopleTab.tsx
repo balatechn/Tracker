@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeesApi, allocationsApi } from '@/lib/api';
 import { Employee } from '@/types';
 import toast from 'react-hot-toast';
-import { Users, Plus, Pencil, Trash2, X, UserCheck, UserX, Clock, Briefcase, ChevronDown, ChevronRight, RotateCcw } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, X, UserCheck, UserX, Clock, Briefcase, ChevronDown, ChevronRight, RotateCcw, RefreshCw } from 'lucide-react';
 
 const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 'Management', 'Admin'];
 const STATUSES = ['Active', 'Resigned', 'On Leave', 'Probation'];
@@ -40,6 +40,36 @@ export default function PeopleTab() {
   const [selected, setSelected] = useState<Employee | null>(null);
   const [form, setForm]       = useState<EmpForm>(EMPTY_FORM);
   const [expandedEmpId, setExpandedEmpId] = useState<number | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ added: number; updated: number; skipped: number } | null>(null);
+
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
+  const isAdmin = userRole === 'admin';
+
+  async function handleMicrosoftSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/employees/sync-microsoft', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error || 'Sync failed');
+        return;
+      }
+      const result = await res.json();
+      setSyncResult(result);
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      toast.success(`Sync complete: ${result.added} added, ${result.updated} updated`);
+    } catch {
+      toast.error('Sync failed — check Azure credentials');
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const returnMut = useMutation({
     mutationFn: (id: number) => allocationsApi.return(id),
@@ -125,9 +155,27 @@ export default function PeopleTab() {
           <option value="All">All Statuses</option>
           {STATUSES.map(s => <option key={s}>{s}</option>)}
         </select>
-        <button className="btn-primary flex items-center gap-1.5 text-sm ml-auto" onClick={openAdd}>
-          <Plus className="w-4 h-4" /> Add Employee
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {syncResult && (
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              Last sync: <span className="text-green-600 font-semibold">{syncResult.added} added</span>, {syncResult.updated} updated, {syncResult.skipped} skipped
+            </span>
+          )}
+          {isAdmin && (
+            <button
+              className="btn-secondary flex items-center gap-1.5 text-sm"
+              onClick={handleMicrosoftSync}
+              disabled={syncing}
+              title="Sync employees from Microsoft Azure AD"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing…' : 'Sync Microsoft'}
+            </button>
+          )}
+          <button className="btn-primary flex items-center gap-1.5 text-sm" onClick={openAdd}>
+            <Plus className="w-4 h-4" /> Add Employee
+          </button>
+        </div>
       </div>
 
       {/* Table */}
