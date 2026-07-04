@@ -29,10 +29,27 @@ api.interceptors.response.use(
 
 export const authApi = {
   login: (username: string, password: string) =>
-    api.post<{ token: string; username: string }>('/auth/login', { username, password }),
+    api.post<{ token: string; username: string; role: string }>('/auth/login', { username, password }),
+  microsoftLogin: (idToken: string) =>
+    api.post<{ token: string; username: string; role: string } | { status: 'pending'; message: string }>('/auth/microsoft', { idToken }),
   changePassword: (currentPassword: string, newPassword: string) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),
+  listUsers: () => api.get<AppUser[]>('/auth/users'),
+  updateUser: (id: number, data: { role?: string; status?: string }) =>
+    api.patch<AppUser>(`/auth/users/${id}`, data),
+  deleteUser: (id: number) => api.delete(`/auth/users/${id}`),
 };
+
+export interface AppUser {
+  id: number;
+  username: string;
+  email: string | null;
+  displayName: string | null;
+  authProvider: string;
+  role: string;
+  status: string;
+  createdAt: string;
+}
 
 export const entriesApi = {
   list: (params?: { search?: string; category?: string; criticality?: string }) =>

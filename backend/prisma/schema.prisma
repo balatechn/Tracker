@@ -101,10 +101,17 @@ model AuditLog {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  password     String?
+  email        String?  @unique
+  displayName  String?
+  msOid        String?  @unique
+  authProvider String   @default("local")
+  role         String   @default("viewer")
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
 }
 
 model Task {

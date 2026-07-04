@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe, Shield } from 'lucide-react';
 import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -19,10 +19,11 @@ import AuditTab from './AuditTab';
 import TaskMgtTab from './TaskMgtTab';
 import TaskDashboardTab from './TaskDashboardTab';
 import SubscriptionsTab from './SubscriptionsTab';
+import UsersTab from './UsersTab';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks';
+type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'users';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [projectFilter, setProjectFilter] = useState('All');
 
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') || 'Admin' : 'Admin';
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') || 'viewer' : 'viewer';
+  const isAdmin = userRole === 'admin';
 
   const { data: entries = [], isLoading, isFetching } = useQuery({
     queryKey: ['entries', search, category, criticality],
@@ -118,6 +121,7 @@ export default function Dashboard() {
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    localStorage.removeItem('role');
     router.replace('/');
   }
 
@@ -324,6 +328,23 @@ export default function Dashboard() {
             <ListTodo size={17} />
             Task Mgt
           </button>
+
+          {isAdmin && (
+            <>
+              <div className="h-6 w-px bg-gray-300 mx-1" />
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
+                  activeTab === 'users'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                }`}
+              >
+                <Shield size={17} />
+                Users
+              </button>
+            </>
+          )}
 
           <div className="ml-auto text-xs text-gray-400">
             {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -549,6 +570,12 @@ export default function Dashboard() {
         {activeTab === 'tasks' && (
           <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
             <TaskMgtTab projectFilter={projectFilter} onProjectChange={setProjectFilter} projectNames={projectNames} />
+          </div>
+        )}
+
+        {activeTab === 'users' && isAdmin && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <UsersTab />
           </div>
         )}
       </div>

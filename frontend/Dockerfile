@@ -6,7 +6,11 @@ RUN npm ci --include=dev
 FROM node:20-alpine AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_APP_NAME="NGI Tracker"
+ARG NEXT_PUBLIC_AZURE_CLIENT_ID=""
+ARG NEXT_PUBLIC_AZURE_TENANT_ID=""
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_AZURE_CLIENT_ID=$NEXT_PUBLIC_AZURE_CLIENT_ID
+ENV NEXT_PUBLIC_AZURE_TENANT_ID=$NEXT_PUBLIC_AZURE_TENANT_ID
 # Set at build time so Next.js rewrites bake in the correct backend URL
 ENV BACKEND_URL=http://backend:4000
 COPY --from=deps /app/node_modules ./node_modules
