@@ -12,6 +12,7 @@ import auditRoutes from './routes/audit';
 import tasksRoutes from './routes/tasks';
 import subscriptionsRoutes from './routes/subscriptions';
 import notifyRoutes from './routes/notify';
+import './services/scheduler';
 
 const app = express();
 const PORT = process.env.PORT || 4000;

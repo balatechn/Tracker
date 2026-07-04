@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
+import { alertNewPendingUser } from '../services/scheduler';
 
 const prisma = new PrismaClient();
 
@@ -93,6 +94,11 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
           status: existingCount === 0 ? 'active' : 'pending',
         },
       });
+
+      // Fire-and-forget immediate alert to admin for new pending users
+      if (user.status === 'pending') {
+        alertNewPendingUser({ displayName: user.displayName, email: user.email, createdAt: user.createdAt });
+      }
     }
 
     if (user.status === 'pending') {
