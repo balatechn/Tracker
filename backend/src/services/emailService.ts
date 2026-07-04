@@ -99,6 +99,7 @@ function baseLayout(title: string, body: string): string {
 </head><body><div class="card">
 <div class="header"><h1>🏢 National Group India — IT Asset Tracker</h1><p>${title}</p></div>
 <div class="body">${body}</div>
+<div style="padding:16px 24px; border-top:1px solid #eee; font-size:12px; color:#444;">Regards,<br><strong>Bala</strong></div>
 <div class="footer">This is an automated alert from the IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>
 </div></body></html>`;
 }
