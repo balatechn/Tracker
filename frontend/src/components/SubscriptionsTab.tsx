@@ -223,7 +223,7 @@ export default function SubscriptionsTab() {
   function Th({ k, children }: { k: SortKey; children: React.ReactNode }) {
     return (
       <th
-        className="px-3 py-2 text-left text-xs font-semibold cursor-pointer select-none hover:bg-brand-500 transition-colors whitespace-nowrap"
+        className="px-2 py-0.5 text-left text-xs font-semibold cursor-pointer select-none hover:bg-brand-500 transition-colors whitespace-nowrap"
         onClick={() => handleSort(k)}
       >
         <span className="flex items-center gap-1">
@@ -305,25 +305,25 @@ export default function SubscriptionsTab() {
             <button onClick={openAdd} className="text-xs text-brand-600 hover:underline">Add your first subscription</button>
           </div>
         ) : (
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-xs">
             <thead className="bg-brand-600 text-white sticky top-0 z-10">
               <tr>
                 <Th k="srNo">#</Th>
                 <Th k="name">Name / Domain</Th>
                 <Th k="type">Type</Th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Registrar</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Billing Co.</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Registrar</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Billing Co.</th>
                 <Th k="expiryDate">Expiry</Th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Auto-Renew</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Auto-Renew</th>
                 <Th k="owner">Owner</Th>
                 <Th k="criticality">Criticality</Th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Last Renewal</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Period</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Last Renewal</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Period</th>
                 <Th k="annualCost">Annual Cost</Th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Payment</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Invoice Ref</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Remarks</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">Actions</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Payment</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Invoice Ref</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Remarks</th>
+                <th className="px-2 py-1 text-left text-xs font-semibold whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -336,31 +336,31 @@ export default function SubscriptionsTab() {
                   : i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
                 return (
                   <tr key={s.id} className={`${rowBg} hover:bg-blue-50 transition-colors`}>
-                    <td className="px-3 py-2 text-gray-500 text-xs">{s.srNo ?? ''}</td>
-                    <td className="px-3 py-2 font-medium text-gray-900 max-w-[180px] truncate" title={s.name}>{s.name}</td>
-                    <td className="px-3 py-2"><TypeBadge v={s.type} /></td>
-                    <td className="px-3 py-2 text-gray-600 text-xs">{s.registrar || '—'}</td>
-                    <td className="px-3 py-2 text-gray-600 text-xs">{s.billingCompany || '—'}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-0.5 text-gray-500 text-xs">{s.srNo ?? ''}</td>
+                    <td className="px-2 py-0.5 font-medium text-gray-900 max-w-[180px] truncate" title={s.name}>{s.name}</td>
+                    <td className="px-2 py-0.5"><TypeBadge v={s.type} /></td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs">{s.registrar || '—'}</td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs">{s.billingCompany || '—'}</td>
+                    <td className="px-2 py-0.5">
                       <div className="flex flex-col gap-0.5">
                         <ExpiryBadge date={s.expiryDate} />
                         {s.expiryDate && <span className="text-[10px] text-gray-400">{fmtDate(s.expiryDate)}</span>}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-xs">
+                    <td className="px-2 py-0.5 text-xs">
                       <span className={`px-1.5 py-0.5 rounded ${s.autoRenewal ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                         {s.autoRenewal ? 'Yes' : 'No'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-gray-700 text-xs">{s.owner || '—'}</td>
-                    <td className="px-3 py-2"><CritBadge v={s.criticality} /></td>
-                    <td className="px-3 py-2 text-gray-600 text-xs whitespace-nowrap">{fmtDate(s.lastRenewalDate)}</td>
-                    <td className="px-3 py-2 text-gray-600 text-xs">{s.renewalPeriod ? `${s.renewalPeriod}yr` : '—'}</td>
-                    <td className="px-3 py-2 text-gray-700 text-xs font-medium whitespace-nowrap">{fmtCost(s.annualCost)}</td>
-                    <td className="px-3 py-2 text-gray-600 text-xs">{s.paymentMethod || '—'}</td>
-                    <td className="px-3 py-2 text-gray-600 text-xs">{s.invoiceRef || '—'}</td>
-                    <td className="px-3 py-2 text-gray-500 text-xs max-w-[140px] truncate" title={s.remarks || ''}>{s.remarks || '—'}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-0.5 text-gray-700 text-xs">{s.owner || '—'}</td>
+                    <td className="px-2 py-0.5"><CritBadge v={s.criticality} /></td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs whitespace-nowrap">{fmtDate(s.lastRenewalDate)}</td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs">{s.renewalPeriod ? `${s.renewalPeriod}yr` : '—'}</td>
+                    <td className="px-2 py-0.5 text-gray-700 text-xs font-medium whitespace-nowrap">{fmtCost(s.annualCost)}</td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs">{s.paymentMethod || '—'}</td>
+                    <td className="px-2 py-0.5 text-gray-600 text-xs">{s.invoiceRef || '—'}</td>
+                    <td className="px-2 py-0.5 text-gray-500 text-xs max-w-[140px] truncate" title={s.remarks || ''}>{s.remarks || '—'}</td>
+                    <td className="px-2 py-0.5">
                       <div className="flex items-center gap-1">
                         <button onClick={() => openEdit(s)} title="Edit" className="p-1 rounded hover:bg-blue-100 text-blue-600 transition-colors">
                           <Pencil size={13} />
