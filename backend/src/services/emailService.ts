@@ -225,6 +225,125 @@ export function buildPendingUsersEmail(items: { displayName: string | null; emai
   return baseLayout('New User Approval Required', body);
 }
 
+export function buildAutoRenewalOffEmail(items: SubItem[]): string {
+  const rows = items.map(s => `<tr>
+    <td>${s.name}</td>
+    <td><span class="badge blue">${s.type}</span></td>
+    <td>${critBadge(s.criticality)}</td>
+    <td>${formatDate(s.expiryDate)}</td>
+    <td>${s.expiryDate ? daysBadge(Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / 86400000)) : '—'}</td>
+    <td>${s.owner ?? '—'}</td>
+    <td>${formatCurrency(s.annualCost)}</td>
+  </tr>`).join('');
+
+  const body = `
+    <p>⚠️ <strong>${items.length} subscription${items.length > 1 ? 's' : ''} expiring within 30 days with Auto-Renewal turned OFF.</strong> Manual action required.</p>
+    <table>
+      <tr><th>Name</th><th>Type</th><th>Criticality</th><th>Expiry</th><th>Days Left</th><th>Owner</th><th>Annual Cost</th></tr>
+      ${rows}
+    </table>
+    <a href="${BASE_URL}/dashboard" class="btn">Renew Now →</a>`;
+
+  return baseLayout('Action Required — Auto-Renewal OFF, Expiring Soon', body);
+}
+
+export function buildHighCriticalityEmail(items: SubItem[]): string {
+  const rows = items.map(s => `<tr>
+    <td>${s.name}</td>
+    <td><span class="badge blue">${s.type}</span></td>
+    <td>${critBadge(s.criticality)}</td>
+    <td>${formatDate(s.expiryDate)}</td>
+    <td>${s.expiryDate ? daysBadge(Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / 86400000)) : '—'}</td>
+    <td>${s.owner ?? '—'}</td>
+    <td>${formatCurrency(s.annualCost)}</td>
+    <td>${s.autoRenewal ? '✅ Yes' : '❌ No'}</td>
+  </tr>`).join('');
+
+  const body = `
+    <p>🔴 <strong>${items.length} High/Critical subscription${items.length > 1 ? 's' : ''} expiring within 60 days.</strong> Early renewal recommended.</p>
+    <table>
+      <tr><th>Name</th><th>Type</th><th>Criticality</th><th>Expiry</th><th>Days Left</th><th>Owner</th><th>Annual Cost</th><th>Auto-Renew</th></tr>
+      ${rows}
+    </table>
+    <a href="${BASE_URL}/dashboard" class="btn">Review Subscriptions →</a>`;
+
+  return baseLayout('High Criticality Subscriptions Expiring in 60 Days', body);
+}
+
+export function buildDomainExpiryEmail(items: SubItem[]): string {
+  const rows = items.map(s => `<tr>
+    <td>${s.name}</td>
+    <td>${critBadge(s.criticality)}</td>
+    <td>${formatDate(s.expiryDate)}</td>
+    <td>${s.expiryDate ? daysBadge(Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / 86400000)) : '—'}</td>
+    <td>${s.owner ?? '—'}</td>
+    <td>${s.autoRenewal ? '✅ Yes' : '❌ No'}</td>
+  </tr>`).join('');
+
+  const body = `
+    <p>🌐 <strong>${items.length} domain${items.length > 1 ? 's' : ''} expiring within 30 days.</strong> Domain expiry can cause major service disruption — act immediately.</p>
+    <table>
+      <tr><th>Domain</th><th>Criticality</th><th>Expiry</th><th>Days Left</th><th>Owner</th><th>Auto-Renew</th></tr>
+      ${rows}
+    </table>
+    <a href="${BASE_URL}/dashboard" class="btn">Renew Domains →</a>`;
+
+  return baseLayout('⚠️ Domain Expiry Alert — Action Required', body);
+}
+
+export function buildWeeklyRenewalEmail(items: SubItem[], weekEnd: string): string {
+  const totalCost = items.reduce((s, i) => s + (i.annualCost ?? 0), 0);
+  const rows = items.map(s => `<tr>
+    <td>${s.name}</td>
+    <td><span class="badge blue">${s.type}</span></td>
+    <td>${critBadge(s.criticality)}</td>
+    <td>${formatDate(s.expiryDate)}</td>
+    <td>${s.expiryDate ? daysBadge(Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / 86400000)) : '—'}</td>
+    <td>${formatCurrency(s.annualCost)}</td>
+    <td>${s.paymentMethod ?? '—'}</td>
+    <td>${s.autoRenewal ? '✅' : '❌'}</td>
+  </tr>`).join('');
+
+  const body = `
+    <p>📅 Subscriptions due for renewal <strong>this week (by ${weekEnd})</strong>. Total renewal cost: <strong>${formatCurrency(totalCost)}</strong></p>
+    <table>
+      <tr><th>Name</th><th>Type</th><th>Criticality</th><th>Expiry</th><th>Days Left</th><th>Annual Cost</th><th>Payment</th><th>Auto-Renew</th></tr>
+      ${rows}
+    </table>
+    <a href="${BASE_URL}/dashboard" class="btn">View in IT Tracker →</a>`;
+
+  return baseLayout(`Weekly Renewal Checklist — Due by ${weekEnd}`, body);
+}
+
+export function buildMonthlyCostSummaryEmail(
+  byType: Record<string, { count: number; total: number }>,
+  grandTotal: number,
+  month: string
+): string {
+  const rows = Object.entries(byType)
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([type, data]) => `<tr>
+      <td><span class="badge blue">${type}</span></td>
+      <td style="text-align:center">${data.count}</td>
+      <td style="text-align:right"><strong>${formatCurrency(data.total)}</strong></td>
+    </tr>`).join('');
+
+  const body = `
+    <p>📊 Monthly IT subscription cost summary for <strong>${month}</strong>.</p>
+    <table>
+      <tr><th>Category</th><th style="text-align:center">Count</th><th style="text-align:right">Annual Cost</th></tr>
+      ${rows}
+      <tr class="total-row">
+        <td><strong>Total</strong></td>
+        <td style="text-align:center"><strong>${Object.values(byType).reduce((s, v) => s + v.count, 0)}</strong></td>
+        <td style="text-align:right"><strong>${formatCurrency(grandTotal)}</strong></td>
+      </tr>
+    </table>
+    <a href="${BASE_URL}/dashboard" class="btn">View Subscriptions →</a>`;
+
+  return baseLayout(`Monthly IT Cost Summary — ${month}`, body);
+}
+
 type AccrualItem = {
   srNo: number | null; name: string; type: string;
   expiryDate: Date | null; annualCost: number | null;

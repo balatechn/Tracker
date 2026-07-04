@@ -4,6 +4,8 @@ import {
   sendMail,
   buildExpiryEmail, buildExpiredEmail, buildOverdueTasksEmail,
   buildUnallocatedEmail, buildPendingUsersEmail, buildAccrualsEmail,
+  buildAutoRenewalOffEmail, buildHighCriticalityEmail, buildDomainExpiryEmail,
+  buildWeeklyRenewalEmail, buildMonthlyCostSummaryEmail,
 } from './emailService';
 
 const prisma = new PrismaClient();
@@ -90,6 +92,53 @@ cron.schedule('30 3 * * *', async () => {
       console.log(`[scheduler] Sent pending users alert (${pendingUsers.length} users)`);
     }
 
+    // Auto-renewal OFF + expiring ≤30 days
+    const in30 = new Date(); in30.setDate(in30.getDate() + 30); in30.setHours(23, 59, 59, 999);
+    const noAutoRenewal = await prisma.subscription.findMany({
+      where: { autoRenewal: false, expiryDate: { gte: new Date(), lte: in30 } },
+      orderBy: { expiryDate: 'asc' },
+    });
+    if (noAutoRenewal.length > 0) {
+      await sendMail({
+        to: [ADMIN],
+        subject: `⚠️ [IT Tracker] ${noAutoRenewal.length} Subscription${noAutoRenewal.length > 1 ? 's' : ''} Expiring — Auto-Renewal OFF`,
+        html: buildAutoRenewalOffEmail(noAutoRenewal),
+      });
+      console.log(`[scheduler] Sent auto-renewal-off alert (${noAutoRenewal.length} items)`);
+    }
+
+    // High/Critical criticality expiring ≤60 days
+    const in60 = new Date(); in60.setDate(in60.getDate() + 60); in60.setHours(23, 59, 59, 999);
+    const highCrit = await prisma.subscription.findMany({
+      where: {
+        criticality: { in: ['High', 'Critical'] },
+        expiryDate: { gte: new Date(), lte: in60 },
+      },
+      orderBy: [{ criticality: 'asc' }, { expiryDate: 'asc' }],
+    });
+    if (highCrit.length > 0) {
+      await sendMail({
+        to: [ADMIN],
+        subject: `🔴 [IT Tracker] ${highCrit.length} High/Critical Subscription${highCrit.length > 1 ? 's' : ''} Expiring in 60 Days`,
+        html: buildHighCriticalityEmail(highCrit),
+      });
+      console.log(`[scheduler] Sent high-criticality alert (${highCrit.length} items)`);
+    }
+
+    // Domain-only expiry ≤30 days
+    const domains = await prisma.subscription.findMany({
+      where: { type: 'Domain', expiryDate: { gte: new Date(), lte: in30 } },
+      orderBy: { expiryDate: 'asc' },
+    });
+    if (domains.length > 0) {
+      await sendMail({
+        to: [ADMIN],
+        subject: `🌐 [IT Tracker] ${domains.length} Domain${domains.length > 1 ? 's' : ''} Expiring in 30 Days`,
+        html: buildDomainExpiryEmail(domains),
+      });
+      console.log(`[scheduler] Sent domain expiry alert (${domains.length} domains)`);
+    }
+
   } catch (err) {
     console.error('[scheduler] Daily alerts error:', err);
   }
@@ -119,6 +168,65 @@ cron.schedule('0 9 * * 1', async () => {
     }
   } catch (err) {
     console.error('[scheduler] Unallocated assets error:', err);
+  }
+}, { timezone: 'Asia/Kolkata' });
+
+// ── Every Monday 9am IST — renewal due this week (Finance + Admin) ──────────
+cron.schedule('0 9 * * 1', async () => {
+  console.log('[scheduler] Running weekly renewal checklist...');
+  try {
+    const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 6); weekEnd.setHours(23, 59, 59, 999);
+    const weekEndStr = weekEnd.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const renewals = await prisma.subscription.findMany({
+      where: { expiryDate: { gte: new Date(), lte: weekEnd } },
+      orderBy: { expiryDate: 'asc' },
+    });
+
+    if (renewals.length > 0) {
+      await sendMail({
+        to: FINANCE,
+        cc: [ADMIN],
+        subject: `📅 [IT Tracker] ${renewals.length} Subscription${renewals.length > 1 ? 's' : ''} Due This Week`,
+        html: buildWeeklyRenewalEmail(renewals, weekEndStr),
+      });
+      console.log(`[scheduler] Sent weekly renewal checklist (${renewals.length} items)`);
+    }
+  } catch (err) {
+    console.error('[scheduler] Weekly renewal checklist error:', err);
+  }
+}, { timezone: 'Asia/Kolkata' });
+
+// ── 1st of month 9am IST — monthly cost summary (Finance + Admin) ───────────
+cron.schedule('0 9 1 * *', async () => {
+  console.log('[scheduler] Running monthly cost summary...');
+  try {
+    const month = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
+
+    const allSubs = await prisma.subscription.findMany({
+      where: { annualCost: { gt: 0 } },
+    });
+
+    if (allSubs.length === 0) return;
+
+    const byType: Record<string, { count: number; total: number }> = {};
+    for (const s of allSubs) {
+      const t = s.type || 'Other';
+      if (!byType[t]) byType[t] = { count: 0, total: 0 };
+      byType[t].count++;
+      byType[t].total += s.annualCost ?? 0;
+    }
+    const grandTotal = allSubs.reduce((sum, s) => sum + (s.annualCost ?? 0), 0);
+
+    await sendMail({
+      to: FINANCE,
+      cc: [ADMIN],
+      subject: `📊 [IT Tracker] Monthly IT Subscription Cost Summary — ${month}`,
+      html: buildMonthlyCostSummaryEmail(byType, grandTotal, month),
+    });
+    console.log(`[scheduler] Sent monthly cost summary (${allSubs.length} items, ₹${grandTotal.toLocaleString()})`);
+  } catch (err) {
+    console.error('[scheduler] Monthly cost summary error:', err);
   }
 }, { timezone: 'Asia/Kolkata' });
 
