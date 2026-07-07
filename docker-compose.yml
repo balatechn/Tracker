@@ -69,8 +69,12 @@ services:
     networks:
       - tracker-network
       - coolify
-    # Traefik routing managed by Coolify via docker_compose_domains setting
-    # Do NOT add manual Traefik labels here — they conflict with Coolify's injection
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.ngi-tracker.rule=Host(`itasset.nationalgroupindia.com`)"
+      - "traefik.http.routers.ngi-tracker.entrypoints=http"
+      - "traefik.http.services.ngi-tracker.loadbalancer.server.port=3000"
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
