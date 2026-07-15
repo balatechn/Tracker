@@ -20,6 +20,7 @@ import TaskMgtTab from './TaskMgtTab';
 import TaskDashboardTab from './TaskDashboardTab';
 import SubscriptionsTab from './SubscriptionsTab';
 import UsersTab from './UsersTab';
+import ReportModal from './ReportModal';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [category, setCategory] = useState('All');
   const [criticality, setCriticality] = useState('All');
   const [addOpen, setAddOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<Entry | null>(null);
   const [changePwOpen, setChangePwOpen] = useState(false);
   const [allocateEntry, setAllocateEntry] = useState<Entry | null>(null);
@@ -602,9 +604,9 @@ export default function Dashboard() {
                   <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
                   <span className="hidden sm:inline">Refresh</span>
                 </button>
-                <button className="btn-secondary py-1.5 px-3 text-xs" onClick={handleExport}>
+                <button className="btn-secondary py-1.5 px-3 text-xs" onClick={() => setReportOpen(true)}>
                   <Download size={13} />
-                  <span className="hidden sm:inline">Export</span>
+                  <span className="hidden sm:inline">Report</span>
                 </button>
                 <button className="btn-primary py-1.5 px-3 text-xs" onClick={() => setAddOpen(true)}>
                   <Plus size={13} />
@@ -687,6 +689,8 @@ export default function Dashboard() {
       )}
 
       {changePwOpen && <ChangePasswordModal onClose={() => setChangePwOpen(false)} />}
+
+      {reportOpen && <ReportModal entries={entries} onClose={() => setReportOpen(false)} />}
 
       {/* Quick Allocate Modal */}
       {allocateEntry && (

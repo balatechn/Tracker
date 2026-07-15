@@ -35,7 +35,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   function sortedEntries() {
     return [...entries].sort((a, b) => {
       let aVal: any, bVal: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
       if (sortKey === 'daysRemaining') {
         aVal = getDaysRemaining(a.expiryDate) ?? 99999;
         bVal = getDaysRemaining(b.expiryDate) ?? 99999;
@@ -52,7 +51,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
         aVal = (a[sortKey as keyof Entry] ?? '') as string;
         bVal = (b[sortKey as keyof Entry] ?? '') as string;
       }
-
       if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
       return 0;
@@ -72,20 +70,28 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   }
 
   function SortIcon({ k }: { k: SortKey }) {
-    if (sortKey !== k) return <ChevronsUpDown size={12} className="opacity-30" />;
-    return sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
+    if (sortKey !== k) return <ChevronsUpDown size={11} className="opacity-30" />;
+    return sortDir === 'asc' ? <ChevronUp size={11} /> : <ChevronDown size={11} />;
   }
 
-  function Th({ children, k, className = '' }: { children: React.ReactNode; k: SortKey; className?: string }) {
+  function Th({ children, k }: { children: React.ReactNode; k: SortKey }) {
     return (
       <th
-        className={`px-2 py-0.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap cursor-pointer select-none hover:bg-brand-600 transition-colors ${className}`}
+        className="px-2 py-1 text-left text-[11px] font-semibold whitespace-nowrap cursor-pointer select-none border border-[#bfbfbf] bg-[#d9d9d9] hover:bg-[#c8c8c8] transition-colors text-gray-800"
         onClick={() => handleSort(k)}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {children}
           <SortIcon k={k} />
         </div>
+      </th>
+    );
+  }
+
+  function ThPlain({ children }: { children: React.ReactNode }) {
+    return (
+      <th className="px-2 py-1 text-left text-[11px] font-semibold whitespace-nowrap border border-[#bfbfbf] bg-[#d9d9d9] text-gray-800">
+        {children}
       </th>
     );
   }
@@ -111,13 +117,13 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   return (
     <>
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="w-full text-xs border-collapse">
-          <thead className="bg-brand-500 sticky top-0 z-10">
+        <table className="w-full text-[11px] border-collapse">
+          <thead className="sticky top-0 z-10">
             <tr>
-              <Th k="srNo" className="pl-4 w-12">#</Th>
-              <th className="px-2 py-0.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Allocated To</th>
+              <Th k="srNo">#</Th>
+              <ThPlain>Allocated To</ThPlain>
               <Th k="billingCompany">Company</Th>
-              <th className="px-2 py-0.5 text-center text-xs font-semibold text-white uppercase tracking-wide w-20">Actions</th>
+              <ThPlain>Actions</ThPlain>
               <Th k="serviceName">Service / Domain</Th>
               <Th k="category">Category</Th>
               <Th k="vendor">Vendor</Th>
@@ -130,111 +136,76 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
               <Th k="paymentMethod">Payment</Th>
               <Th k="invoiceRef">Invoice Ref</Th>
               <Th k="remarks">Remarks</Th>
-              <th className="px-2 py-0.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Asset Tag</th>
-              <th className="px-2 py-0.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Status</th>
+              <ThPlain>Asset Tag</ThPlain>
+              <ThPlain>Status</ThPlain>
             </tr>
           </thead>
           <tbody>
             {sortedEntries().map((entry, idx) => {
               const days = getDaysRemaining(entry.expiryDate);
               const status = getStatusInfo(days);
+              const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]';
               return (
-                <tr
-                  key={entry.id}
-                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${
-                    entry.assetTag && !entry.allocations?.[0]
-                      ? 'bg-amber-50'
-                      : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  }`}
-                >
-                  <td className="px-2 py-0.5 pl-3 text-gray-400">{entry.srNo ?? idx + 1}</td>
-                  <td className="px-2 py-0.5 whitespace-nowrap text-gray-700">
-                    {entry.allocations?.[0]?.employee.name ?? '—'}
-                  </td>
-                  <td className="px-2 py-0.5 whitespace-nowrap text-gray-600">
-                    {entry.billingCompany ?? '—'}
-                  </td>
-                  <td className="px-2 py-0.5">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => onEdit(entry)}
-                        className="p-1.5 text-gray-400 hover:text-brand-500 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil size={13} />
+                <tr key={entry.id} className={`${rowBg} hover:bg-[#e8f0fe] transition-colors`}>
+                  <td className="px-2 py-[2px] border border-gray-200 text-gray-500 text-right w-8">{entry.srNo ?? idx + 1}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">{entry.allocations?.[0]?.employee.name ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.billingCompany ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200">
+                    <div className="flex items-center justify-center gap-0.5">
+                      <button onClick={() => onEdit(entry)} className="p-1 text-gray-400 hover:text-brand-500 rounded transition-colors" title="Edit">
+                        <Pencil size={12} />
                       </button>
-                      <button
-                        onClick={() => setDeleteTarget(entry)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={13} />
+                      <button onClick={() => setDeleteTarget(entry)} className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors" title="Delete">
+                        <Trash2 size={12} />
                       </button>
                       {onAllocate && entry.assetTag && entry.assetStatus !== 'InUse' && (
-                        <button
-                          onClick={() => onAllocate(entry)}
-                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                          title="Allocate Asset"
-                        >
-                          <UserPlus size={13} />
+                        <button onClick={() => onAllocate(entry)} className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors" title="Allocate">
+                          <UserPlus size={12} />
                         </button>
                       )}
                     </div>
                   </td>
-                  <td className="px-2 py-0.5 font-medium text-gray-800 whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
+                  <td className="px-2 py-[2px] border border-gray-200 font-medium whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
                     {entry.serviceName}
                   </td>
-                  <td className="px-2 py-0.5">
-                    {entry.category && (
-                      <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                        {entry.category}
-                      </span>
-                    )}
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
+                    {entry.category ? (
+                      <span className="bg-blue-100 text-blue-700 px-1.5 py-0 rounded-sm text-[10px]">{entry.category}</span>
+                    ) : '—'}
                   </td>
-                  <td className="px-2 py-0.5 text-gray-600 whitespace-nowrap">{entry.vendor ?? '—'}</td>
-                  <td className="px-2 py-0.5 whitespace-nowrap text-gray-600">{formatDate(entry.expiryDate)}</td>
-                  <td className="px-2 py-0.5">
-                    <span className={`inline-flex items-center gap-1 font-medium px-1.5 py-0.5 rounded-full ${status.bg} ${status.color} whitespace-nowrap`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.vendor ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(entry.expiryDate)}</td>
+                  <td className="px-2 py-[2px] border border-gray-200">
+                    <span className={`font-medium ${status.color} whitespace-nowrap`}>
                       {status.label}
                     </span>
                   </td>
-                  <td className="px-2 py-0.5 text-center">
-                    <span className={`px-1.5 py-0.5 rounded-full font-medium ${entry.autoRenewal ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <td className="px-2 py-[2px] border border-gray-200 text-center">
+                    <span className={entry.autoRenewal ? 'text-green-700 font-medium' : 'text-gray-400'}>
                       {entry.autoRenewal ? 'Yes' : 'No'}
                     </span>
                   </td>
-                  <td className="px-2 py-0.5 text-gray-600 whitespace-nowrap">{entry.owner ?? '—'}</td>
-                  <td className="px-2 py-0.5">
-                    {entry.criticality && (
-                      <span className={`px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap ${
-                        entry.criticality === 'High' ? 'bg-red-100 text-red-700' :
-                        entry.criticality === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        {entry.criticality}
-                      </span>
-                    )}
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.owner ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
+                    <span className={
+                      entry.criticality === 'High' ? 'text-red-600 font-semibold' :
+                      entry.criticality === 'Medium' ? 'text-yellow-600 font-medium' :
+                      entry.criticality === 'Low' ? 'text-gray-500' : 'text-gray-400'
+                    }>{entry.criticality ?? '—'}</span>
                   </td>
-                  <td className="px-2 py-0.5 text-right whitespace-nowrap text-gray-700 font-medium">
-                    {formatCurrency(entry.annualCost)}
-                  </td>
-                  <td className="px-2 py-0.5 text-gray-500 whitespace-nowrap">{entry.paymentMethod ?? '—'}</td>
-                  <td className="px-2 py-0.5 text-gray-500 whitespace-nowrap">{entry.invoiceRef ?? '—'}</td>
-                  <td className="px-2 py-0.5 text-gray-500 max-w-[150px] truncate" title={entry.remarks ?? ''}>
-                    {entry.remarks ?? '—'}
-                  </td>
-                  <td className="px-2 py-0.5 font-mono text-xs text-gray-600 whitespace-nowrap">
-                    {entry.assetTag ?? '—'}
-                  </td>
-                  <td className="px-2 py-0.5 whitespace-nowrap">
+                  <td className="px-2 py-[2px] border border-gray-200 text-right whitespace-nowrap font-medium text-gray-700">{formatCurrency(entry.annualCost)}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-500">{entry.paymentMethod ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-500">{entry.invoiceRef ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 max-w-[150px] truncate text-gray-500" title={entry.remarks ?? ''}>{entry.remarks ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 font-mono text-[10px] whitespace-nowrap text-gray-600">{entry.assetTag ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
                     {entry.assetStatus ? (
-                      <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                        entry.assetStatus === 'InUse' ? 'bg-green-100 text-green-700' :
-                        entry.assetStatus === 'Available' ? 'bg-blue-100 text-blue-700' :
-                        entry.assetStatus === 'InRepair' ? 'bg-orange-100 text-orange-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>{entry.assetStatus}</span>
+                      <span className={
+                        entry.assetStatus === 'InUse' ? 'text-green-700 font-medium' :
+                        entry.assetStatus === 'Available' ? 'text-blue-600 font-medium' :
+                        entry.assetStatus === 'InRepair' ? 'text-orange-600 font-medium' :
+                        'text-gray-400'
+                      }>{entry.assetStatus}</span>
                     ) : '—'}
                   </td>
                 </tr>
@@ -244,7 +215,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
         </table>
       </div>
 
-      <div className="px-4 py-2 border-t border-gray-100 text-xs text-gray-400">
+      <div className="px-3 py-1.5 border-t border-gray-200 text-[11px] text-gray-400 bg-[#f2f2f2]">
         {entries.length} record{entries.length !== 1 ? 's' : ''}
       </div>
 
