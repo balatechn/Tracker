@@ -199,13 +199,13 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-      {/* Header */}
+      {/* Header + Nav combined */}
       <header className="bg-brand-700 shadow-md flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-4 h-12 flex items-center gap-3">
-          {/* Brand */}
+        {/* Top row: brand, project filter, user actions */}
+        <div className="max-w-screen-2xl mx-auto px-4 h-10 flex items-center gap-3">
           <div className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-6 h-6 bg-white rounded flex items-center justify-center flex-shrink-0">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                 <rect x="1" y="1" width="6" height="6" fill="#0078d4" />
                 <rect x="9" y="1" width="6" height="6" fill="#0078d4" opacity="0.7" />
                 <rect x="1" y="9" width="6" height="6" fill="#0078d4" opacity="0.7" />
@@ -218,176 +218,76 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Global project filter */}
-          <div className="flex items-center gap-1.5 ml-4">
-            <FolderKanban size={13} className="text-brand-200" />
+          <div className="flex items-center gap-1.5 ml-3">
+            <FolderKanban size={12} className="text-brand-200" />
             <span className="text-brand-200 text-xs hidden md:inline">Project:</span>
             <div className="relative">
               <select
                 value={projectFilter}
                 onChange={e => setProjectFilter(e.target.value)}
-                className="appearance-none bg-brand-600 hover:bg-brand-500 text-white text-xs rounded-md pl-2 pr-6 py-1 border border-brand-500 focus:outline-none cursor-pointer transition-colors"
+                className="appearance-none bg-brand-600 hover:bg-brand-500 text-white text-xs rounded pl-2 pr-5 py-0.5 border border-brand-500 focus:outline-none cursor-pointer transition-colors"
               >
                 <option value="All">All Projects</option>
                 {projectNames.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-brand-200 pointer-events-none" />
+              <ChevronDown size={10} className="absolute right-1 top-1/2 -translate-y-1/2 text-brand-200 pointer-events-none" />
             </div>
           </div>
 
-          {/* Spacer */}
           <div className="flex-1" />
 
-          {/* User actions */}
-          <div className="flex items-center gap-2">
-            <span className="text-brand-100 text-xs hidden sm:block">{username}</span>
-            <button
-              onClick={() => setChangePwOpen(true)}
-              className="text-brand-100 hover:text-white p-1.5 rounded hover:bg-brand-600 transition-colors"
-              title="Change Password"
-            >
-              <Key size={14} />
+          <div className="flex items-center gap-1">
+            <span className="text-brand-100 text-xs hidden sm:block mr-1">{username}</span>
+            <span className="text-brand-200 text-xs hidden md:block mr-2">
+              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </span>
+            <button onClick={() => setChangePwOpen(true)} className="text-brand-100 hover:text-white p-1 rounded hover:bg-brand-600 transition-colors" title="Change Password">
+              <Key size={13} />
             </button>
-            <button
-              onClick={handleLogout}
-              className="text-brand-100 hover:text-white p-1.5 rounded hover:bg-brand-600 transition-colors"
-              title="Sign out"
-            >
-              <LogOut size={14} />
+            <button onClick={handleLogout} className="text-brand-100 hover:text-white p-1 rounded hover:bg-brand-600 transition-colors" title="Sign out">
+              <LogOut size={13} />
             </button>
+          </div>
+        </div>
+
+        {/* Nav tab row — inside header, darker stripe */}
+        <div className="bg-brand-800 border-t border-brand-600">
+          <div className="max-w-screen-2xl mx-auto px-3 flex items-center gap-0.5">
+            {([
+              { key: 'overview',       label: 'Overview',               icon: <LayoutDashboard size={14} /> },
+              { key: 'tracker',        label: 'Hardware Assets',         icon: <Table2 size={14} /> },
+              { key: 'subscriptions',  label: 'Software & Subscriptions',icon: <Globe size={14} /> },
+              { key: 'people',         label: 'People',                  icon: <Users size={14} /> },
+              { key: 'allocations',    label: 'Allocations',             icon: <ArrowLeftRight size={14} /> },
+            ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
+                  activeTab === key
+                    ? 'border-white text-white bg-brand-600'
+                    : 'border-transparent text-brand-200 hover:text-white hover:bg-brand-700'
+                }`}
+              >
+                {icon}{label}
+              </button>
+            ))}
+
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ml-auto ${
+                  activeTab === 'users'
+                    ? 'border-white text-white bg-brand-600'
+                    : 'border-transparent text-brand-200 hover:text-white hover:bg-brand-700'
+                }`}
+              >
+                <Shield size={14} />Users
+              </button>
+            )}
           </div>
         </div>
       </header>
-
-      {/* Tab bar */}
-      <div className="bg-gray-100 border-b border-gray-200 flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-3 flex items-center gap-0.5 py-1">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'overview'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <LayoutDashboard size={17} />
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('tracker')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'tracker'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <Table2 size={17} />
-            Hardware Assets
-          </button>
-          <button
-            onClick={() => setActiveTab('subscriptions')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'subscriptions'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <Globe size={17} />
-            Software & Subscriptions
-          </button>
-          <button
-            onClick={() => setActiveTab('people')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'people'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <Users size={17} />
-            People
-          </button>
-          <button
-            onClick={() => setActiveTab('allocations')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'allocations'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <ArrowLeftRight size={17} />
-            Allocations
-          </button>
-          <button
-            onClick={() => setActiveTab('requests')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'requests'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <ClipboardList size={17} />
-            Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'audit'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <ScrollText size={17} />
-            Audit Log
-          </button>
-
-          {/* Task section separator */}
-          <div className="h-6 w-px bg-gray-300 mx-1" />
-
-          <button
-            onClick={() => setActiveTab('task-dashboard')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'task-dashboard'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <FolderKanban size={17} />
-            Task Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-              activeTab === 'tasks'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-            }`}
-          >
-            <ListTodo size={17} />
-            Task Mgt
-          </button>
-
-          {isAdmin && (
-            <>
-              <div className="h-6 w-px bg-gray-300 mx-1" />
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 text-sm font-semibold rounded-md transition-all ${
-                  activeTab === 'users'
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                }`}
-              >
-                <Shield size={17} />
-                Users
-              </button>
-            </>
-          )}
-
-          <div className="ml-auto text-xs text-gray-400">
-            {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-          </div>
-        </div>
-      </div>
 
       {/* Tab content — fills remaining viewport height */}
       <div className="flex-1 min-h-0 overflow-hidden">
