@@ -568,17 +568,17 @@ export default function Dashboard() {
 
         {/* ── Tracker tab ── */}
         {activeTab === 'tracker' && (
-          <div className="h-full flex flex-col max-w-screen-2xl mx-auto w-full px-4 py-3 gap-3">
-            {/* Toolbar */}
-            <div className="bg-white rounded-lg shadow-card border border-gray-200 px-3 py-2 flex flex-wrap items-center gap-2 flex-shrink-0">
+          <div className="h-full flex flex-col w-full">
+            {/* Excel-style toolbar */}
+            <div className="bg-[#f2f2f2] border-b border-[#bfbfbf] px-2 py-1 flex flex-wrap items-center gap-1.5 flex-shrink-0">
               <input
-                className="input flex-1 min-w-[160px] max-w-xs py-1.5 text-sm"
+                className="border border-[#bfbfbf] bg-white px-2 py-[3px] text-xs flex-1 min-w-[160px] max-w-xs focus:outline-none focus:border-blue-500"
                 placeholder="Search by name, vendor, owner…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               <select
-                className="input w-auto min-w-[120px] py-1.5 text-sm"
+                className="border border-[#bfbfbf] bg-white px-2 py-[3px] text-xs min-w-[120px] focus:outline-none focus:border-blue-500"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -587,7 +587,7 @@ export default function Dashboard() {
                 ))}
               </select>
               <select
-                className="input w-auto min-w-[110px] py-1.5 text-sm"
+                className="border border-[#bfbfbf] bg-white px-2 py-[3px] text-xs min-w-[100px] focus:outline-none focus:border-blue-500"
                 value={criticality}
                 onChange={(e) => setCriticality(e.target.value)}
               >
@@ -595,28 +595,34 @@ export default function Dashboard() {
                   <option key={c}>{c}</option>
                 ))}
               </select>
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-1 ml-auto">
                 <button
-                  className="btn-secondary py-1.5 px-3 text-xs"
+                  className="flex items-center gap-1 border border-[#bfbfbf] bg-white hover:bg-[#e8e8e8] px-2 py-[3px] text-xs transition-colors"
                   onClick={() => queryClient.invalidateQueries({ queryKey: ['entries'] })}
                   title="Refresh"
                 >
-                  <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />
+                  Refresh
                 </button>
-                <button className="btn-secondary py-1.5 px-3 text-xs" onClick={() => setReportOpen(true)}>
-                  <Download size={13} />
-                  <span className="hidden sm:inline">Report</span>
+                <button
+                  className="flex items-center gap-1 border border-[#bfbfbf] bg-white hover:bg-[#e8e8e8] px-2 py-[3px] text-xs transition-colors"
+                  onClick={() => setReportOpen(true)}
+                >
+                  <Download size={12} />
+                  Report
                 </button>
-                <button className="btn-primary py-1.5 px-3 text-xs" onClick={() => setAddOpen(true)}>
-                  <Plus size={13} />
-                  <span className="hidden sm:inline">Add New</span>
+                <button
+                  className="flex items-center gap-1 border border-[#217346] bg-[#217346] hover:bg-[#1a5c38] text-white px-2 py-[3px] text-xs transition-colors"
+                  onClick={() => setAddOpen(true)}
+                >
+                  <Plus size={12} />
+                  Add New
                 </button>
               </div>
             </div>
 
-            {/* Table card — fills remaining height, rows scroll inside */}
-            <div className="flex-1 min-h-0 bg-white rounded-lg shadow-card border border-gray-200 overflow-hidden flex flex-col">
+            {/* Table fills remaining height, rows scroll inside */}
+            <div className="flex-1 min-h-0 bg-white overflow-hidden flex flex-col border-t-0">
               <TrackerTable
                 entries={entries}
                 isLoading={isLoading}
