@@ -116,6 +116,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
             <tr>
               <Th k="srNo" className="pl-4 w-12">#</Th>
               <th className="px-2 py-0.5 text-left text-xs font-semibold text-white uppercase tracking-wide whitespace-nowrap">Allocated To</th>
+              <Th k="billingCompany">Company</Th>
               <th className="px-2 py-0.5 text-center text-xs font-semibold text-white uppercase tracking-wide w-20">Actions</th>
               <Th k="serviceName">Service / Domain</Th>
               <Th k="category">Category</Th>
@@ -150,6 +151,9 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                   <td className="px-2 py-0.5 whitespace-nowrap text-gray-700">
                     {entry.allocations?.[0]?.employee.name ?? '—'}
                   </td>
+                  <td className="px-2 py-0.5 whitespace-nowrap text-gray-600">
+                    {entry.billingCompany ?? '—'}
+                  </td>
                   <td className="px-2 py-0.5">
                     <div className="flex items-center justify-center gap-1">
                       <button
@@ -179,9 +183,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                   </td>
                   <td className="px-2 py-0.5 font-medium text-gray-800 whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
                     {entry.serviceName}
-                    {entry.billingCompany && (
-                      <span className="text-gray-400 ml-1">({entry.billingCompany})</span>
-                    )}
                   </td>
                   <td className="px-2 py-0.5">
                     {entry.category && (
