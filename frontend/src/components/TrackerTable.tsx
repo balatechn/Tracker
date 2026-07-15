@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown, UserPlus } from 'lucide-react';
 import { Entry } from '@/types';
-import { getDaysRemaining, getStatusInfo, formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import { entriesApi } from '@/lib/api';
 import DeleteModal from './DeleteModal';
 
@@ -16,10 +16,8 @@ interface Props {
   onAllocate?: (entry: Entry) => void;
 }
 
-type SortKey = keyof Entry | 'daysRemaining';
+type SortKey = keyof Entry | 'department';
 type SortDir = 'asc' | 'desc';
-
-const CRITICALITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
 export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }: Props) {
   const queryClient = useQueryClient();
@@ -35,18 +33,15 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   function sortedEntries() {
     return [...entries].sort((a, b) => {
       let aVal: any, bVal: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (sortKey === 'daysRemaining') {
-        aVal = getDaysRemaining(a.expiryDate) ?? 99999;
-        bVal = getDaysRemaining(b.expiryDate) ?? 99999;
-      } else if (sortKey === 'criticality') {
-        aVal = CRITICALITY_ORDER[a.criticality ?? ''] ?? 3;
-        bVal = CRITICALITY_ORDER[b.criticality ?? ''] ?? 3;
+      if (sortKey === 'department') {
+        aVal = a.allocations?.[0]?.employee.department ?? '';
+        bVal = b.allocations?.[0]?.employee.department ?? '';
       } else if (sortKey === 'annualCost') {
         aVal = a.annualCost ?? 0;
         bVal = b.annualCost ?? 0;
-      } else if (sortKey === 'expiryDate') {
-        aVal = a.expiryDate ? new Date(a.expiryDate).getTime() : 99999999999;
-        bVal = b.expiryDate ? new Date(b.expiryDate).getTime() : 99999999999;
+      } else if (sortKey === 'purchaseDate') {
+        aVal = a.purchaseDate ? new Date(a.purchaseDate).getTime() : 99999999999;
+        bVal = b.purchaseDate ? new Date(b.purchaseDate).getTime() : 99999999999;
       } else {
         aVal = (a[sortKey as keyof Entry] ?? '') as string;
         bVal = (b[sortKey as keyof Entry] ?? '') as string;
@@ -77,7 +72,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   function Th({ children, k }: { children: React.ReactNode; k: SortKey }) {
     return (
       <th
-        className="px-2 py-1 text-left text-[11px] font-semibold whitespace-nowrap cursor-pointer select-none border border-[#bfbfbf] bg-[#d9d9d9] hover:bg-[#c8c8c8] transition-colors text-gray-800"
+        className="px-2 py-1 text-left text-[11px] font-bold whitespace-nowrap cursor-pointer select-none border border-[#bfbfbf] bg-[#1f3864] hover:bg-[#162a4a] transition-colors text-white uppercase tracking-wide"
         onClick={() => handleSort(k)}
       >
         <div className="flex items-center gap-0.5">
@@ -90,7 +85,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
 
   function ThPlain({ children }: { children: React.ReactNode }) {
     return (
-      <th className="px-2 py-1 text-left text-[11px] font-semibold whitespace-nowrap border border-[#bfbfbf] bg-[#d9d9d9] text-gray-800">
+      <th className="px-2 py-1 text-left text-[11px] font-bold whitespace-nowrap border border-[#bfbfbf] bg-[#1f3864] text-white uppercase tracking-wide">
         {children}
       </th>
     );
@@ -114,42 +109,57 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
     );
   }
 
+  const statusColor: Record<string, string> = {
+    'InUse':     'text-green-700 font-semibold',
+    'IN USE':    'text-green-700 font-semibold',
+    'Available': 'text-blue-600 font-semibold',
+    'InRepair':  'text-orange-600 font-semibold',
+    'Retired':   'text-gray-400',
+    'RETURNED':  'text-red-600 font-semibold',
+    'SPARE':     'text-purple-600 font-semibold',
+  };
+
   return (
     <>
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="w-full text-[11px] border-collapse">
           <thead className="sticky top-0 z-10">
             <tr>
-              <Th k="srNo">#</Th>
-              <ThPlain>Allocated To</ThPlain>
+              <ThPlain>#</ThPlain>
+              <Th k="owner">Previous User</Th>
+              <ThPlain>User ID</ThPlain>
+              <Th k="serviceName">Re Issued To</Th>
+              <Th k="category">Product</Th>
+              <Th k="vendor">Make</Th>
+              <Th k="department">Department</Th>
               <Th k="billingCompany">Company</Th>
+              <Th k="assetStatus">Status</Th>
+              <Th k="invoiceRef">Invoice</Th>
+              <Th k="purchaseDate">Invoice Date</Th>
               <ThPlain>Actions</ThPlain>
-              <Th k="serviceName">Service / Domain</Th>
-              <Th k="category">Category</Th>
-              <Th k="vendor">Vendor</Th>
-              <Th k="expiryDate">Expiry Date</Th>
-              <Th k="daysRemaining">Days Left</Th>
-              <Th k="autoRenewal">Auto-Renew</Th>
-              <Th k="owner">Owner</Th>
-              <Th k="criticality">Criticality</Th>
-              <Th k="annualCost">Annual Cost</Th>
-              <Th k="paymentMethod">Payment</Th>
-              <Th k="invoiceRef">Invoice Ref</Th>
-              <Th k="remarks">Remarks</Th>
-              <ThPlain>Asset Tag</ThPlain>
-              <ThPlain>Status</ThPlain>
             </tr>
           </thead>
           <tbody>
             {sortedEntries().map((entry, idx) => {
-              const days = getDaysRemaining(entry.expiryDate);
-              const status = getStatusInfo(days);
+              const emp = entry.allocations?.[0]?.employee;
               const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]';
               return (
-                <tr key={entry.id} className={`${rowBg} hover:bg-[#e8f0fe] transition-colors`}>
-                  <td className="px-2 py-[2px] border border-gray-200 text-gray-500 text-right w-8">{entry.srNo ?? idx + 1}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">{entry.allocations?.[0]?.employee.name ?? '—'}</td>
+                <tr key={entry.id} className={`${rowBg} hover:bg-[#dce6f1] transition-colors`}>
+                  <td className="px-2 py-[2px] border border-gray-200 text-gray-500 text-right w-8 font-mono">{entry.srNo ?? idx + 1}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap font-medium text-gray-800">{entry.owner ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-700">{emp?.name ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap max-w-[180px] truncate text-gray-600" title={entry.serviceName}>{entry.serviceName}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap font-medium text-gray-800">{entry.category ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-700">{entry.vendor ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{emp?.department ?? '—'}</td>
                   <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.billingCompany ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
+                    <span className={statusColor[entry.assetStatus ?? ''] ?? 'text-gray-500'}>
+                      {entry.assetStatus ?? '—'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600 font-mono text-[10px]">{entry.invoiceRef ?? '—'}</td>
+                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(entry.purchaseDate)}</td>
                   <td className="px-2 py-[2px] border border-gray-200">
                     <div className="flex items-center justify-center gap-0.5">
                       <button onClick={() => onEdit(entry)} className="p-1 text-gray-400 hover:text-brand-500 rounded transition-colors" title="Edit">
@@ -165,49 +175,6 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                       )}
                     </div>
                   </td>
-                  <td className="px-2 py-[2px] border border-gray-200 font-medium whitespace-nowrap max-w-[180px] truncate" title={entry.serviceName}>
-                    {entry.serviceName}
-                  </td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
-                    {entry.category ? (
-                      <span className="bg-blue-100 text-blue-700 px-1.5 py-0 rounded-sm text-[10px]">{entry.category}</span>
-                    ) : '—'}
-                  </td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.vendor ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(entry.expiryDate)}</td>
-                  <td className="px-2 py-[2px] border border-gray-200">
-                    <span className={`font-medium ${status.color} whitespace-nowrap`}>
-                      {status.label}
-                    </span>
-                  </td>
-                  <td className="px-2 py-[2px] border border-gray-200 text-center">
-                    <span className={entry.autoRenewal ? 'text-green-700 font-medium' : 'text-gray-400'}>
-                      {entry.autoRenewal ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.owner ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
-                    <span className={
-                      entry.criticality === 'High' ? 'text-red-600 font-semibold' :
-                      entry.criticality === 'Medium' ? 'text-yellow-600 font-medium' :
-                      entry.criticality === 'Low' ? 'text-gray-500' : 'text-gray-400'
-                    }>{entry.criticality ?? '—'}</span>
-                  </td>
-                  <td className="px-2 py-[2px] border border-gray-200 text-right whitespace-nowrap font-medium text-gray-700">{formatCurrency(entry.annualCost)}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-500">{entry.paymentMethod ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-500">{entry.invoiceRef ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 max-w-[150px] truncate text-gray-500" title={entry.remarks ?? ''}>{entry.remarks ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 font-mono text-[10px] whitespace-nowrap text-gray-600">{entry.assetTag ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
-                    {entry.assetStatus ? (
-                      <span className={
-                        entry.assetStatus === 'InUse' ? 'text-green-700 font-medium' :
-                        entry.assetStatus === 'Available' ? 'text-blue-600 font-medium' :
-                        entry.assetStatus === 'InRepair' ? 'text-orange-600 font-medium' :
-                        'text-gray-400'
-                      }>{entry.assetStatus}</span>
-                    ) : '—'}
-                  </td>
                 </tr>
               );
             })}
@@ -215,7 +182,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
         </table>
       </div>
 
-      <div className="px-3 py-1.5 border-t border-gray-200 text-[11px] text-gray-400 bg-[#f2f2f2]">
+      <div className="px-3 py-1 border-t border-[#bfbfbf] text-[11px] text-gray-500 bg-[#f2f2f2]">
         {entries.length} record{entries.length !== 1 ? 's' : ''}
       </div>
 

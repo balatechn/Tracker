@@ -33,7 +33,7 @@ export async function getEntries(req: AuthRequest, res: Response): Promise<void>
     include: {
       allocations: {
         where: { status: 'Active' },
-        include: { employee: { select: { id: true, name: true, empId: true } } },
+        include: { employee: { select: { id: true, name: true, empId: true, department: true } } },
         take: 1,
       },
     },
@@ -54,7 +54,7 @@ export async function getEntry(req: AuthRequest, res: Response): Promise<void> {
     include: {
       allocations: {
         where: { status: 'Active' },
-        include: { employee: { select: { id: true, name: true, empId: true } } },
+        include: { employee: { select: { id: true, name: true, empId: true, department: true } } },
         take: 1,
       },
     },

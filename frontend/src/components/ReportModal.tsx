@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { X, Download, FileSpreadsheet } from 'lucide-react';
 import { Entry } from '@/types';
-import { getDaysRemaining, formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface Props {
   entries: Entry[];
@@ -40,30 +40,25 @@ export default function ReportModal({ entries, onClose }: Props) {
   }, [entries, filterCategory, filterStatus, filterCriticality, filterAllocation, filterCompany]);
 
   function downloadCSV() {
-    const headers = ['#', 'Allocated To', 'Company', 'Service/Domain', 'Category', 'Vendor', 'Expiry Date', 'Days Left', 'Auto-Renew', 'Owner', 'Criticality', 'Annual Cost', 'Payment', 'Invoice Ref', 'Asset Tag', 'Serial No', 'Location', 'Condition', 'Status', 'Purchase Date', 'Purchase Price', 'Warranty (yrs)', 'Remarks'];
+    const headers = ['#', 'Previous User', 'User ID', 'Re Issued To', 'Product', 'Make', 'Department', 'Company', 'Status', 'Invoice', 'Invoice Date', 'Asset Tag', 'Serial No', 'Location', 'Condition', 'Purchase Price', 'Warranty (yrs)', 'Remarks'];
     const rows = filtered.map((e, i) => {
-      const days = getDaysRemaining(e.expiryDate);
+      const emp = e.allocations?.[0]?.employee;
       return [
         e.srNo ?? i + 1,
-        e.allocations?.[0]?.employee.name ?? '',
-        e.billingCompany ?? '',
+        e.owner ?? '',
+        emp?.name ?? '',
         e.serviceName,
         e.category ?? '',
         e.vendor ?? '',
-        formatDate(e.expiryDate),
-        days !== null ? days : '',
-        e.autoRenewal ? 'Yes' : 'No',
-        e.owner ?? '',
-        e.criticality ?? '',
-        e.annualCost ?? '',
-        e.paymentMethod ?? '',
+        emp?.department ?? '',
+        e.billingCompany ?? '',
+        e.assetStatus ?? '',
         e.invoiceRef ?? '',
+        formatDate(e.purchaseDate),
         e.assetTag ?? '',
         e.serialNumber ?? '',
         e.location ?? '',
         e.condition ?? '',
-        e.assetStatus ?? '',
-        formatDate(e.purchaseDate),
         e.purchasePrice ?? '',
         e.warrantyYears ?? '',
         e.remarks ?? '',
@@ -78,8 +73,6 @@ export default function ReportModal({ entries, onClose }: Props) {
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  const days = (e: Entry) => getDaysRemaining(e.expiryDate);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -143,7 +136,7 @@ export default function ReportModal({ entries, onClose }: Props) {
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#217346] text-white">
-                {['#', 'Allocated To', 'Company', 'Service / Domain', 'Category', 'Vendor', 'Expiry Date', 'Days Left', 'Auto-Renew', 'Owner', 'Criticality', 'Annual Cost', 'Payment', 'Invoice Ref', 'Asset Tag', 'Serial No', 'Location', 'Condition', 'Status', 'Purchase Date', 'Purchase Price', 'Warranty', 'Remarks'].map(h => (
+                {['#', 'Previous User', 'User ID', 'Re Issued To', 'Product', 'Make', 'Department', 'Company', 'Status', 'Invoice', 'Invoice Date', 'Asset Tag', 'Serial No', 'Location', 'Condition', 'Purchase Price', 'Warranty', 'Remarks'].map(h => (
                   <th key={h} className="px-2 py-1 text-left font-semibold whitespace-nowrap border border-[#1a5c38] text-xs">
                     {h}
                   </th>
@@ -153,34 +146,27 @@ export default function ReportModal({ entries, onClose }: Props) {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={23} className="text-center py-8 text-gray-400">No records match the selected filters</td>
+                  <td colSpan={18} className="text-center py-8 text-gray-400">No records match the selected filters</td>
                 </tr>
               ) : filtered.map((e, idx) => {
-                const d = days(e);
-                const daysLabel = d === null ? '—' : d < 0 ? `Expired` : `${d}d`;
-                const daysColor = d === null ? '' : d < 0 ? 'text-red-600 font-semibold' : d <= 30 ? 'text-orange-600 font-semibold' : 'text-gray-700';
-                return (
+                  const emp = e.allocations?.[0]?.employee;
+                  return (
                   <tr key={e.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
-                    <td className="px-2 py-0.5 border border-gray-200 text-gray-500 whitespace-nowrap">{e.srNo ?? idx + 1}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap">{e.allocations?.[0]?.employee.name ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 text-gray-500 text-right font-mono">{e.srNo ?? idx + 1}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap font-medium">{e.owner ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap">{emp?.name ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap max-w-[160px] truncate text-gray-600" title={e.serviceName}>{e.serviceName}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap font-medium">{e.category ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-700">{e.vendor ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{emp?.department ?? '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.billingCompany ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 font-medium whitespace-nowrap max-w-[160px] truncate" title={e.serviceName}>{e.serviceName}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.category ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.vendor ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(e.expiryDate)}</td>
-                    <td className={`px-2 py-0.5 border border-gray-200 whitespace-nowrap ${daysColor}`}>{daysLabel}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap">{e.autoRenewal ? 'Yes' : 'No'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.owner ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap">{e.criticality ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-right">{formatCurrency(e.annualCost)}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.paymentMethod ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.invoiceRef ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap font-semibold text-green-700">{e.assetStatus ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap font-mono text-[10px] text-gray-600">{e.invoiceRef ?? '—'}</td>
+                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(e.purchaseDate)}</td>
                     <td className="px-2 py-0.5 border border-gray-200 font-mono whitespace-nowrap text-gray-600">{e.assetTag ?? '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.serialNumber ?? '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.location ?? '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.condition ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{e.assetStatus ?? '—'}</td>
-                    <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(e.purchaseDate)}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-right">{e.purchasePrice ? formatCurrency(e.purchasePrice) : '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 whitespace-nowrap text-center">{e.warrantyYears != null ? `${e.warrantyYears}y` : '—'}</td>
                     <td className="px-2 py-0.5 border border-gray-200 max-w-[150px] truncate text-gray-500" title={e.remarks ?? ''}>{e.remarks ?? '—'}</td>

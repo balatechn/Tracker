@@ -30,7 +30,7 @@ export interface Entry {
   // Active allocation (included in API responses)
   allocations?: {
     id: number;
-    employee: { id: number; name: string; empId: string };
+    employee: { id: number; name: string; empId: string; department: string };
     allocatedAt: string;
   }[];
   createdAt: string;
