@@ -103,7 +103,11 @@ export default function AllocationsTab() {
     enabled: modal === 'allocate',
   });
 
-  const availableAssets = entries.filter((e: Entry) => e.assetStatus === 'Available' || !e.assetStatus);
+  const HARDWARE_CATEGORIES = ['Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'];
+  const availableAssets = entries.filter((e: Entry) =>
+    (e.assetStatus === 'Available' || !e.assetStatus) &&
+    (!e.category || HARDWARE_CATEGORIES.includes(e.category))
+  );
 
   const createMut = useMutation({
     mutationFn: () => allocationsApi.create({
