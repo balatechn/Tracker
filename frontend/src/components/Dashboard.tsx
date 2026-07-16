@@ -314,41 +314,122 @@ export default function Dashboard() {
                 <StatCard label="Total Employees"     value={employees.length}                                             color="blue"   icon={<Users size={14} />} />
               </div>
 
-              {/* Hardware Charts */}
-              <div className="grid grid-cols-2 gap-3" style={{ height: 220 }}>
-                {/* Pie: By Category */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Asset by Category</p>
-                  <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={categoryData} cx="50%" cy="45%" innerRadius="30%" outerRadius="58%" paddingAngle={3} dataKey="value" labelLine={false}>
-                          {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                        </Pie>
-                        <Tooltip formatter={(v) => { const n = Number(v); return [`${n} asset${n !== 1 ? 's' : ''}`, '']; }} />
-                        <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 10 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+              {/* Hardware 3-panel lists */}
+              <div className="grid grid-cols-3 gap-3" style={{ height: 280 }}>
 
-                {/* Bar: Allocation Status */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex-shrink-0">Allocation Status</p>
-                  <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={hwStatusData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <Tooltip cursor={{ fill: '#f9fafb' }} />
-                        <Bar dataKey="count" name="Assets" radius={[4, 4, 0, 0]} maxBarSize={52}>
-                          {hwStatusData.map((item, i) => <Cell key={i} fill={item.color} />)}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+                {/* Panel 1: Available — NCPL HO */}
+                {(() => {
+                  const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('NCPL'));
+                  return (
+                    <div className="bg-white rounded-xl border border-blue-100 shadow-sm flex flex-col overflow-hidden">
+                      <div className="bg-blue-50 border-b border-blue-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
+                        <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Available — NCPL HO</p>
+                        <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto min-h-0">
+                        {list.length === 0 ? (
+                          <div className="flex items-center justify-center h-full text-xs text-gray-400">No available assets</div>
+                        ) : (
+                          <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
+                            <thead className="sticky top-0 bg-[#dce6f1]">
+                              <tr>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {list.map((e, i) => (
+                                <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Panel 2: Available — RAINLAND */}
+                {(() => {
+                  const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('RAINLAND'));
+                  return (
+                    <div className="bg-white rounded-xl border border-green-100 shadow-sm flex flex-col overflow-hidden">
+                      <div className="bg-green-50 border-b border-green-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
+                        <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Available — RAINLAND</p>
+                        <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto min-h-0">
+                        {list.length === 0 ? (
+                          <div className="flex items-center justify-center h-full text-xs text-gray-400">No available assets</div>
+                        ) : (
+                          <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
+                            <thead className="sticky top-0 bg-[#e2efda]">
+                              <tr>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {list.map((e, i) => (
+                                <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Panel 3: In Use hardware list */}
+                {(() => {
+                  const list = entries.filter(e => e.assetStatus === 'InUse');
+                  return (
+                    <div className="bg-white rounded-xl border border-orange-100 shadow-sm flex flex-col overflow-hidden">
+                      <div className="bg-orange-50 border-b border-orange-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
+                        <p className="text-xs font-bold text-orange-800 uppercase tracking-wide">In Use</p>
+                        <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto min-h-0">
+                        {list.length === 0 ? (
+                          <div className="flex items-center justify-center h-full text-xs text-gray-400">No assets in use</div>
+                        ) : (
+                          <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
+                            <thead className="sticky top-0 bg-[#fce4d6]">
+                              <tr>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">User</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
+                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {list.map((e, i) => (
+                                <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-700 whitespace-nowrap">{e.allocations?.[0]?.employee.name ?? e.owner ?? '—'}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
               </div>
             </div>
 
