@@ -97,7 +97,7 @@ export async function returnAsset(req: AuthRequest, res: Response): Promise<void
     include: { asset: ASSET_SEL, employee: EMP_SEL },
   });
 
-  await prisma.entry.update({ where: { id: allocation.assetId }, data: { assetStatus: 'Available' } });
+  await prisma.entry.update({ where: { id: allocation.assetId }, data: { assetStatus: 'Available', owner: allocation.employee.name } });
 
   await prisma.auditLog.create({
     data: {
