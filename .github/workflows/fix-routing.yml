@@ -9,29 +9,29 @@ jobs:
   fix-routing:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Coolify to build and start
+      - name: Wait for Coolify build to finish
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
-          echo "Waiting 3 minutes for Docker build to complete..."
-          sleep 180
+          echo "Waiting 5 minutes for Docker build..."
+          sleep 300
 
-          echo "Polling until app status = running..."
-          for i in $(seq 1 40); do
-            STATUS=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
-              -H "Authorization: Bearer $TOKEN" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+          echo "Polling until status=running and no deploy in progress..."
+          for i in $(seq 1 60); do
+            RESP=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" -H "Authorization: Bearer $TOKEN")
+            STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
             echo "Attempt $i: status=$STATUS"
             if echo "$STATUS" | grep -q "running"; then
-              echo "App is running."
-              sleep 5
+              echo "App running. Waiting 15s extra to ensure deploy settled..."
+              sleep 15
               break
             fi
             sleep 10
           done
 
-      - name: Patch domain routing
+      - name: Patch domain and restart (with retry)
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
@@ -43,16 +43,26 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}'
 
-          echo "Restarting to apply domain patch..."
-          curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
-            -H "Authorization: Bearer $TOKEN"
+          echo ""
+          echo "Attempting restart (retry up to 5 times if deploy still queued)..."
+          for attempt in $(seq 1 5); do
+            RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
+              -H "Authorization: Bearer $TOKEN")
+            echo "Restart attempt $attempt: $RESTART"
+            if echo "$RESTART" | grep -q "queued\|uuid"; then
+              echo "Restart accepted."
+              break
+            fi
+            echo "Blocked, waiting 30s..."
+            sleep 30
+          done
 
-          echo "Waiting 60s for restart..."
-          sleep 60
+          echo "Waiting 90s for restart to complete..."
+          sleep 90
 
       - name: Verify site is up
         run: |
-          for i in $(seq 1 18); do
+          for i in $(seq 1 24); do
             CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com --max-time 10)
             echo "Attempt $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
