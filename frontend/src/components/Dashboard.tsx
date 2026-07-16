@@ -657,6 +657,7 @@ export default function Dashboard() {
         <AddEditModal
           entry={editEntry}
           onClose={() => { setAddOpen(false); setEditEntry(null); }}
+          allocatedUser={editEntry?.allocations?.[0]?.employee?.name ?? undefined}
         />
       )}
 

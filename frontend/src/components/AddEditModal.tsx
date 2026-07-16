@@ -10,6 +10,7 @@ import { entriesApi } from '@/lib/api';
 interface Props {
   entry: Entry | null;
   onClose: () => void;
+  allocatedUser?: string;
 }
 
 const EMPTY: EntryFormData = {
@@ -60,7 +61,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export default function AddEditModal({ entry, onClose }: Props) {
+export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
   const qc = useQueryClient();
   const [form, setForm] = useState<EntryFormData>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -187,9 +188,18 @@ export default function AddEditModal({ entry, onClose }: Props) {
             />
           </Field>
 
-          {/* Previous User + Make */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {/* Previous User + User ID + Make */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             <Field label="Previous User">{inp('owner')}</Field>
+            <Field label="User ID">
+              <input
+                style={{ ...INPUT, background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }}
+                type="text"
+                value={allocatedUser ?? '—'}
+                readOnly
+                title="Managed via Allocations"
+              />
+            </Field>
             <Field label="Make">{inp('vendor')}</Field>
           </div>
 
