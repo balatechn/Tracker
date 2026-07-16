@@ -319,7 +319,7 @@ export default function Dashboard() {
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
                             <thead className="sticky top-0" style={{ background: '#bdd7ee' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>#</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Previous User</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Product</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Make</th>
                               </tr>
@@ -327,7 +327,7 @@ export default function Dashboard() {
                             <tbody>
                               {list.map((e, i) => (
                                 <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.owner ?? '—'}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
                                 </tr>
@@ -356,7 +356,7 @@ export default function Dashboard() {
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
                             <thead className="sticky top-0" style={{ background: '#e2efda' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>#</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Previous User</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Product</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Make</th>
                               </tr>
@@ -364,7 +364,7 @@ export default function Dashboard() {
                             <tbody>
                               {list.map((e, i) => (
                                 <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.owner ?? '—'}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
                                 </tr>
@@ -393,8 +393,8 @@ export default function Dashboard() {
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
                             <thead className="sticky top-0" style={{ background: '#fce4d6' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>#</th>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>User</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>User ID</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>Previous User</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>Product</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>Make</th>
                               </tr>
@@ -402,8 +402,8 @@ export default function Dashboard() {
                             <tbody>
                               {list.map((e, i) => (
                                 <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-400">{e.srNo ?? i + 1}</td>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-700 whitespace-nowrap">{e.allocations?.[0]?.employee.name ?? e.owner ?? '—'}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-700 whitespace-nowrap">{e.allocations?.[0]?.employee.name ?? '—'}</td>
+                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.owner ?? '—'}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
                                   <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
                                 </tr>
