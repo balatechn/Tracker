@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [allocateEntry, setAllocateEntry] = useState<Entry | null>(null);
   const [allocEmpId, setAllocEmpId] = useState('');
   const [projectFilter, setProjectFilter] = useState('All');
+  const [companyFilter, setCompanyFilter] = useState('All');
 
   const username = typeof window !== 'undefined' ? localStorage.getItem('username') || 'Admin' : 'Admin';
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') || 'viewer' : 'viewer';
@@ -561,6 +562,16 @@ export default function Dashboard() {
                   <option key={c}>{c}</option>
                 ))}
               </select>
+              <select
+                className="border border-[#bfbfbf] bg-white px-2 py-[3px] text-xs min-w-[130px] focus:outline-none focus:border-blue-500"
+                value={companyFilter}
+                onChange={(e) => setCompanyFilter(e.target.value)}
+              >
+                <option value="All">All Companies</option>
+                {Array.from(new Set(entries.map(e => e.billingCompany).filter(Boolean))).sort().map(c => (
+                  <option key={c!} value={c!}>{c}</option>
+                ))}
+              </select>
               <div className="flex items-center gap-1 ml-auto">
                 <button
                   className="flex items-center gap-1 border border-[#bfbfbf] bg-white hover:bg-[#e8e8e8] px-2 py-[3px] text-xs transition-colors"
@@ -590,7 +601,7 @@ export default function Dashboard() {
             {/* Table fills remaining height, rows scroll inside */}
             <div className="flex-1 min-h-0 bg-white overflow-hidden flex flex-col border-t-0">
               <TrackerTable
-                entries={entries}
+                entries={companyFilter === 'All' ? entries : entries.filter(e => e.billingCompany === companyFilter)}
                 isLoading={isLoading}
                 onEdit={(e) => setEditEntry(e)}
                 onAllocate={(e) => { setAllocateEntry(e); setAllocEmpId(''); }}
