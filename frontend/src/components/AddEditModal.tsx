@@ -211,8 +211,9 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
             </Field>
           </div>
 
-          {/* Invoice + Invoice Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {/* Serial Number + Invoice + Invoice Date */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <Field label="Serial Number">{inp('serialNumber')}</Field>
             <Field label="Invoice">{inp('invoiceRef')}</Field>
             <Field label="Invoice Date">{inp('purchaseDate', 'date')}</Field>
           </div>
