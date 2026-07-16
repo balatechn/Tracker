@@ -1,8 +1,8 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { allocationsApi, employeesApi, entriesApi } from '@/lib/api';
-import { Allocation } from '@/types';
+import { Allocation, Employee, Entry } from '@/types';
 import toast from 'react-hot-toast';
 import { ArrowLeftRight, Plus, RotateCcw, X, Package, Printer, Pencil, ChevronDown } from 'lucide-react';
 import { printHandover } from '@/lib/handover';
@@ -94,7 +94,7 @@ export default function AllocationsTab() {
   });
 
   const editEmployeeOptions = modal === 'edit' && selected
-    ? [selected.employee, ...employees.filter(e => e.id !== selected.employee.id)]
+    ? [selected.employee, ...employees.filter((e: Employee) => e.id !== selected.employee.id)]
     : employees;
 
   const { data: entries = [] } = useQuery({
@@ -103,7 +103,7 @@ export default function AllocationsTab() {
     enabled: modal === 'allocate',
   });
 
-  const availableAssets = entries.filter(e => e.assetStatus === 'Available' || !e.assetStatus);
+  const availableAssets = entries.filter((e: Entry) => e.assetStatus === 'Available' || !e.assetStatus);
 
   const createMut = useMutation({
     mutationFn: () => allocationsApi.create({
@@ -142,10 +142,10 @@ export default function AllocationsTab() {
   function closeModal() { setModal(null); setSelected(null); }
 
   // Unique filter values
-  const locations = Array.from(new Set(allocations.map(a => a.asset.location).filter(Boolean))).sort() as string[];
-  const categories = Array.from(new Set(allocations.map(a => a.asset.category).filter(Boolean))).sort() as string[];
+  const locations = Array.from(new Set(allocations.map((a: Allocation) => a.asset.location).filter(Boolean))).sort() as string[];
+  const categories = Array.from(new Set(allocations.map((a: Allocation) => a.asset.category).filter(Boolean))).sort() as string[];
 
-  const filtered = allocations.filter(a => {
+  const filtered = allocations.filter((a: Allocation) => {
     const q = search.toLowerCase();
     if (q && !(a.asset.serviceName.toLowerCase().includes(q) || a.employee.name.toLowerCase().includes(q) || a.employee.department.toLowerCase().includes(q))) return false;
     if (locationF !== 'All' && a.asset.location !== locationF) return false;
@@ -154,8 +154,8 @@ export default function AllocationsTab() {
   });
 
   const total    = allocations.length;
-  const active   = allocations.filter(a => a.status === 'Active').length;
-  const returned = allocations.filter(a => a.status === 'Returned').length;
+  const active   = allocations.filter((a: Allocation) => a.status === 'Active').length;
+  const returned = allocations.filter((a: Allocation) => a.status === 'Returned').length;
 
   return (
     <div className="flex flex-col h-full overflow-hidden" style={{ fontFamily: "'Calibri','Aptos',Arial,sans-serif" }}>
@@ -218,10 +218,10 @@ export default function AllocationsTab() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((a, i) => (
+              {filtered.map((a: Allocation, i: number) => (
                 <tr key={a.id} style={{ background: i % 2 === 0 ? '#fff' : '#f5f5f5', borderBottom: '1px solid #e8e8e8' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#dce6f1')}
-                  onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? '#fff' : '#f5f5f5')}
+                  onMouseEnter={(e: React.MouseEvent<HTMLTableRowElement>) => (e.currentTarget.style.background = '#dce6f1')}
+                  onMouseLeave={(e: React.MouseEvent<HTMLTableRowElement>) => (e.currentTarget.style.background = i % 2 === 0 ? '#fff' : '#f5f5f5')}
                 >
                   <td style={{ padding: '4px 8px', color: '#a0a0a0', whiteSpace: 'nowrap' }}>{a.id}</td>
                   <td style={{ padding: '4px 8px', fontWeight: 600, whiteSpace: 'nowrap', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -275,9 +275,9 @@ export default function AllocationsTab() {
             <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <label style={LBL}>Asset <span style={{ color: '#c00000' }}>*</span></label>
-                <select style={FLAT} value={form.assetId} onChange={e => setForm(p => ({ ...p, assetId: e.target.value }))}>
+                <select style={FLAT} value={form.assetId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(p => ({ ...p, assetId: e.target.value }))}>
                   <option value="">— Select available asset —</option>
-                  {availableAssets.map(e => (
+                  {availableAssets.map((e: Entry) => (
                     <option key={e.id} value={e.id}>{e.serviceName}{e.assetTag ? ` [${e.assetTag}]` : ''}{e.category ? ` — ${e.category}` : ''}</option>
                   ))}
                 </select>
@@ -285,9 +285,9 @@ export default function AllocationsTab() {
               </div>
               <div>
                 <label style={LBL}>Employee <span style={{ color: '#c00000' }}>*</span></label>
-                <select style={FLAT} value={form.employeeId} onChange={e => setForm(p => ({ ...p, employeeId: e.target.value }))}>
+                <select style={FLAT} value={form.employeeId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(p => ({ ...p, employeeId: e.target.value }))}>
                   <option value="">— Select employee —</option>
-                  {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.empId}) — {e.department}</option>)}
+                  {employees.map((e: Employee) => <option key={e.id} value={e.id}>{e.name} ({e.empId}) — {e.department}</option>)}
                 </select>
               </div>
               <div>
@@ -327,9 +327,9 @@ export default function AllocationsTab() {
               </div>
               <div>
                 <label style={LBL}>Employee <span style={{ color: '#c00000' }}>*</span></label>
-                <select style={FLAT} value={editForm.employeeId} onChange={e => setEditForm(p => ({ ...p, employeeId: e.target.value }))}>
+                <select style={FLAT} value={editForm.employeeId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditForm(p => ({ ...p, employeeId: e.target.value }))}>
                   <option value="">— Select employee —</option>
-                  {editEmployeeOptions.map(e => <option key={e.id} value={String(e.id)}>{e.name} ({e.empId}) — {e.department}</option>)}
+                  {editEmployeeOptions.map((e: Employee) => <option key={e.id} value={String(e.id)}>{e.name} ({e.empId}) — {e.department}</option>)}
                 </select>
               </div>
               <div>
