@@ -199,11 +199,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#f2f2f2', fontFamily: "'Calibri','Aptos',Arial,sans-serif" }}>
+    <div className="min-h-screen md:h-screen flex flex-col md:overflow-hidden" style={{ background: '#f2f2f2', fontFamily: "'Calibri','Aptos',Arial,sans-serif" }}>
       {/* Office-style title bar + ribbon */}
       <header style={{ flexShrink: 0 }}>
         {/* Title bar */}
-        <div style={{ background: '#2b579a', height: 36, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 10 }}>
+        <div style={{ background: '#2b579a', minHeight: 36, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, flexWrap: 'wrap' as const }}>
           <div style={{ width: 20, height: 20, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <rect x="1" y="1" width="6" height="6" fill="#2b579a" />
@@ -213,8 +213,8 @@ export default function Dashboard() {
             </svg>
           </div>
           <span style={{ color: '#fff', fontWeight: 700, fontSize: '11pt' }}>National Group India</span>
-          <span style={{ color: '#c7d8f0', fontSize: '9pt', opacity: 0.9 }}>IT Asset Tracker</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 12 }}>
+          <span className="hidden sm:inline" style={{ color: '#c7d8f0', fontSize: '9pt', opacity: 0.9 }}>IT Asset Tracker</span>
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 4, marginLeft: 4 }}>
             <FolderKanban size={12} style={{ color: '#c7d8f0' }} />
             <span style={{ color: '#c7d8f0', fontSize: '9pt' }}>Project:</span>
             <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
@@ -224,24 +224,24 @@ export default function Dashboard() {
             </select>
           </div>
           <div style={{ flex: 1 }} />
-          <span style={{ color: '#c7d8f0', fontSize: '9pt', marginRight: 8 }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-          <span style={{ color: '#fff', fontSize: '9pt', marginRight: 8 }}>{username}</span>
-          <button onClick={() => setChangePwOpen(true)} title="Change Password" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><Key size={13} /></button>
-          <button onClick={handleLogout} title="Sign out" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><LogOut size={13} /></button>
+          <span className="hidden sm:inline" style={{ color: '#c7d8f0', fontSize: '9pt', marginRight: 4 }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          <span className="hidden sm:inline" style={{ color: '#fff', fontSize: '9pt', marginRight: 4 }}>{username}</span>
+          <button onClick={() => setChangePwOpen(true)} title="Change Password" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><Key size={14} /></button>
+          <button onClick={handleLogout} title="Sign out" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><LogOut size={14} /></button>
         </div>
 
-        {/* Office ribbon tab bar — white bg, active tab = bold + blue underline */}
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #d0d0d0', display: 'flex', alignItems: 'stretch', padding: '0 4px' }}>
+        {/* Office ribbon tab bar — scrollable on mobile */}
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #d0d0d0', display: 'flex', alignItems: 'stretch', padding: '0 4px', overflowX: 'auto' as const }}>
           {([
-            { key: 'overview',      label: 'Overview',                icon: <LayoutDashboard size={13} /> },
-            { key: 'tracker',       label: 'Hardware Assets',          icon: <Table2 size={13} /> },
-            { key: 'subscriptions', label: 'Software & Subscriptions', icon: <Globe size={13} /> },
-            { key: 'people',        label: 'People',                   icon: <Users size={13} /> },
-            { key: 'allocations',   label: 'Allocations',              icon: <ArrowLeftRight size={13} /> },
+            { key: 'overview',      label: 'Overview',       icon: <LayoutDashboard size={13} /> },
+            { key: 'tracker',       label: 'Hardware',        icon: <Table2 size={13} /> },
+            { key: 'subscriptions', label: 'Subscriptions',   icon: <Globe size={13} /> },
+            { key: 'people',        label: 'People',          icon: <Users size={13} /> },
+            { key: 'allocations',   label: 'Allocations',     icon: <ArrowLeftRight size={13} /> },
           ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '0 14px',
+              padding: '0 10px',
               height: 36,
               fontSize: '10pt',
               fontWeight: activeTab === key ? 700 : 400,
@@ -252,35 +252,36 @@ export default function Dashboard() {
               cursor: 'pointer',
               whiteSpace: 'nowrap' as const,
               transition: 'color 0.1s, border-color 0.1s, background 0.1s',
+              flexShrink: 0,
             }}
             onMouseEnter={e => { if (activeTab !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#e8eef7'; (e.currentTarget as HTMLButtonElement).style.color = '#2b579a'; } }}
             onMouseLeave={e => { if (activeTab !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#3b3b3b'; } }}
-            >{icon}{label}</button>
+            >{icon}<span className="hidden sm:inline">{label}</span></button>
           ))}
           <div style={{ flex: 1 }} />
           {isAdmin && (
             <button onClick={() => setActiveTab('users')} style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '0 14px', height: 36, fontSize: '10pt',
+              padding: '0 10px', height: 36, fontSize: '10pt',
               fontWeight: activeTab === 'users' ? 700 : 400,
               color: activeTab === 'users' ? '#2b579a' : '#3b3b3b',
               background: 'transparent', border: 'none',
               borderBottom: activeTab === 'users' ? '3px solid #2b579a' : '3px solid transparent',
-              cursor: 'pointer',
+              cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' as const,
             }}
             onMouseEnter={e => { if (activeTab !== 'users') { (e.currentTarget as HTMLButtonElement).style.background = '#e8eef7'; (e.currentTarget as HTMLButtonElement).style.color = '#2b579a'; } }}
             onMouseLeave={e => { if (activeTab !== 'users') { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#3b3b3b'; } }}
-            ><Shield size={13} />Users</button>
+            ><Shield size={13} /><span className="hidden sm:inline">Users</span></button>
           )}
         </div>
       </header>
 
       {/* Tab content — fills remaining viewport height */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden md:overflow-hidden overflow-y-auto">
 
         {/* ── Overview tab ── */}
         {activeTab === 'overview' && (
-          <div className="h-full max-w-screen-2xl mx-auto w-full px-4 py-3 overflow-y-auto space-y-5">
+          <div className="h-full md:h-full max-w-screen-2xl mx-auto w-full px-3 py-3 overflow-y-auto space-y-5">
 
             {/* ── SECTION 1: Hardware Assets ── */}
             <div>
@@ -291,7 +292,7 @@ export default function Dashboard() {
               </div>
 
               {/* Hardware KPI row */}
-              <div className="grid grid-cols-6 gap-3 mb-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
                 <StatCard label="Total Hardware"    value={entries.length}                                                                                                           color="blue"   icon={<Package size={14} />} />
                 <StatCard label="NCPL HO Total"     value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('NCPL')).length}                                      color="blue"   icon={<Monitor size={14} />} />
                 <StatCard label="Rainland Total"    value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                  color="green"  icon={<Monitor size={14} />} />
@@ -301,7 +302,7 @@ export default function Dashboard() {
               </div>
 
               {/* Hardware 3-panel lists */}
-              <div className="grid grid-cols-3 gap-3" style={{ height: 280 }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3" style={{ minHeight: 200 }}>
 
                 {/* Panel 1: Available — NCPL HO */}
                 {(() => {
@@ -428,7 +429,7 @@ export default function Dashboard() {
               </div>
 
               {/* Subscription KPI row */}
-              <div className="grid grid-cols-5 gap-3 mb-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
                 <StatCard label="Total Subscriptions" value={subStats.total}                                        color="blue"   icon={<Package size={14} />} />
                 <StatCard label="Expiring ≤ 30d"      value={subStats.expiring30.length}                           color="red"    icon={<AlertTriangle size={14} />} />
                 <StatCard label="Expiring ≤ 90d"      value={subStats.expiring90.length}                           color="orange" icon={<Clock size={14} />} />
@@ -455,7 +456,7 @@ export default function Dashboard() {
               )}
 
               {/* Subscription Charts + Renewals */}
-              <div className="grid grid-cols-3 gap-3" style={{ height: 240 }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3" style={{ minHeight: 200 }}>
 
                 {/* Bar: Cost by Type */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
@@ -535,7 +536,7 @@ export default function Dashboard() {
 
         {/* ── Tracker tab ── */}
         {activeTab === 'tracker' && (
-          <div className="h-full flex flex-col w-full">
+          <div className="min-h-0 md:h-full flex flex-col w-full">
             {/* Excel-style toolbar */}
             <div className="bg-[#f2f2f2] border-b border-[#bfbfbf] px-2 py-1 flex flex-wrap items-center gap-1.5 flex-shrink-0">
               <input

@@ -152,9 +152,9 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
   );
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0 }} className="sm:items-center sm:p-4" onClick={onClose}>
       <div
-        style={{ background: '#fff', border: '1px solid #bfbfbf', width: '100%', maxWidth: 680, maxHeight: '92vh', overflowY: 'auto', fontFamily: "'Calibri','Aptos',Arial,sans-serif", display: 'flex', flexDirection: 'column' }}
+        style={{ background: '#fff', border: '1px solid #bfbfbf', width: '100%', maxWidth: 680, maxHeight: '95vh', overflowY: 'auto', fontFamily: "'Calibri','Aptos',Arial,sans-serif", display: 'flex', flexDirection: 'column' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header — Office blue flat */}
@@ -189,7 +189,7 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
           </Field>
 
           {/* Previous User + User ID + Make */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
             <Field label="Previous User">{inp('owner')}</Field>
             <Field label="User ID">
               <input
@@ -212,7 +212,7 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
           </div>
 
           {/* Tag Number + Serial Number + Invoice + Invoice Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
             <Field label="Tag Number">{inp('assetTag', 'text', 'e.g. NGI-LT-001')}</Field>
             <Field label="Serial Number">{inp('serialNumber')}</Field>
             <Field label="Invoice">{inp('invoiceRef')}</Field>
