@@ -3,55 +3,59 @@ name: Fix Coolify Routing After Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   fix-routing:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Coolify deploy to start and finish
+      - name: Wait for Coolify deploy to complete
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
-          echo "Waiting 30s for Coolify to pick up the push..."
-          sleep 30
+          echo "Waiting 90s for Coolify to pick up push and start deploy..."
+          sleep 90
 
-          echo "Polling for deploy to complete..."
-          for i in $(seq 1 30); do
+          echo "Polling until deploy finishes (status=running)..."
+          for i in $(seq 1 40); do
             STATUS=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
               -H "Authorization: Bearer $TOKEN" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
             echo "Attempt $i: status=$STATUS"
             if echo "$STATUS" | grep -q "running"; then
-              echo "Deploy finished."
+              echo "App is running. Waiting extra 10s to ensure containers are stable..."
+              sleep 10
               break
             fi
             sleep 10
           done
 
-      - name: Set domain and restart containers
+      - name: Patch domain and restart
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
-          echo "Setting docker_compose_domains..."
-          curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
+          echo "Patching docker_compose_domains..."
+          PATCH=$(curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}'
+            -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}')
+          echo "Patch response: $PATCH"
 
-          echo "Restarting containers..."
-          curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
-            -H "Authorization: Bearer $TOKEN"
+          echo "Restarting..."
+          RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
+            -H "Authorization: Bearer $TOKEN")
+          echo "Restart response: $RESTART"
 
-          echo "Waiting 40s for restart to complete..."
-          sleep 40
+          echo "Waiting 60s for restart to complete..."
+          sleep 60
 
       - name: Verify site is up
         run: |
-          for i in $(seq 1 12); do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com)
+          for i in $(seq 1 18); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com --max-time 10)
             echo "Attempt $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
               echo "Site is UP."
