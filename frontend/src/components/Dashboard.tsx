@@ -321,21 +321,21 @@ export default function Dashboard() {
                 {(() => {
                   const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('NCPL'));
                   return (
-                    <div className="bg-white rounded-xl border border-blue-100 shadow-sm flex flex-col overflow-hidden">
-                      <div className="bg-blue-50 border-b border-blue-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
-                        <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Available — NCPL HO</p>
-                        <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                    <div className="rounded-xl shadow-sm flex flex-col overflow-hidden" style={{ border: '1px solid #2e75b6' }}>
+                      <div className="px-3 py-1.5 flex items-center justify-between flex-shrink-0" style={{ background: '#2e75b6' }}>
+                        <p className="text-xs font-bold text-white uppercase tracking-wide">Available — NCPL HO</p>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#1f4e79', color: '#fff' }}>{list.length}</span>
                       </div>
-                      <div className="flex-1 overflow-y-auto min-h-0">
+                      <div className="flex-1 overflow-y-auto min-h-0 bg-white">
                         {list.length === 0 ? (
                           <div className="flex items-center justify-center h-full text-xs text-gray-400">No available assets</div>
                         ) : (
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
-                            <thead className="sticky top-0 bg-[#dce6f1]">
+                            <thead className="sticky top-0" style={{ background: '#bdd7ee' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>#</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Product</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Make</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -358,21 +358,21 @@ export default function Dashboard() {
                 {(() => {
                   const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('RAINLAND'));
                   return (
-                    <div className="bg-white rounded-xl border border-green-100 shadow-sm flex flex-col overflow-hidden">
-                      <div className="bg-green-50 border-b border-green-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
-                        <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Available — RAINLAND</p>
-                        <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                    <div className="rounded-xl shadow-sm flex flex-col overflow-hidden" style={{ border: '1px solid #375623' }}>
+                      <div className="px-3 py-1.5 flex items-center justify-between flex-shrink-0" style={{ background: '#375623' }}>
+                        <p className="text-xs font-bold text-white uppercase tracking-wide">Available — RAINLAND</p>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#1e3a12', color: '#fff' }}>{list.length}</span>
                       </div>
-                      <div className="flex-1 overflow-y-auto min-h-0">
+                      <div className="flex-1 overflow-y-auto min-h-0 bg-white">
                         {list.length === 0 ? (
                           <div className="flex items-center justify-center h-full text-xs text-gray-400">No available assets</div>
                         ) : (
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
-                            <thead className="sticky top-0 bg-[#e2efda]">
+                            <thead className="sticky top-0" style={{ background: '#e2efda' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>#</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Product</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Make</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -395,22 +395,22 @@ export default function Dashboard() {
                 {(() => {
                   const list = entries.filter(e => e.assetStatus === 'InUse');
                   return (
-                    <div className="bg-white rounded-xl border border-orange-100 shadow-sm flex flex-col overflow-hidden">
-                      <div className="bg-orange-50 border-b border-orange-100 px-3 py-1.5 flex items-center justify-between flex-shrink-0">
-                        <p className="text-xs font-bold text-orange-800 uppercase tracking-wide">In Use</p>
-                        <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{list.length}</span>
+                    <div className="rounded-xl shadow-sm flex flex-col overflow-hidden" style={{ border: '1px solid #833c00' }}>
+                      <div className="px-3 py-1.5 flex items-center justify-between flex-shrink-0" style={{ background: '#833c00' }}>
+                        <p className="text-xs font-bold text-white uppercase tracking-wide">In Use</p>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#4d2300', color: '#fff' }}>{list.length}</span>
                       </div>
-                      <div className="flex-1 overflow-y-auto min-h-0">
+                      <div className="flex-1 overflow-y-auto min-h-0 bg-white">
                         {list.length === 0 ? (
                           <div className="flex items-center justify-center h-full text-xs text-gray-400">No assets in use</div>
                         ) : (
                           <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
-                            <thead className="sticky top-0 bg-[#fce4d6]">
+                            <thead className="sticky top-0" style={{ background: '#fce4d6' }}>
                               <tr>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">#</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">User</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Product</th>
-                                <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b border-[#bfbfbf]">Make</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>#</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>User</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>Product</th>
+                                <th className="px-2 py-1 text-left font-bold border-b border-[#833c00]" style={{ color: '#4d2300' }}>Make</th>
                               </tr>
                             </thead>
                             <tbody>
