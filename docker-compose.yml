@@ -70,6 +70,39 @@ services:
       - tracker-network
       - coolify
 
+  # One-shot: writes a file-based Traefik router into Coolify's proxy dynamic
+  # config dir. File-based routers survive deploys (container labels do not),
+  # and this service re-writes it on every deploy — permanent 502 fix.
+  traefik-config:
+    image: alpine:3.20
+    restart: "no"
+    volumes:
+      - /data/coolify/proxy/dynamic:/dynamic
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cat > /dynamic/ngi-tracker.yaml <<'EOF'
+        http:
+          routers:
+            ngi-tracker-http:
+              rule: Host(`itasset.nationalgroupindia.com`)
+              entryPoints:
+                - http
+              service: ngi-tracker
+            ngi-tracker-https:
+              rule: Host(`itasset.nationalgroupindia.com`)
+              entryPoints:
+                - https
+              tls: true
+              service: ngi-tracker
+          services:
+            ngi-tracker:
+              loadBalancer:
+                servers:
+                  - url: "http://187.127.134.246:3000"
+        EOF
+        echo "Traefik dynamic config written."
+
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: unless-stopped

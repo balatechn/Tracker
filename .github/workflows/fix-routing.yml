@@ -1,4 +1,4 @@
-name: Fix Coolify Routing After Deploy
+name: Verify Site After Deploy
 
 on:
   push:
@@ -6,72 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  fix-routing:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Coolify build to finish
-        run: |
-          APP_UUID="qys5ng80cub4toeleeywj04r"
-          COOLIFY_URL="http://187.127.134.246:8000"
-          TOKEN="${{ secrets.COOLIFY_TOKEN }}"
-
-          echo "Waiting 5 minutes for Docker build..."
-          sleep 300
-
-          echo "Polling until status=running..."
-          for i in $(seq 1 60); do
-            RESP=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" -H "Authorization: Bearer $TOKEN")
-            STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
-            echo "Attempt $i: status=$STATUS"
-            if echo "$STATUS" | grep -q "running"; then
-              echo "App running. Waiting 20s..."
-              sleep 20
-              break
-            fi
-            sleep 10
-          done
-
-      - name: Patch domain (fqdn + docker_compose_domains) and restart
-        run: |
-          APP_UUID="qys5ng80cub4toeleeywj04r"
-          COOLIFY_URL="http://187.127.134.246:8000"
-          TOKEN="${{ secrets.COOLIFY_TOKEN }}"
-
-          echo "Current config:"
-          curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
-            -H "Authorization: Bearer $TOKEN" \
-            | grep -oE '"(fqdn|docker_compose_domains)":"[^"]*"' | head -5
-
-          echo ""
-          echo "Patching fqdn + docker_compose_domains..."
-          PATCH=$(curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"fqdn":"https://itasset.nationalgroupindia.com","docker_compose_domains":{"frontend":{"domain":"https://itasset.nationalgroupindia.com","name":"frontend"}}}')
-          echo "Patch result: $PATCH"
-
-          echo ""
-          echo "Verified config after patch:"
-          curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
-            -H "Authorization: Bearer $TOKEN" \
-            | grep -oE '"(fqdn|docker_compose_domains)":"[^"]*"' | head -5
-
-          echo ""
-          echo "Restarting app..."
-          for attempt in $(seq 1 5); do
-            RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
-              -H "Authorization: Bearer $TOKEN")
-            echo "Restart attempt $attempt: $RESTART"
-            if echo "$RESTART" | grep -q "queued\|uuid\|message"; then
-              echo "Restart accepted."
-              break
-            fi
-            echo "Blocked, waiting 30s..."
-            sleep 30
-          done
-
-          echo "Waiting 3 minutes for restart..."
-          sleep 180
+      - name: Wait for Coolify build
+        run: sleep 360
 
       - name: Verify site is up
         run: |
