@@ -278,7 +278,7 @@ export default function AllocationsTab() {
                 <select style={FLAT} value={form.assetId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(p => ({ ...p, assetId: e.target.value }))}>
                   <option value="">— Select available asset —</option>
                   {availableAssets.map((e: Entry) => (
-                    <option key={e.id} value={e.id}>{e.serviceName}{e.assetTag ? ` [${e.assetTag}]` : ''}{e.category ? ` — ${e.category}` : ''}</option>
+                    <option key={e.id} value={e.id}>{e.category ?? 'Asset'} — {e.owner ? e.owner : 'No Previous User'}{e.assetTag ? ` [${e.assetTag}]` : ''}</option>
                   ))}
                 </select>
                 {availableAssets.length === 0 && <p style={{ fontSize: '9pt', color: '#c00000', marginTop: 4 }}>No available assets found.</p>}
