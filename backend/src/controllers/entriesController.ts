@@ -98,12 +98,15 @@ export async function deleteEntry(req: AuthRequest, res: Response): Promise<void
     return;
   }
 
-  const exists = await prisma.entry.findUnique({ where: { id } });
+  const exists = await prisma.entry.findUnique({ where: { id }, include: { allocations: true } });
   if (!exists) {
     res.status(404).json({ error: 'Entry not found' });
     return;
   }
 
+  // Delete related allocations and audit logs first, then the entry
+  await prisma.allocation.deleteMany({ where: { assetId: id } });
+  await prisma.auditLog.deleteMany({ where: { entityType: 'Allocation', entityId: id } });
   await prisma.entry.delete({ where: { id } });
   res.json({ message: 'Deleted successfully' });
 }
