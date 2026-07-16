@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown, UserPlus } from 'lucide-react';
 import { Entry } from '@/types';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { entriesApi } from '@/lib/api';
 import DeleteModal from './DeleteModal';
 
@@ -19,6 +19,10 @@ interface Props {
 type SortKey = keyof Entry | 'department';
 type SortDir = 'asc' | 'desc';
 
+// Excel cell/header shared styles
+const TD = 'px-1.5 border border-[#d0d0d0] whitespace-nowrap text-[10.5px] leading-[18px]';
+const TH_BASE = 'px-1.5 border border-[#2a4a7f] text-[10.5px] font-bold uppercase tracking-wide whitespace-nowrap leading-[20px] bg-[#1f3864] text-white select-none';
+
 export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }: Props) {
   const queryClient = useQueryClient();
   const [sortKey, setSortKey] = useState<SortKey>('srNo');
@@ -26,7 +30,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   const [deleteTarget, setDeleteTarget] = useState<Entry | null>(null);
 
   function handleSort(key: SortKey) {
-    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('asc'); }
   }
 
@@ -36,15 +40,15 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
       if (sortKey === 'department') {
         aVal = a.allocations?.[0]?.employee.department ?? '';
         bVal = b.allocations?.[0]?.employee.department ?? '';
-      } else if (sortKey === 'annualCost') {
-        aVal = a.annualCost ?? 0;
-        bVal = b.annualCost ?? 0;
+      } else if (sortKey === 'annualCost' || sortKey === 'purchasePrice') {
+        aVal = (a[sortKey] as number) ?? 0;
+        bVal = (b[sortKey] as number) ?? 0;
       } else if (sortKey === 'purchaseDate') {
-        aVal = a.purchaseDate ? new Date(a.purchaseDate).getTime() : 99999999999;
-        bVal = b.purchaseDate ? new Date(b.purchaseDate).getTime() : 99999999999;
+        aVal = a.purchaseDate ? new Date(a.purchaseDate).getTime() : 9e12;
+        bVal = b.purchaseDate ? new Date(b.purchaseDate).getTime() : 9e12;
       } else {
-        aVal = (a[sortKey as keyof Entry] ?? '') as string;
-        bVal = (b[sortKey as keyof Entry] ?? '') as string;
+        aVal = String(a[sortKey as keyof Entry] ?? '');
+        bVal = String(b[sortKey as keyof Entry] ?? '');
       }
       if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
@@ -65,37 +69,27 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   }
 
   function SortIcon({ k }: { k: SortKey }) {
-    if (sortKey !== k) return <ChevronsUpDown size={11} className="opacity-30" />;
-    return sortDir === 'asc' ? <ChevronUp size={11} /> : <ChevronDown size={11} />;
+    if (sortKey !== k) return <ChevronsUpDown size={9} className="opacity-40 flex-shrink-0" />;
+    return sortDir === 'asc' ? <ChevronUp size={9} className="flex-shrink-0" /> : <ChevronDown size={9} className="flex-shrink-0" />;
   }
 
   function Th({ children, k }: { children: React.ReactNode; k: SortKey }) {
     return (
-      <th
-        className="px-2 py-1 text-left text-[11px] font-bold whitespace-nowrap cursor-pointer select-none border border-[#bfbfbf] bg-[#1f3864] hover:bg-[#162a4a] transition-colors text-white uppercase tracking-wide"
-        onClick={() => handleSort(k)}
-      >
-        <div className="flex items-center gap-0.5">
-          {children}
-          <SortIcon k={k} />
-        </div>
+      <th className={`${TH_BASE} cursor-pointer hover:bg-[#162a4a] transition-colors`} onClick={() => handleSort(k)}>
+        <div className="flex items-center gap-0.5">{children}<SortIcon k={k} /></div>
       </th>
     );
   }
 
   function ThPlain({ children }: { children: React.ReactNode }) {
-    return (
-      <th className="px-2 py-1 text-left text-[11px] font-bold whitespace-nowrap border border-[#bfbfbf] bg-[#1f3864] text-white uppercase tracking-wide">
-        {children}
-      </th>
-    );
+    return <th className={TH_BASE}>{children}</th>;
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        <span className="animate-spin h-6 w-6 border-2 border-brand-500 border-t-transparent rounded-full mr-3" />
-        Loading entries…
+      <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+        <span className="animate-spin h-5 w-5 border-2 border-brand-500 border-t-transparent rounded-full mr-2" />
+        Loading…
       </div>
     );
   }
@@ -103,26 +97,25 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-400">
-        <p className="text-lg font-medium">No entries found</p>
-        <p className="text-sm">Try adjusting your search or filters, or add a new entry.</p>
+        <p className="font-medium">No entries found</p>
+        <p className="text-sm mt-1">Try adjusting filters or add a new entry.</p>
       </div>
     );
   }
 
-  const statusColor: Record<string, string> = {
-    'InUse':     'text-green-700 font-semibold',
-    'IN USE':    'text-green-700 font-semibold',
-    'Available': 'text-blue-600 font-semibold',
-    'InRepair':  'text-orange-600 font-semibold',
-    'Retired':   'text-gray-400',
-    'RETURNED':  'text-red-600 font-semibold',
-    'SPARE':     'text-purple-600 font-semibold',
+  const statusStyle: Record<string, string> = {
+    InUse:     'text-[#375623] font-semibold',
+    Available: 'text-[#1f497d] font-semibold',
+    InRepair:  'text-[#974706] font-semibold',
+    Retired:   'text-gray-400',
+    RETURNED:  'text-[#c00000] font-semibold',
+    SPARE:     'text-[#7030a0] font-semibold',
   };
 
   return (
     <>
-      <div className="flex-1 min-h-0 overflow-auto">
-        <table className="w-full text-[11px] border-collapse">
+      <div className="flex-1 min-h-0 overflow-auto" style={{ fontFamily: "'Calibri', 'Aptos', 'Arial', sans-serif" }}>
+        <table className="border-collapse" style={{ tableLayout: 'auto', minWidth: '100%' }}>
           <thead className="sticky top-0 z-10">
             <tr>
               <ThPlain>#</ThPlain>
@@ -142,35 +135,41 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
           <tbody>
             {sortedEntries().map((entry, idx) => {
               const emp = entry.allocations?.[0]?.employee;
-              const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]';
+              const bg = idx % 2 === 0 ? '#ffffff' : '#f2f2f2';
               return (
-                <tr key={entry.id} className={`${rowBg} hover:bg-[#dce6f1] transition-colors`}>
-                  <td className="px-2 py-[2px] border border-gray-200 text-gray-500 text-right w-8 font-mono">{entry.srNo ?? idx + 1}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap font-medium text-gray-800">{entry.owner ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-700">{emp?.name ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap max-w-[180px] truncate text-gray-600" title={entry.serviceName}>{entry.serviceName}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap font-medium text-gray-800">{entry.category ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-700">{entry.vendor ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{emp?.department ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{entry.billingCompany ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap">
-                    <span className={statusColor[entry.assetStatus ?? ''] ?? 'text-gray-500'}>
-                      {entry.assetStatus ?? '—'}
+                <tr
+                  key={entry.id}
+                  style={{ backgroundColor: bg }}
+                  className="hover:bg-[#dce6f1] transition-colors"
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dce6f1')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = bg)}
+                >
+                  <td className={`${TD} text-right text-gray-400 w-8`}>{entry.srNo ?? idx + 1}</td>
+                  <td className={`${TD} text-gray-800`}>{entry.owner ?? '–'}</td>
+                  <td className={`${TD} text-gray-800`}>{emp?.name ?? '–'}</td>
+                  <td className={`${TD} text-gray-600 max-w-[200px] overflow-hidden text-ellipsis`} title={entry.serviceName}>{entry.serviceName}</td>
+                  <td className={`${TD} text-gray-800 font-semibold`}>{entry.category ?? '–'}</td>
+                  <td className={`${TD} text-gray-700`}>{entry.vendor ?? '–'}</td>
+                  <td className={`${TD} text-gray-700`}>{emp?.department ?? '–'}</td>
+                  <td className={`${TD} text-gray-700`}>{entry.billingCompany ?? '–'}</td>
+                  <td className={`${TD}`}>
+                    <span className={statusStyle[entry.assetStatus ?? ''] ?? 'text-gray-500'}>
+                      {entry.assetStatus ?? '–'}
                     </span>
                   </td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600 font-mono text-[10px]">{entry.invoiceRef ?? '—'}</td>
-                  <td className="px-2 py-[2px] border border-gray-200 whitespace-nowrap text-gray-600">{formatDate(entry.purchaseDate)}</td>
-                  <td className="px-2 py-[2px] border border-gray-200">
+                  <td className={`${TD} text-gray-600`} style={{ fontFamily: 'Consolas, monospace', fontSize: '10px' }}>{entry.invoiceRef ?? '–'}</td>
+                  <td className={`${TD} text-gray-600`}>{formatDate(entry.purchaseDate)}</td>
+                  <td className={`${TD}`}>
                     <div className="flex items-center justify-center gap-0.5">
-                      <button onClick={() => onEdit(entry)} className="p-1 text-gray-400 hover:text-brand-500 rounded transition-colors" title="Edit">
-                        <Pencil size={12} />
+                      <button onClick={() => onEdit(entry)} className="p-0.5 text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
+                        <Pencil size={11} />
                       </button>
-                      <button onClick={() => setDeleteTarget(entry)} className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors" title="Delete">
-                        <Trash2 size={12} />
+                      <button onClick={() => setDeleteTarget(entry)} className="p-0.5 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                        <Trash2 size={11} />
                       </button>
                       {onAllocate && entry.assetTag && entry.assetStatus !== 'InUse' && (
-                        <button onClick={() => onAllocate(entry)} className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors" title="Allocate">
-                          <UserPlus size={12} />
+                        <button onClick={() => onAllocate(entry)} className="p-0.5 text-gray-400 hover:text-green-600 transition-colors" title="Allocate">
+                          <UserPlus size={11} />
                         </button>
                       )}
                     </div>
@@ -182,7 +181,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
         </table>
       </div>
 
-      <div className="px-3 py-1 border-t border-[#bfbfbf] text-[11px] text-gray-500 bg-[#f2f2f2]">
+      <div className="px-2 py-1 border-t border-[#d0d0d0] bg-[#f2f2f2]" style={{ fontFamily: "'Calibri','Arial',sans-serif", fontSize: '10.5px', color: '#595959' }}>
         {entries.length} record{entries.length !== 1 ? 's' : ''}
       </div>
 
