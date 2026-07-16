@@ -229,8 +229,8 @@ export default function Dashboard() {
           <button onClick={handleLogout} title="Sign out" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><LogOut size={13} /></button>
         </div>
 
-        {/* Ribbon tab bar — Excel style: blue bg, white active tab elevated */}
-        <div style={{ background: '#2b579a', display: 'flex', alignItems: 'flex-end', padding: '4px 4px 0', gap: 2 }}>
+        {/* Office ribbon tab bar — white bg, active tab = bold + blue underline */}
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #d0d0d0', display: 'flex', alignItems: 'stretch', padding: '0 4px' }}>
           {([
             { key: 'overview',      label: 'Overview',                icon: <LayoutDashboard size={13} /> },
             { key: 'tracker',       label: 'Hardware Assets',          icon: <Table2 size={13} /> },
@@ -240,35 +240,35 @@ export default function Dashboard() {
           ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 14px 6px',
+              padding: '0 14px',
+              height: 36,
               fontSize: '10pt',
-              fontWeight: activeTab === key ? 700 : 500,
-              color: activeTab === key ? '#2b579a' : '#dce6f8',
-              background: activeTab === key ? '#f2f2f2' : 'transparent',
+              fontWeight: activeTab === key ? 700 : 400,
+              color: activeTab === key ? '#2b579a' : '#3b3b3b',
+              background: 'transparent',
               border: 'none',
-              borderRadius: '3px 3px 0 0',
+              borderBottom: activeTab === key ? '3px solid #2b579a' : '3px solid transparent',
               cursor: 'pointer',
               whiteSpace: 'nowrap' as const,
-              transition: 'background 0.1s, color 0.1s',
+              transition: 'color 0.1s, border-color 0.1s, background 0.1s',
             }}
-            onMouseEnter={e => { if (activeTab !== key) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)'; }}
-            onMouseLeave={e => { if (activeTab !== key) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            onMouseEnter={e => { if (activeTab !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#e8eef7'; (e.currentTarget as HTMLButtonElement).style.color = '#2b579a'; } }}
+            onMouseLeave={e => { if (activeTab !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#3b3b3b'; } }}
             >{icon}{label}</button>
           ))}
           <div style={{ flex: 1 }} />
           {isAdmin && (
             <button onClick={() => setActiveTab('users')} style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 14px 6px', fontSize: '10pt',
-              fontWeight: activeTab === 'users' ? 700 : 500,
-              color: activeTab === 'users' ? '#2b579a' : '#dce6f8',
-              background: activeTab === 'users' ? '#f2f2f2' : 'transparent',
-              border: 'none',
-              borderRadius: '3px 3px 0 0',
+              padding: '0 14px', height: 36, fontSize: '10pt',
+              fontWeight: activeTab === 'users' ? 700 : 400,
+              color: activeTab === 'users' ? '#2b579a' : '#3b3b3b',
+              background: 'transparent', border: 'none',
+              borderBottom: activeTab === 'users' ? '3px solid #2b579a' : '3px solid transparent',
               cursor: 'pointer',
             }}
-            onMouseEnter={e => { if (activeTab !== 'users') (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)'; }}
-            onMouseLeave={e => { if (activeTab !== 'users') (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            onMouseEnter={e => { if (activeTab !== 'users') { (e.currentTarget as HTMLButtonElement).style.background = '#e8eef7'; (e.currentTarget as HTMLButtonElement).style.color = '#2b579a'; } }}
+            onMouseLeave={e => { if (activeTab !== 'users') { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#3b3b3b'; } }}
             ><Shield size={13} />Users</button>
           )}
         </div>
