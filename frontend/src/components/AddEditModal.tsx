@@ -18,7 +18,6 @@ const EMPTY: EntryFormData = {
   criticality: null, lastRenewalDate: null, renewalPeriod: null,
   annualCost: null, paymentMethod: null, invoiceRef: null,
   financeEmail: null, adminEmail: null, vendorEmail: null, remarks: null,
-  // Physical asset fields
   assetTag: null, serialNumber: null, location: null, condition: null,
   assetStatus: null, purchaseDate: null, purchasePrice: null, warrantyYears: null,
 };
@@ -28,10 +27,34 @@ function toInputDate(v: string | null) {
   return v.slice(0, 10);
 }
 
+const LBL: React.CSSProperties = {
+  display: 'block',
+  fontSize: '8.5pt',
+  fontWeight: 700,
+  color: '#595959',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  marginBottom: 3,
+  fontFamily: "'Calibri','Aptos',Arial,sans-serif",
+};
+
+const INPUT: React.CSSProperties = {
+  width: '100%',
+  fontSize: '10.5pt',
+  fontFamily: "'Calibri','Aptos',Arial,sans-serif",
+  border: '1px solid #bfbfbf',
+  borderRadius: 0,
+  padding: '4px 6px',
+  background: '#fff',
+  color: '#1f1f1f',
+  outline: 'none',
+  boxSizing: 'border-box',
+};
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="label">{label}</label>
+      <label style={LBL}>{label}</label>
       {children}
     </div>
   );
@@ -72,6 +95,8 @@ export default function AddEditModal({ entry, onClose }: Props) {
         purchasePrice: entry.purchasePrice,
         warrantyYears: entry.warrantyYears,
       });
+    } else {
+      setForm(EMPTY);
     }
   }, [entry]);
 
@@ -81,7 +106,7 @@ export default function AddEditModal({ entry, onClose }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.serviceName.trim()) { toast.error('Service name is required'); return; }
+    if (!form.serviceName.trim()) { toast.error('Re Issued To is required'); return; }
     setSaving(true);
     try {
       if (entry) {
@@ -100,155 +125,161 @@ export default function AddEditModal({ entry, onClose }: Props) {
     }
   }
 
+  const inp = (key: keyof EntryFormData, type = 'text', placeholder = '') => (
+    <input
+      style={INPUT}
+      type={type}
+      placeholder={placeholder}
+      value={(form[key] as string | number) ?? ''}
+      onChange={e => set(key, (type === 'number' ? (e.target.value ? Number(e.target.value) : null) : (e.target.value || null)) as EntryFormData[typeof key])}
+      onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; e.currentTarget.style.boxShadow = '0 0 0 1px #2b579a'; }}
+      onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; e.currentTarget.style.boxShadow = 'none'; }}
+    />
+  );
+
+  const sel = (key: keyof EntryFormData, options: string[]) => (
+    <select
+      style={INPUT}
+      value={(form[key] as string) ?? ''}
+      onChange={e => set(key, (e.target.value || null) as EntryFormData[typeof key])}
+      onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; }}
+      onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; }}
+    >
+      <option value="">— Select —</option>
+      {options.map(o => <option key={o}>{o}</option>)}
+    </select>
+  );
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        style={{ background: '#fff', border: '1px solid #bfbfbf', width: '100%', maxWidth: 680, maxHeight: '92vh', overflowY: 'auto', fontFamily: "'Calibri','Aptos',Arial,sans-serif", display: 'flex', flexDirection: 'column' }}
+        onClick={e => e.stopPropagation()}
       >
-        {/* Modal header */}
-        <div className="bg-brand-500 px-6 py-4 flex items-center justify-between rounded-t-xl sticky top-0">
-          <h2 className="text-white font-semibold text-base">
+        {/* Header — Office blue flat */}
+        <div style={{ background: '#2b579a', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: '11pt' }}>
             {entry ? 'Edit Entry' : 'Add New Entry'}
-          </h2>
-          <button onClick={onClose} className="text-white/70 hover:text-white transition-colors">
-            <X size={18} />
+          </span>
+          <button onClick={onClose} style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+            <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {/* Row 1 */}
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Sr No">
-              <input className="input" type="number" value={form.srNo ?? ''} onChange={(e) => set('srNo', e.target.value ? Number(e.target.value) : null)} />
-            </Field>
-            <Field label="Category">
-              <select className="input" value={form.category ?? ''} onChange={(e) => set('category', e.target.value || null)}>
-                <option value="">— Select —</option>
-                {['Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'].map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+        <form onSubmit={handleSubmit} style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+          {/* Row: # and Product (Category) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
+            <Field label="#">{inp('srNo', 'number')}</Field>
+            <Field label="Product">
+              {sel('category', ['Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'])}
             </Field>
           </div>
 
-          {/* Service Name */}
-          <Field label="Service / Domain Name *">
-            <input className="input" type="text" value={form.serviceName} onChange={(e) => set('serviceName', e.target.value)} required placeholder="e.g. nationalgroupindia.com" />
+          {/* Re Issued To (serviceName) */}
+          <Field label="Re Issued To *">
+            <input
+              style={INPUT} type="text" value={form.serviceName}
+              onChange={e => set('serviceName', e.target.value)} required
+              placeholder="Asset description / name"
+              onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; e.currentTarget.style.boxShadow = '0 0 0 1px #2b579a'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; e.currentTarget.style.boxShadow = 'none'; }}
+            />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Billing Company">
-              <input className="input" type="text" value={form.billingCompany ?? ''} onChange={(e) => set('billingCompany', e.target.value || null)} />
-            </Field>
-            <Field label="Vendor / Registrar">
-              <input className="input" type="text" value={form.vendor ?? ''} onChange={(e) => set('vendor', e.target.value || null)} />
+          {/* Previous User + Make */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Previous User">{inp('owner')}</Field>
+            <Field label="Make">{inp('vendor')}</Field>
+          </div>
+
+          {/* Company + Status */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Company">{inp('billingCompany')}</Field>
+            <Field label="Status">
+              {sel('assetStatus', ['Available', 'InUse', 'InRepair', 'Retired', 'Scrapped', 'RETURNED', 'SPARE'])}
             </Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Expiry Date">
-              <input className="input" type="date" value={form.expiryDate ?? ''} onChange={(e) => set('expiryDate', e.target.value || null)} />
-            </Field>
-            <Field label="Last Renewal Date">
-              <input className="input" type="date" value={form.lastRenewalDate ?? ''} onChange={(e) => set('lastRenewalDate', e.target.value || null)} />
-            </Field>
-            <Field label="Renewal Period (Yrs)">
-              <input className="input" type="number" value={form.renewalPeriod ?? ''} onChange={(e) => set('renewalPeriod', e.target.value ? Number(e.target.value) : null)} />
-            </Field>
+          {/* Invoice + Invoice Date */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Invoice">{inp('invoiceRef')}</Field>
+            <Field label="Invoice Date">{inp('purchaseDate', 'date')}</Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Owner (IT Person)">
-              <input className="input" type="text" value={form.owner ?? ''} onChange={(e) => set('owner', e.target.value || null)} />
-            </Field>
-            <Field label="Criticality">
-              <select className="input" value={form.criticality ?? ''} onChange={(e) => set('criticality', e.target.value || null)}>
-                <option value="">— Select —</option>
-                {['High', 'Medium', 'Low'].map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-            <div className="flex items-end pb-0.5">
-              <label className="flex items-center gap-2 cursor-pointer mt-5">
-                <input type="checkbox" checked={form.autoRenewal} onChange={(e) => set('autoRenewal', e.target.checked)} className="w-4 h-4 accent-brand-500" />
-                <span className="text-sm font-medium text-gray-700">Auto Renewal</span>
+          {/* Divider — Additional Details */}
+          <div style={{ borderTop: '1px solid #d0d0d0', paddingTop: 10, marginTop: 2 }}>
+            <div style={{ fontSize: '8.5pt', fontWeight: 700, color: '#2b579a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Additional Details</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <Field label="Asset Tag">{inp('assetTag', 'text', 'e.g. NGI-LT-001')}</Field>
+              <Field label="Serial Number">{inp('serialNumber')}</Field>
+              <Field label="Location">{inp('location', 'text', 'Office / Floor')}</Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 10 }}>
+              <Field label="Condition">
+                {sel('condition', ['Good', 'Fair', 'Poor', 'Faulty'])}
+              </Field>
+              <Field label="Criticality">
+                {sel('criticality', ['High', 'Medium', 'Low'])}
+              </Field>
+              <Field label="Warranty (Years)">{inp('warrantyYears', 'number')}</Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 10 }}>
+              <Field label="Annual Cost (INR)">{inp('annualCost', 'number')}</Field>
+              <Field label="Purchase Price (INR)">{inp('purchasePrice', 'number')}</Field>
+              <Field label="Payment Method">{inp('paymentMethod', 'text', 'Online / Cheque')}</Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 10 }}>
+              <Field label="Finance Email">
+                <input style={INPUT} type="email" value={form.financeEmail ?? ''} onChange={e => set('financeEmail', e.target.value || null)}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; }} onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; }} />
+              </Field>
+              <Field label="Admin Email">
+                <input style={INPUT} type="email" value={form.adminEmail ?? ''} onChange={e => set('adminEmail', e.target.value || null)}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; }} onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; }} />
+              </Field>
+              <Field label="Vendor Email">
+                <input style={INPUT} type="email" value={form.vendorEmail ?? ''} onChange={e => set('vendorEmail', e.target.value || null)}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; }} onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; }} />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+              <Field label="Expiry Date">{inp('expiryDate', 'date')}</Field>
+              <Field label="Last Renewal Date">{inp('lastRenewalDate', 'date')}</Field>
+            </div>
+
+            <div style={{ marginTop: 10 }}>
+              <Field label="Remarks">
+                <textarea
+                  style={{ ...INPUT, resize: 'none' }} rows={2}
+                  value={form.remarks ?? ''} onChange={e => set('remarks', e.target.value || null)}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#2b579a'; }} onBlur={e => { e.currentTarget.style.borderColor = '#bfbfbf'; }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: '10pt', color: '#3b3b3b' }}>
+                <input type="checkbox" checked={form.autoRenewal} onChange={e => set('autoRenewal', e.target.checked)} style={{ accentColor: '#2b579a', width: 14, height: 14 }} />
+                Auto Renewal
               </label>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Annual Cost (INR)">
-              <input className="input" type="number" value={form.annualCost ?? ''} onChange={(e) => set('annualCost', e.target.value ? Number(e.target.value) : null)} />
-            </Field>
-            <Field label="Payment Method">
-              <input className="input" type="text" value={form.paymentMethod ?? ''} onChange={(e) => set('paymentMethod', e.target.value || null)} placeholder="Online / Cheque" />
-            </Field>
-            <Field label="Invoice Reference">
-              <input className="input" type="text" value={form.invoiceRef ?? ''} onChange={(e) => set('invoiceRef', e.target.value || null)} />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Finance Email">
-              <input className="input" type="email" value={form.financeEmail ?? ''} onChange={(e) => set('financeEmail', e.target.value || null)} />
-            </Field>
-            <Field label="Admin Email">
-              <input className="input" type="email" value={form.adminEmail ?? ''} onChange={(e) => set('adminEmail', e.target.value || null)} />
-            </Field>
-            <Field label="Vendor Email">
-              <input className="input" type="email" value={form.vendorEmail ?? ''} onChange={(e) => set('vendorEmail', e.target.value || null)} />
-            </Field>
-          </div>
-
-          <Field label="Remarks">
-            <textarea className="input resize-none" rows={2} value={form.remarks ?? ''} onChange={(e) => set('remarks', e.target.value || null)} />
-          </Field>
-
-          {/* Physical Asset Details section */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Physical Asset Details</p>
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="Asset Tag">
-                <input className="input" type="text" value={form.assetTag ?? ''} onChange={(e) => set('assetTag', e.target.value || null)} placeholder="e.g. NGI-LT-001" />
-              </Field>
-              <Field label="Serial Number">
-                <input className="input" type="text" value={form.serialNumber ?? ''} onChange={(e) => set('serialNumber', e.target.value || null)} />
-              </Field>
-              <Field label="Location">
-                <input className="input" type="text" value={form.location ?? ''} onChange={(e) => set('location', e.target.value || null)} placeholder="Office / Floor" />
-              </Field>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mt-4">
-              <Field label="Condition">
-                <select className="input" value={form.condition ?? ''} onChange={(e) => set('condition', e.target.value || null)}>
-                  <option value="">— Select —</option>
-                  {['Good','Fair','Poor','Faulty'].map(c => <option key={c}>{c}</option>)}
-                </select>
-              </Field>
-              <Field label="Asset Status">
-                <select className="input" value={form.assetStatus ?? ''} onChange={(e) => set('assetStatus', e.target.value || null)}>
-                  <option value="">— Select —</option>
-                  {['Available','InUse','InRepair','Retired','Scrapped'].map(s => <option key={s}>{s}</option>)}
-                </select>
-              </Field>
-              <Field label="Warranty (Years)">
-                <input className="input" type="number" min="0" value={form.warrantyYears ?? ''} onChange={(e) => set('warrantyYears', e.target.value ? Number(e.target.value) : null)} />
-              </Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <Field label="Purchase Date">
-                <input className="input" type="date" value={form.purchaseDate ?? ''} onChange={(e) => set('purchaseDate', e.target.value || null)} />
-              </Field>
-              <Field label="Purchase Price (INR)">
-                <input className="input" type="number" min="0" value={form.purchasePrice ?? ''} onChange={(e) => set('purchasePrice', e.target.value ? Number(e.target.value) : null)} />
-              </Field>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saving}>
-              {saving && <span className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />}
+          {/* Footer buttons */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 10, borderTop: '1px solid #d0d0d0', marginTop: 2 }}>
+            <button type="button" onClick={onClose}
+              style={{ background: '#f2f2f2', border: '1px solid #bfbfbf', padding: '4px 16px', fontSize: '10pt', fontFamily: "'Calibri',Arial,sans-serif", cursor: 'pointer', color: '#1f1f1f' }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              style={{ background: saving ? '#7a9fcb' : '#2b579a', border: '1px solid #1f4278', color: '#fff', padding: '4px 20px', fontSize: '10pt', fontFamily: "'Calibri',Arial,sans-serif", cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {saving && <span style={{ width: 12, height: 12, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />}
               {saving ? 'Saving…' : entry ? 'Update Entry' : 'Add Entry'}
             </button>
           </div>
