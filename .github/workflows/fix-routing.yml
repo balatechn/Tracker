@@ -6,58 +6,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-and-fix:
+  fix-routing:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger full Coolify deploy (build + run latest code)
+      - name: Wait for Coolify to build and start
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
-          echo "Triggering full deploy (rebuild from latest git)..."
-          DEPLOY=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/deploy?force=true" \
-            -H "Authorization: Bearer $TOKEN")
-          echo "Deploy response: $DEPLOY"
-
-          echo "Waiting 3 minutes for build + start..."
+          echo "Waiting 3 minutes for Docker build to complete..."
           sleep 180
 
-      - name: Poll until app is running
-        run: |
-          APP_UUID="qys5ng80cub4toeleeywj04r"
-          COOLIFY_URL="http://187.127.134.246:8000"
-          TOKEN="${{ secrets.COOLIFY_TOKEN }}"
-
-          for i in $(seq 1 30); do
+          echo "Polling until app status = running..."
+          for i in $(seq 1 40); do
             STATUS=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
               -H "Authorization: Bearer $TOKEN" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
             echo "Attempt $i: status=$STATUS"
-            if echo "$STATUS" | grep -qE "running"; then
+            if echo "$STATUS" | grep -q "running"; then
               echo "App is running."
+              sleep 5
               break
             fi
             sleep 10
           done
 
-      - name: Patch domain and restart to apply routing
+      - name: Patch domain routing
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
           echo "Patching docker_compose_domains..."
-          PATCH=$(curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
+          curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}')
-          echo "Patch: $PATCH"
+            -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}'
 
           echo "Restarting to apply domain patch..."
           curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
             -H "Authorization: Bearer $TOKEN"
 
-          echo "Waiting 60s..."
+          echo "Waiting 60s for restart..."
           sleep 60
 
       - name: Verify site is up
@@ -66,7 +56,7 @@ jobs:
             CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com --max-time 10)
             echo "Attempt $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
-              echo "Site is UP with latest code."
+              echo "Site is UP."
               exit 0
             fi
             sleep 10
