@@ -18,51 +18,76 @@ jobs:
           echo "Waiting 5 minutes for Docker build..."
           sleep 300
 
-          echo "Polling until status=running and no deploy in progress..."
+          echo "Polling until status=running..."
           for i in $(seq 1 60); do
             RESP=$(curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" -H "Authorization: Bearer $TOKEN")
             STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
             echo "Attempt $i: status=$STATUS"
             if echo "$STATUS" | grep -q "running"; then
-              echo "App running. Waiting 15s extra to ensure deploy settled..."
-              sleep 15
+              echo "App running. Waiting 20s extra..."
+              sleep 20
               break
             fi
             sleep 10
           done
 
-      - name: Patch domain and restart (with retry)
+      - name: Check current domain config
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
 
-          echo "Patching docker_compose_domains..."
-          curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
+          echo "Current app config (domain fields):"
+          curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
+            -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('docker_compose_domains:', d.get('docker_compose_domains'))
+print('fqdn:', d.get('fqdn'))
+print('status:', d.get('status'))
+"
+
+      - name: Patch domain and restart
+        run: |
+          APP_UUID="qys5ng80cub4toeleeywj04r"
+          COOLIFY_URL="http://187.127.134.246:8000"
+          TOKEN="${{ secrets.COOLIFY_TOKEN }}"
+
+          echo "=== Trying format 1: object with service name as key ==="
+          PATCH1=$(curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}'
+            -d '{"docker_compose_domains":{"frontend":{"domain":"https://itasset.nationalgroupindia.com"}}}')
+          echo "Patch1 result: $PATCH1"
+
+          echo "Verifying what was stored..."
+          curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
+            -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('docker_compose_domains after patch1:', d.get('docker_compose_domains'))
+"
 
           echo ""
-          echo "Triggering full redeploy (applies updated docker_compose_domains)..."
+          echo "=== Restarting app ==="
           for attempt in $(seq 1 5); do
-            DEPLOY=$(curl -s -X GET "$COOLIFY_URL/api/v1/deploy?uuid=$APP_UUID&force=false" \
+            RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
               -H "Authorization: Bearer $TOKEN")
-            echo "Deploy attempt $attempt: $DEPLOY"
-            if echo "$DEPLOY" | grep -q "queued\|uuid\|message"; then
-              echo "Deploy accepted."
+            echo "Restart attempt $attempt: $RESTART"
+            if echo "$RESTART" | grep -q "queued\|uuid\|message"; then
+              echo "Restart accepted."
               break
             fi
             echo "Blocked, waiting 30s..."
             sleep 30
           done
 
-          echo "Waiting 5 minutes for redeploy to complete..."
-          sleep 300
+          echo "Waiting 2 minutes for restart..."
+          sleep 120
 
       - name: Verify site is up
         run: |
-          for i in $(seq 1 24); do
+          for i in $(seq 1 30); do
             CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com --max-time 10)
             echo "Attempt $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
