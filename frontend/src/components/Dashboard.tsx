@@ -198,94 +198,74 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-      {/* Header + Nav combined */}
-      <header className="bg-brand-700 shadow-md flex-shrink-0">
-        {/* Top row: brand, project filter, user actions */}
-        <div className="max-w-screen-2xl mx-auto px-4 h-10 flex items-center gap-3">
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <rect x="1" y="1" width="6" height="6" fill="#0078d4" />
-                <rect x="9" y="1" width="6" height="6" fill="#0078d4" opacity="0.7" />
-                <rect x="1" y="9" width="6" height="6" fill="#0078d4" opacity="0.7" />
-                <rect x="9" y="9" width="6" height="6" fill="#0078d4" opacity="0.4" />
-              </svg>
-            </div>
-            <div className="hidden sm:block">
-              <span className="text-white font-semibold text-sm">National Group India</span>
-              <span className="text-brand-200 text-xs opacity-70 ml-2">IT Asset Tracker</span>
-            </div>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#f2f2f2', fontFamily: "'Calibri','Aptos',Arial,sans-serif" }}>
+      {/* Office-style title bar + ribbon */}
+      <header style={{ flexShrink: 0 }}>
+        {/* Title bar */}
+        <div style={{ background: '#2b579a', height: 36, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 10 }}>
+          <div style={{ width: 20, height: 20, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="1" width="6" height="6" fill="#2b579a" />
+              <rect x="9" y="1" width="6" height="6" fill="#2b579a" opacity="0.7" />
+              <rect x="1" y="9" width="6" height="6" fill="#2b579a" opacity="0.7" />
+              <rect x="9" y="9" width="6" height="6" fill="#2b579a" opacity="0.4" />
+            </svg>
           </div>
-
-          <div className="flex items-center gap-1.5 ml-3">
-            <FolderKanban size={12} className="text-brand-200" />
-            <span className="text-brand-200 text-xs hidden md:inline">Project:</span>
-            <div className="relative">
-              <select
-                value={projectFilter}
-                onChange={e => setProjectFilter(e.target.value)}
-                className="appearance-none bg-brand-600 hover:bg-brand-500 text-white text-xs rounded pl-2 pr-5 py-0.5 border border-brand-500 focus:outline-none cursor-pointer transition-colors"
-              >
-                <option value="All">All Projects</option>
-                {projectNames.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-              <ChevronDown size={10} className="absolute right-1 top-1/2 -translate-y-1/2 text-brand-200 pointer-events-none" />
-            </div>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: '11pt' }}>National Group India</span>
+          <span style={{ color: '#c7d8f0', fontSize: '9pt', opacity: 0.9 }}>IT Asset Tracker</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 12 }}>
+            <FolderKanban size={12} style={{ color: '#c7d8f0' }} />
+            <span style={{ color: '#c7d8f0', fontSize: '9pt' }}>Project:</span>
+            <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
+              style={{ background: '#1f4278', color: '#fff', fontSize: '9pt', border: '1px solid #4a7bc4', padding: '1px 6px', cursor: 'pointer' }}>
+              <option value="All">All Projects</option>
+              {projectNames.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
           </div>
-
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-1">
-            <span className="text-brand-100 text-xs hidden sm:block mr-1">{username}</span>
-            <span className="text-brand-200 text-xs hidden md:block mr-2">
-              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </span>
-            <button onClick={() => setChangePwOpen(true)} className="text-brand-100 hover:text-white p-1 rounded hover:bg-brand-600 transition-colors" title="Change Password">
-              <Key size={13} />
-            </button>
-            <button onClick={handleLogout} className="text-brand-100 hover:text-white p-1 rounded hover:bg-brand-600 transition-colors" title="Sign out">
-              <LogOut size={13} />
-            </button>
-          </div>
+          <div style={{ flex: 1 }} />
+          <span style={{ color: '#c7d8f0', fontSize: '9pt', marginRight: 8 }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          <span style={{ color: '#fff', fontSize: '9pt', marginRight: 8 }}>{username}</span>
+          <button onClick={() => setChangePwOpen(true)} title="Change Password" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><Key size={13} /></button>
+          <button onClick={handleLogout} title="Sign out" style={{ color: '#c7d8f0', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}><LogOut size={13} /></button>
         </div>
 
-        {/* Nav tab row — inside header, darker stripe */}
-        <div className="bg-brand-800 border-t border-brand-600">
-          <div className="max-w-screen-2xl mx-auto px-3 flex items-center gap-0.5">
-            {([
-              { key: 'overview',       label: 'Overview',               icon: <LayoutDashboard size={14} /> },
-              { key: 'tracker',        label: 'Hardware Assets',         icon: <Table2 size={14} /> },
-              { key: 'subscriptions',  label: 'Software & Subscriptions',icon: <Globe size={14} /> },
-              { key: 'people',         label: 'People',                  icon: <Users size={14} /> },
-              { key: 'allocations',    label: 'Allocations',             icon: <ArrowLeftRight size={14} /> },
-            ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
-                  activeTab === key
-                    ? 'border-white text-white bg-brand-600'
-                    : 'border-transparent text-brand-200 hover:text-white hover:bg-brand-700'
-                }`}
-              >
-                {icon}{label}
-              </button>
-            ))}
-
-            {isAdmin && (
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ml-auto ${
-                  activeTab === 'users'
-                    ? 'border-white text-white bg-brand-600'
-                    : 'border-transparent text-brand-200 hover:text-white hover:bg-brand-700'
-                }`}
-              >
-                <Shield size={14} />Users
-              </button>
-            )}
-          </div>
+        {/* Ribbon tab bar */}
+        <div style={{ background: '#f2f2f2', borderBottom: '2px solid #2b579a', display: 'flex', alignItems: 'flex-end', padding: '0 4px' }}>
+          {([
+            { key: 'overview',      label: 'Overview',                icon: <LayoutDashboard size={13} /> },
+            { key: 'tracker',       label: 'Hardware Assets',          icon: <Table2 size={13} /> },
+            { key: 'subscriptions', label: 'Software & Subscriptions', icon: <Globe size={13} /> },
+            { key: 'people',        label: 'People',                   icon: <Users size={13} /> },
+            { key: 'allocations',   label: 'Allocations',              icon: <ArrowLeftRight size={13} /> },
+          ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
+            <button key={key} onClick={() => setActiveTab(key)} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 14px 4px',
+              fontSize: '10pt',
+              fontWeight: activeTab === key ? 700 : 400,
+              color: activeTab === key ? '#2b579a' : '#595959',
+              background: activeTab === key ? '#fff' : 'transparent',
+              border: '1px solid transparent',
+              borderColor: activeTab === key ? '#bfbfbf' : 'transparent',
+              borderBottom: activeTab === key ? '2px solid #fff' : '1px solid transparent',
+              marginBottom: activeTab === key ? -2 : 0,
+              cursor: 'pointer', whiteSpace: 'nowrap' as const,
+            }}>{icon}{label}</button>
+          ))}
+          <div style={{ flex: 1 }} />
+          {isAdmin && (
+            <button onClick={() => setActiveTab('users')} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 14px 4px', fontSize: '10pt',
+              fontWeight: activeTab === 'users' ? 700 : 400,
+              color: activeTab === 'users' ? '#2b579a' : '#595959',
+              background: activeTab === 'users' ? '#fff' : 'transparent',
+              border: activeTab === 'users' ? '1px solid #bfbfbf' : '1px solid transparent',
+              borderBottom: activeTab === 'users' ? '2px solid #fff' : '1px solid transparent',
+              marginBottom: activeTab === 'users' ? -2 : 0,
+              cursor: 'pointer',
+            }}><Shield size={13} />Users</button>
+          )}
         </div>
       </header>
 

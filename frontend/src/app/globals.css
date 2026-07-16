@@ -4,36 +4,67 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; margin: 0; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #f3f2f1; }
-  ::-webkit-scrollbar-thumb { background: #c8c6c4; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #a19f9d; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    font-family: 'Calibri', 'Aptos', 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    background: #f2f2f2;
+    color: #1f1f1f;
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f2f2f2; }
+  ::-webkit-scrollbar-thumb { background: #bfbfbf; border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
 }
 
 @layer components {
+  /* Excel-style flat button */
   .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-150 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-[#2b579a] hover:bg-[#1f4278] active:bg-[#1a3660] text-white px-3 py-1 text-xs font-semibold transition-colors duration-100 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed;
+    border: 1px solid #1f4278;
+    border-radius: 0;
+    font-family: 'Calibri', Arial, sans-serif;
   }
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded text-sm font-medium transition-colors duration-150 flex items-center gap-2;
+    @apply bg-[#f2f2f2] hover:bg-[#e8e8e8] active:bg-[#d8d8d8] text-[#1f1f1f] text-xs font-semibold transition-colors duration-100 flex items-center gap-1.5;
+    border: 1px solid #bfbfbf;
+    border-radius: 0;
+    padding: 2px 8px;
+    font-family: 'Calibri', Arial, sans-serif;
   }
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-150;
+    @apply bg-[#c00000] hover:bg-[#a00000] text-white px-3 py-1 text-xs font-semibold transition-colors duration-100;
+    border: 1px solid #900000;
+    border-radius: 0;
+    font-family: 'Calibri', Arial, sans-serif;
   }
   .input {
-    @apply w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-shadow;
+    @apply w-full text-xs text-[#1f1f1f] bg-white focus:outline-none transition-shadow;
+    border: 1px solid #bfbfbf;
+    border-radius: 0;
+    padding: 3px 6px;
+    font-family: 'Calibri', Arial, sans-serif;
+    font-size: 11pt;
+  }
+  .input:focus {
+    border-color: #2b579a;
+    box-shadow: 0 0 0 1px #2b579a;
   }
   .label {
-    @apply block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1;
+    @apply block text-xs font-semibold text-[#595959] uppercase tracking-wide mb-1;
+    font-family: 'Calibri', Arial, sans-serif;
   }
   .card {
-    @apply bg-white rounded-lg shadow-card p-4;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 0;
+    padding: 12px;
   }
 }
 
-/* ─── Gantt chart overrides ─────────────────────────────── */
-._CZjuD { font-family: inherit !important; }
+/* Gantt overrides */
+._CZjuD { font-family: 'Calibri', Arial, sans-serif !important; }
 ._WuQ0f { height: auto !important; }
 .gantt-container { overflow-x: auto; }
-

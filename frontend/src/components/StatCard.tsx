@@ -10,30 +10,45 @@ interface Props {
 }
 
 const colorMap = {
-  blue:   { border: 'border-brand-500',  text: 'text-brand-600',  iconBg: 'bg-blue-100 text-brand-600' },
-  green:  { border: 'border-green-500',  text: 'text-green-700',  iconBg: 'bg-green-100 text-green-700' },
-  orange: { border: 'border-orange-400', text: 'text-orange-600', iconBg: 'bg-orange-100 text-orange-600' },
-  red:    { border: 'border-red-500',    text: 'text-red-700',    iconBg: 'bg-red-100 text-red-700' },
-  gray:   { border: 'border-gray-400',   text: 'text-gray-600',   iconBg: 'bg-gray-100 text-gray-500' },
-  purple: { border: 'border-purple-500', text: 'text-purple-700', iconBg: 'bg-purple-100 text-purple-700' },
+  blue:   { top: '#2b579a', text: '#2b579a', iconBg: '#dce6f1', iconColor: '#2b579a' },
+  green:  { top: '#375623', text: '#375623', iconBg: '#e2efda', iconColor: '#375623' },
+  orange: { top: '#833c00', text: '#833c00', iconBg: '#fce4d6', iconColor: '#833c00' },
+  red:    { top: '#c00000', text: '#c00000', iconBg: '#ffd7d7', iconColor: '#c00000' },
+  gray:   { top: '#595959', text: '#595959', iconBg: '#f2f2f2', iconColor: '#595959' },
+  purple: { top: '#7030a0', text: '#7030a0', iconBg: '#ead1ff', iconColor: '#7030a0' },
 };
 
 export default function StatCard({ label, value, color, subtitle, icon }: Props) {
   const c = colorMap[color];
   return (
-    <div className={`bg-white rounded-xl border border-gray-100 border-t-[3px] ${c.border} px-4 py-3 flex flex-col gap-1.5 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-default group`}>
-      <div className="flex items-start justify-between gap-1">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">{label}</p>
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid #d0d0d0',
+        borderTop: `3px solid ${c.top}`,
+        borderRadius: 0,
+        padding: '8px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+        fontFamily: "'Calibri','Aptos',Arial,sans-serif",
+        cursor: 'default',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4 }}>
+        <p style={{ fontSize: '9pt', fontWeight: 700, color: '#595959', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0, lineHeight: 1.2 }}>
+          {label}
+        </p>
         {icon && (
-          <div className={`flex-shrink-0 p-1.5 rounded-lg ${c.iconBg} group-hover:scale-110 transition-transform duration-200`}>
+          <div style={{ background: c.iconBg, color: c.iconColor, padding: '4px', flexShrink: 0, display: 'flex' }}>
             {icon}
           </div>
         )}
       </div>
-      <div>
-        <p className={`text-2xl font-bold ${c.text} leading-none tracking-tight`}>{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
-      </div>
+      <p style={{ fontSize: '18pt', fontWeight: 700, color: c.text, margin: 0, lineHeight: 1 }}>
+        {value}
+      </p>
+      {subtitle && <p style={{ fontSize: '8pt', color: '#a0a0a0', margin: 0 }}>{subtitle}</p>}
     </div>
   );
 }
