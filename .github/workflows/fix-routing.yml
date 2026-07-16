@@ -44,21 +44,21 @@ jobs:
             -d '{"docker_compose_domains":[{"name":"frontend","domain":"http://itasset.nationalgroupindia.com"}]}'
 
           echo ""
-          echo "Attempting restart (retry up to 5 times if deploy still queued)..."
+          echo "Triggering full redeploy (applies updated docker_compose_domains)..."
           for attempt in $(seq 1 5); do
-            RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
+            DEPLOY=$(curl -s -X GET "$COOLIFY_URL/api/v1/deploy?uuid=$APP_UUID&force=false" \
               -H "Authorization: Bearer $TOKEN")
-            echo "Restart attempt $attempt: $RESTART"
-            if echo "$RESTART" | grep -q "queued\|uuid"; then
-              echo "Restart accepted."
+            echo "Deploy attempt $attempt: $DEPLOY"
+            if echo "$DEPLOY" | grep -q "queued\|uuid\|message"; then
+              echo "Deploy accepted."
               break
             fi
             echo "Blocked, waiting 30s..."
             sleep 30
           done
 
-          echo "Waiting 90s for restart to complete..."
-          sleep 90
+          echo "Waiting 5 minutes for redeploy to complete..."
+          sleep 300
 
       - name: Verify site is up
         run: |
