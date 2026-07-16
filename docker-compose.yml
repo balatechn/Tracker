@@ -69,17 +69,6 @@ services:
     networks:
       - tracker-network
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=coolify"
-      - "traefik.http.routers.ngi-tracker.rule=Host(`itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-tracker.entrypoints=http"
-      - "traefik.http.routers.ngi-tracker.service=ngi-tracker"
-      - "traefik.http.routers.ngi-tracker-https.rule=Host(`itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-tracker-https.entrypoints=https"
-      - "traefik.http.routers.ngi-tracker-https.tls=true"
-      - "traefik.http.routers.ngi-tracker-https.service=ngi-tracker"
-      - "traefik.http.services.ngi-tracker.loadbalancer.server.port=3000"
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest

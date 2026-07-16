@@ -31,34 +31,32 @@ jobs:
             sleep 10
           done
 
-      - name: Check current domain config
+      - name: Patch domain (fqdn + docker_compose_domains) and restart
         run: |
           APP_UUID="qys5ng80cub4toeleeywj04r"
           COOLIFY_URL="http://187.127.134.246:8000"
           TOKEN="${{ secrets.COOLIFY_TOKEN }}"
-          echo "Current docker_compose_domains:"
+
+          echo "Current config:"
           curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
-            | grep -o '"docker_compose_domains":[^,}]*' | head -1
+            | grep -oE '"(fqdn|docker_compose_domains)":"[^"]*"' | head -5
 
-      - name: Patch domain and restart
-        run: |
-          APP_UUID="qys5ng80cub4toeleeywj04r"
-          COOLIFY_URL="http://187.127.134.246:8000"
-          TOKEN="${{ secrets.COOLIFY_TOKEN }}"
-
-          echo "Patching with object format..."
+          echo ""
+          echo "Patching fqdn + docker_compose_domains..."
           PATCH=$(curl -s -X PATCH "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"docker_compose_domains":{"frontend":{"domain":"https://itasset.nationalgroupindia.com"}}}')
+            -d '{"fqdn":"https://itasset.nationalgroupindia.com","docker_compose_domains":{"frontend":{"domain":"https://itasset.nationalgroupindia.com","name":"frontend"}}}')
           echo "Patch result: $PATCH"
 
-          echo "Verifying stored value..."
+          echo ""
+          echo "Verified config after patch:"
           curl -s "$COOLIFY_URL/api/v1/applications/$APP_UUID" \
             -H "Authorization: Bearer $TOKEN" \
-            | grep -o '"docker_compose_domains":[^,}]*' | head -1
+            | grep -oE '"(fqdn|docker_compose_domains)":"[^"]*"' | head -5
 
+          echo ""
           echo "Restarting app..."
           for attempt in $(seq 1 5); do
             RESTART=$(curl -s -X POST "$COOLIFY_URL/api/v1/applications/$APP_UUID/restart" \
@@ -72,8 +70,8 @@ jobs:
             sleep 30
           done
 
-          echo "Waiting 2 minutes for restart to apply..."
-          sleep 120
+          echo "Waiting 3 minutes for restart..."
+          sleep 180
 
       - name: Verify site is up
         run: |
