@@ -211,8 +211,9 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
             </Field>
           </div>
 
-          {/* Serial Number + Invoice + Invoice Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          {/* Tag Number + Serial Number + Invoice + Invoice Date */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+            <Field label="Tag Number">{inp('assetTag', 'text', 'e.g. NGI-LT-001')}</Field>
             <Field label="Serial Number">{inp('serialNumber')}</Field>
             <Field label="Invoice">{inp('invoiceRef')}</Field>
             <Field label="Invoice Date">{inp('purchaseDate', 'date')}</Field>

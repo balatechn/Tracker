@@ -127,6 +127,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
               <Th k="department">Department</Th>
               <Th k="billingCompany">Company</Th>
               <Th k="assetStatus">Status</Th>
+              <Th k="assetTag">Tag Number</Th>
               <Th k="serialNumber">Serial Number</Th>
               <Th k="invoiceRef">Invoice</Th>
               <Th k="purchaseDate">Invoice Date</Th>
@@ -158,6 +159,7 @@ export default function TrackerTable({ entries, isLoading, onEdit, onAllocate }:
                       {entry.assetStatus ?? '–'}
                     </span>
                   </td>
+                  <td className={`${TD} text-gray-600`} style={{ fontFamily: 'Consolas, monospace', fontSize: '10px' }}>{entry.assetTag ?? '–'}</td>
                   <td className={`${TD} text-gray-600`} style={{ fontFamily: 'Consolas, monospace', fontSize: '10px' }}>{entry.serialNumber ?? '–'}</td>
                   <td className={`${TD} text-gray-600`} style={{ fontFamily: 'Consolas, monospace', fontSize: '10px' }}>{entry.invoiceRef ?? '–'}</td>
                   <td className={`${TD} text-gray-600`}>{formatDate(entry.purchaseDate)}</td>
