@@ -5,8 +5,6 @@ import 'gantt-task-react/dist/index.css';
 import { Task } from '@/types';
 import { useState } from 'react';
 import { ZoomIn, ZoomOut, Download } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 interface Props {
@@ -79,7 +77,11 @@ export default function TaskGanttView({ tasks, onTaskClick, onTaskEdit, location
     XLSX.writeFile(wb, `NGI-Tasks-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportPDF() {
+  async function exportPDF() {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(14);
     doc.text(`NGI IT Infrastructure Tasks${locationFilter !== 'All Locations' ? ` — ${locationFilter}` : ''}`, 14, 14);
