@@ -32,35 +32,38 @@ export default function LoginForm() {
   const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID;
-    const tenantId = process.env.NEXT_PUBLIC_AZURE_TENANT_ID;
-    setMsEnabled(!!(clientId && tenantId));
-    if (!clientId || !tenantId) return;
-
     const msal = getMsalInstance();
     if (!msal) return;
+    setMsEnabled(true);
 
     msal.initialize().then(() => {
-      // Handle redirect response after Microsoft redirects back
-      msal.handleRedirectPromise().then(async (result) => {
-        if (!result) return;
-        try {
-          const { data } = await authApi.microsoftLogin(result.idToken);
-          if ('status' in data && data.status === 'pending') {
-            toast('Your account is pending admin approval.', { icon: '⏳', duration: 8000 });
-            return;
-          }
-          const loginData = data as { token: string; username: string; role: string };
-          localStorage.setItem('token', loginData.token);
-          localStorage.setItem('username', loginData.username);
-          localStorage.setItem('role', loginData.role);
-          router.replace('/dashboard');
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          setError(`Sign-in failed: ${msg}`);
+      return msal.handleRedirectPromise();
+    }).then(async (result) => {
+      if (!result) return;
+      try {
+        const { data } = await authApi.microsoftLogin(result.idToken);
+        if ('status' in data && data.status === 'pending') {
+          toast('Your account is pending admin approval.', { icon: '⏳', duration: 8000 });
+          return;
         }
-      }).catch(() => {});
-    }).catch(() => {});
+        const loginData = data as { token: string; username: string; role: string };
+        localStorage.setItem('token', loginData.token);
+        localStorage.setItem('username', loginData.username);
+        localStorage.setItem('role', loginData.role);
+        router.replace('/dashboard');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(`Backend error: ${msg}`);
+        toast.error(`SSO backend error: ${msg}`);
+      }
+    }).catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Ignore expected non-error cases
+      if (!msg.includes('user_cancelled') && !msg.includes('no_account_error')) {
+        setError(`MSAL error: ${msg}`);
+        toast.error(`MSAL: ${msg}`);
+      }
+    });
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
