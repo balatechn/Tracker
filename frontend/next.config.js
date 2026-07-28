@@ -12,7 +12,7 @@ const nextConfig = {
     return config;
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+    const backendUrl = process.env.BACKEND_URL || 'http://api.itasset.nationalgroupindia.com';
     return [
       {
         source: '/api/:path*',
