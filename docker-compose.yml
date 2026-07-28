@@ -85,7 +85,8 @@ services:
               rule: Host(`api.itasset.nationalgroupindia.com`)
               entryPoints:
                 - https
-              tls: true
+              tls:
+                certResolver: letsencrypt
               service: ngi-api
           services:
             ngi-api:
