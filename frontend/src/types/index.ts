@@ -207,4 +207,46 @@ export interface TaskStats {
   delayed: number;
 }
 
+export interface BillAttachment {
+  id: number;
+  billId: number;
+  filename: string;
+  filesize: number | null;
+  mimetype: string | null;
+  createdAt: string;
+}
+
+export interface Bill {
+  id: number;
+  vendorName: string;
+  invoiceNumber: string | null;
+  invoiceDate: string | null;
+  dueDate: string | null;
+  amount: number;
+  entity: string;
+  paymentMethod: string | null;
+  submittedBy: string;
+  submitterEmail: string;
+  status: string;
+  remarks: string | null;
+  rejectionReason: string | null;
+  paidAt: string | null;
+  paidBy: string | null;
+  transactionRef: string | null;
+  attachments: BillAttachment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BillFormData = Omit<Bill, 'id' | 'attachments' | 'createdAt' | 'updatedAt'>;
+
+export interface EntityManager {
+  id: number;
+  entityName: string;
+  managerName: string;
+  managerEmail: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 

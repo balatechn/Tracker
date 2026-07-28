@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe, Shield } from 'lucide-react';
+import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe, Shield, Receipt } from 'lucide-react';
 import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi, subscriptionsApi } from '@/lib/api';
 import { computeStats, formatCurrency, getDaysRemaining, getStatusInfo } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -20,11 +20,12 @@ import TaskMgtTab from './TaskMgtTab';
 import TaskDashboardTab from './TaskDashboardTab';
 import SubscriptionsTab from './SubscriptionsTab';
 import UsersTab from './UsersTab';
+import BillsTab from './BillsTab';
 import ReportModal from './ReportModal';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'users';
+type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'bills' | 'users';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -238,6 +239,7 @@ export default function Dashboard() {
             { key: 'subscriptions', label: 'Subscriptions',   icon: <Globe size={13} /> },
             { key: 'people',        label: 'People',          icon: <Users size={13} /> },
             { key: 'allocations',   label: 'Allocations',     icon: <ArrowLeftRight size={13} /> },
+            { key: 'bills',         label: 'Bills',           icon: <Receipt size={13} /> },
           ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{
               display: 'flex', alignItems: 'center', gap: 5,
@@ -655,6 +657,12 @@ export default function Dashboard() {
         {activeTab === 'tasks' && (
           <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
             <TaskMgtTab projectFilter={projectFilter} onProjectChange={setProjectFilter} projectNames={projectNames} />
+          </div>
+        )}
+
+        {activeTab === 'bills' && (
+          <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
+            <BillsTab />
           </div>
         )}
 

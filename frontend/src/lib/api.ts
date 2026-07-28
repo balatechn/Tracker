@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog, Task, TaskComment, TaskAttachment, TaskStats, Subscription, SubscriptionFormData } from '@/types';
+import { Entry, EntryFormData, Employee, Allocation, AssetRequest, AuditLog, Task, TaskComment, TaskAttachment, TaskStats, Subscription, SubscriptionFormData, Bill, BillFormData, BillAttachment, EntityManager } from '@/types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -125,6 +125,27 @@ export const subscriptionsApi = {
   update: (id: number, data: SubscriptionFormData) => api.put<Subscription>(`/subscriptions/${id}`, data),
   delete: (id: number) => api.delete(`/subscriptions/${id}`),
   export: () => api.get<Subscription[]>('/subscriptions/export'),
+};
+
+export const billsApi = {
+  list: () => api.get<Bill[]>('/bills'),
+  get: (id: number) => api.get<Bill>(`/bills/${id}`),
+  create: (data: Omit<BillFormData, 'status' | 'rejectionReason' | 'paidAt' | 'paidBy' | 'transactionRef'>) =>
+    api.post<Bill>('/bills', data),
+  update: (id: number, data: Partial<BillFormData>) => api.patch<Bill>(`/bills/${id}`, data),
+  delete: (id: number) => api.delete(`/bills/${id}`),
+  addAttachment: (billId: number, data: { filename: string; mimetype?: string; data: string }) =>
+    api.post<BillAttachment>(`/bills/${billId}/attachments`, data),
+  getAttachmentUrl: (billId: number, attachId: number) => `/api/bills/${billId}/attachments/${attachId}`,
+};
+
+export const entityManagersApi = {
+  list: () => api.get<EntityManager[]>('/entity-managers'),
+  create: (data: { entityName: string; managerName: string; managerEmail: string }) =>
+    api.post<EntityManager>('/entity-managers', data),
+  update: (id: number, data: Partial<{ entityName: string; managerName: string; managerEmail: string }>) =>
+    api.patch<EntityManager>(`/entity-managers/${id}`, data),
+  delete: (id: number) => api.delete(`/entity-managers/${id}`),
 };
 
 export default api;

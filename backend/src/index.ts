@@ -12,6 +12,8 @@ import auditRoutes from './routes/audit';
 import tasksRoutes from './routes/tasks';
 import subscriptionsRoutes from './routes/subscriptions';
 import notifyRoutes from './routes/notify';
+import billsRoutes from './routes/bills';
+import entityManagersRoutes from './routes/entityManagers';
 import './services/scheduler';
 
 const app = express();
@@ -40,7 +42,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
@@ -58,6 +60,8 @@ app.use('/audit', auditRoutes);
 app.use('/tasks', tasksRoutes);
 app.use('/subscriptions', subscriptionsRoutes);
 app.use('/notify', notifyRoutes);
+app.use('/bills', billsRoutes);
+app.use('/entity-managers', entityManagersRoutes);
 
 // 404 handler
 app.use((_req, res) => {
