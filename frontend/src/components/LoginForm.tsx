@@ -55,8 +55,9 @@ export default function LoginForm() {
           localStorage.setItem('username', loginData.username);
           localStorage.setItem('role', loginData.role);
           router.replace('/dashboard');
-        } catch {
-          setError('Microsoft sign-in failed. Please try again.');
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          setError(`Sign-in failed: ${msg}`);
         }
       }).catch(() => {});
     }).catch(() => {});
