@@ -35,43 +35,36 @@ services:
       MAIL_FROM: ${MAIL_FROM:-connect@nationalgroupindia.com}
       APP_BASE_URL: https://itasset.nationalgroupindia.com
       N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-ngi-n8n-secret-2026}
+      CORS_ORIGIN: https://itasset.nationalgroupindia.com,https://ngi-tracker.vercel.app
+    ports:
+      - "4000:4000"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - tracker-network
+      - coolify
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      # HTTP
+      - "traefik.http.routers.ngi-api-http.rule=Host(`api.itasset.nationalgroupindia.com`)"
+      - "traefik.http.routers.ngi-api-http.entrypoints=http"
+      - "traefik.http.services.ngi-api.loadbalancer.server.port=4000"
+      # HTTPS
+      - "traefik.http.routers.ngi-api-https.rule=Host(`api.itasset.nationalgroupindia.com`)"
+      - "traefik.http.routers.ngi-api-https.entrypoints=https"
+      - "traefik.http.routers.ngi-api-https.tls=true"
+      - "traefik.http.routers.ngi-api-https.service=ngi-api"
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_APP_NAME: "NGI Tracker"
-        NEXT_PUBLIC_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-        NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
-    restart: unless-stopped
-    environment:
-      BACKEND_URL: http://backend:4000
-      NODE_ENV: production
-      NEXT_PUBLIC_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-      NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    depends_on:
-      - backend
-    networks:
-      - tracker-network
-      - coolify
-
-  # One-shot: writes a file-based Traefik router into Coolify's proxy dynamic
-  # config dir. File-based routers survive deploys (container labels do not),
-  # and this service re-writes it on every deploy — permanent 502 fix.
+  # One-shot: writes Traefik file-based config for API subdomain.
+  # File-based routers survive Coolify deploys; container labels may reset.
   traefik-config:
     image: alpine:3.20
     restart: "no"
@@ -83,24 +76,24 @@ services:
         cat > /dynamic/ngi-tracker.yaml <<'EOF'
         http:
           routers:
-            ngi-tracker-http:
-              rule: Host(`itasset.nationalgroupindia.com`)
+            ngi-api-http:
+              rule: Host(`api.itasset.nationalgroupindia.com`)
               entryPoints:
                 - http
-              service: ngi-tracker
-            ngi-tracker-https:
-              rule: Host(`itasset.nationalgroupindia.com`)
+              service: ngi-api
+            ngi-api-https:
+              rule: Host(`api.itasset.nationalgroupindia.com`)
               entryPoints:
                 - https
               tls: true
-              service: ngi-tracker
+              service: ngi-api
           services:
-            ngi-tracker:
+            ngi-api:
               loadBalancer:
                 servers:
-                  - url: "http://187.127.134.246:3000"
+                  - url: "http://187.127.134.246:4000"
         EOF
-        echo "Traefik dynamic config written."
+        echo "Traefik API config written."
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest

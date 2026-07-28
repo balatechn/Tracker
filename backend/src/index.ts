@@ -21,8 +21,19 @@ const PORT = process.env.PORT || 4000;
 
 // Security middleware
 app.use(helmet());
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : ['https://itasset.nationalgroupindia.com', 'https://ngi-tracker.vercel.app'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: (origin, cb) => {
+    // allow no-origin (curl, Postman, server-to-server) and any allowed origin
+    if (!origin || allowedOrigins.some(o => origin === o || o === '*')) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
   credentials: true,
 }));
 
