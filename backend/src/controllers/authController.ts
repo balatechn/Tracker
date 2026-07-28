@@ -78,11 +78,21 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
     const displayName = (payload.name ?? email) as string;
     const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
 
+    const ADMIN_EMAIL = 'bala@nationalgroupindia.com';
+    const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
     let user = await prisma.user.findUnique({ where: { msOid } });
 
+    // If admin email logs in but was previously created as pending/viewer, fix it
+    if (user && isAdminEmail && (user.role !== 'admin' || user.status !== 'active')) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'admin', status: 'active' },
+      });
+    }
+
     if (!user) {
-      // Check if this is the very first SSO user — make them admin
-      const existingCount = await prisma.user.count({ where: { authProvider: 'microsoft' } });
+      const isAdmin = isAdminEmail;
       user = await prisma.user.create({
         data: {
           username: username + '_ms',
@@ -90,8 +100,8 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
           displayName,
           msOid,
           authProvider: 'microsoft',
-          role: existingCount === 0 ? 'admin' : 'viewer',
-          status: existingCount === 0 ? 'active' : 'pending',
+          role: isAdmin ? 'admin' : 'viewer',
+          status: isAdmin ? 'active' : 'pending',
         },
       });
 
