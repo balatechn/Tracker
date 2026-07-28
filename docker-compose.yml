@@ -19,9 +19,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_OWNER:-balatechn}/ngi-tracker-backend:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-trackeruser}:${POSTGRES_PASSWORD:-trackerpass}@db:5432/${POSTGRES_DB:-trackerdb}
@@ -45,16 +43,10 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 90s
+      start_period: 60s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_APP_NAME: "NGI Tracker"
-        NEXT_PUBLIC_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-        NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+    image: ghcr.io/${GITHUB_OWNER:-balatechn}/ngi-tracker-frontend:latest
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:4000
@@ -63,9 +55,10 @@ services:
       NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    # depends on backend starting — not waiting for full health
+    # so frontend is up immediately even while backend does prisma db push
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - tracker-network
       - coolify
