@@ -35,10 +35,32 @@ export default function LoginForm() {
     const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID;
     const tenantId = process.env.NEXT_PUBLIC_AZURE_TENANT_ID;
     setMsEnabled(!!(clientId && tenantId));
-    if (clientId && tenantId) {
-      getMsalInstance()?.initialize().catch(() => {});
-    }
-  }, []);
+    if (!clientId || !tenantId) return;
+
+    const msal = getMsalInstance();
+    if (!msal) return;
+
+    msal.initialize().then(() => {
+      // Handle redirect response after Microsoft redirects back
+      msal.handleRedirectPromise().then(async (result) => {
+        if (!result) return;
+        try {
+          const { data } = await authApi.microsoftLogin(result.idToken);
+          if ('status' in data && data.status === 'pending') {
+            toast('Your account is pending admin approval.', { icon: '⏳', duration: 8000 });
+            return;
+          }
+          const loginData = data as { token: string; username: string; role: string };
+          localStorage.setItem('token', loginData.token);
+          localStorage.setItem('username', loginData.username);
+          localStorage.setItem('role', loginData.role);
+          router.replace('/dashboard');
+        } catch {
+          setError('Microsoft sign-in failed. Please try again.');
+        }
+      }).catch(() => {});
+    }).catch(() => {});
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,32 +82,22 @@ export default function LoginForm() {
 
   async function handleMicrosoftLogin() {
     const msal = getMsalInstance();
-    if (!msal) return;
+    if (!msal) {
+      setError('Microsoft SSO is not configured. Use Admin login below.');
+      return;
+    }
     setMsLoading(true);
     setError('');
     try {
       await msal.initialize();
-      const result = await msal.loginPopup(loginRequest);
-      const idToken = result.idToken;
-      const { data } = await authApi.microsoftLogin(idToken);
-
-      if ('status' in data && data.status === 'pending') {
-        toast('Your account is pending admin approval. You will be notified when access is granted.', { icon: '⏳', duration: 8000 });
-        return;
-      }
-
-      const loginData = data as { token: string; username: string; role: string };
-      localStorage.setItem('token', loginData.token);
-      localStorage.setItem('username', loginData.username);
-      localStorage.setItem('role', loginData.role);
-      router.replace('/dashboard');
+      await msal.loginRedirect(loginRequest);
+      // Page will redirect — no code runs after this
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
-      if (!msg.includes('user_cancelled') && !msg.includes('popup_window_error')) {
+      if (!msg.includes('user_cancelled')) {
         setError('Microsoft sign-in failed. Please try again.');
         toast.error('Microsoft sign-in failed');
       }
-    } finally {
       setMsLoading(false);
     }
   }
