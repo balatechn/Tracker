@@ -3,9 +3,11 @@
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Settings, Trash2, Edit2, Paperclip, Download, X, CheckCircle, XCircle, DollarSign } from 'lucide-react';
+import { Plus, Settings, Trash2, Edit2, Paperclip, Download, X, CheckCircle, FileDown } from 'lucide-react';
 import { billsApi, entityManagersApi } from '@/lib/api';
 import { Bill, EntityManager } from '@/types';
+import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -413,6 +415,70 @@ export default function BillsTab() {
   const totalRejected  = bills.filter(b => b.status === 'Rejected').length;
   const pendingAmount  = bills.filter(b => b.status === 'Submitted' || b.status === 'Approved').reduce((s, b) => s + b.amount, 0);
 
+  async function exportZip() {
+    const toExport = filtered.length > 0 ? filtered : bills;
+    const loadingToast = toast.loading('Preparing export…');
+    try {
+      const zip = new JSZip();
+
+      // Excel sheet
+      const rows = toExport.map(b => ({
+        'Date': fmt(b.createdAt),
+        'Vendor': b.vendorName,
+        'Invoice #': b.invoiceNumber ?? '',
+        'Entity': b.entity,
+        'Amount': b.amount,
+        'Invoice Date': fmt(b.invoiceDate),
+        'Due Date': fmt(b.dueDate),
+        'Status': b.status,
+        'Payment Method': b.paymentMethod ?? '',
+        'Submitted By': b.submittedBy,
+        'Submitter Email': b.submitterEmail,
+        'Paid By': b.paidBy ?? '',
+        'Transaction Ref': b.transactionRef ?? '',
+        'Remarks': b.remarks ?? '',
+        'Attachments': b.attachments?.map(a => a.filename).join(', ') ?? '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = Object.keys(rows[0] ?? {}).map(() => ({ wch: 20 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Bills');
+      const excelBytes = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      zip.file('Bills.xlsx', excelBytes);
+
+      // Fetch attachments
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const attachFolder = zip.folder('Attachments')!;
+      await Promise.all(
+        toExport.flatMap(b =>
+          (b.attachments ?? []).map(async a => {
+            try {
+              const res = await fetch(`/api/bills/${b.id}/attachments/${a.id}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+              });
+              if (!res.ok) return;
+              const buf = await res.arrayBuffer();
+              attachFolder.file(a.filename, buf);
+            } catch { /* skip failed attachment */ }
+          })
+        )
+      );
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `NGI-Bills-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.dismiss(loadingToast);
+      toast.success('Export ready');
+    } catch {
+      toast.dismiss(loadingToast);
+      toast.error('Export failed');
+    }
+  }
+
   async function deleteBill(id: number, name: string) {
     if (!confirm(`Delete bill from "${name}"?`)) return;
     try {
@@ -432,6 +498,10 @@ export default function BillsTab() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid #dde3ec', background: '#fff', flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ fontWeight: 700, fontSize: '12pt', color: '#1f1f1f' }}>Bill Payments</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={exportZip}
+            style={{ background: '#f2f2f2', border: '1px solid #bfbfbf', padding: '4px 12px', fontSize: '10pt', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#1f1f1f', fontFamily: "'Calibri',Arial,sans-serif" }}>
+            <FileDown size={13} /> Export Excel + PDF
+          </button>
           <button onClick={() => setShowSettings(true)}
             style={{ background: '#f2f2f2', border: '1px solid #bfbfbf', padding: '4px 12px', fontSize: '10pt', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#1f1f1f', fontFamily: "'Calibri',Arial,sans-serif" }}>
             <Settings size={13} /> Entity Settings
