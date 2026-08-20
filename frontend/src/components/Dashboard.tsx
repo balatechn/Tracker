@@ -21,11 +21,12 @@ import TaskDashboardTab from './TaskDashboardTab';
 import SubscriptionsTab from './SubscriptionsTab';
 import UsersTab from './UsersTab';
 import BillsTab from './BillsTab';
+import CredentialsTab from './CredentialsTab';
 import ReportModal from './ReportModal';
 import { Entry } from '@/types';
 import * as XLSX from 'xlsx';
 
-type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'bills' | 'users';
+type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'bills' | 'credentials' | 'users';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -240,6 +241,7 @@ export default function Dashboard() {
             { key: 'people',        label: 'People',          icon: <Users size={13} /> },
             { key: 'allocations',   label: 'Allocations',     icon: <ArrowLeftRight size={13} /> },
             { key: 'bills',         label: 'Bills',           icon: <Receipt size={13} /> },
+            { key: 'credentials',   label: 'Credentials',     icon: <Key size={13} /> },
           ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{
               display: 'flex', alignItems: 'center', gap: 5,
@@ -663,6 +665,12 @@ export default function Dashboard() {
         {activeTab === 'bills' && (
           <div className="h-full max-w-screen-2xl mx-auto w-full overflow-hidden">
             <BillsTab />
+          </div>
+        )}
+
+        {activeTab === 'credentials' && (
+          <div className="h-full w-full overflow-hidden">
+            <CredentialsTab isAdmin={isAdmin} />
           </div>
         )}
 

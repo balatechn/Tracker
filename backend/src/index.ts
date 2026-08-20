@@ -14,6 +14,7 @@ import subscriptionsRoutes from './routes/subscriptions';
 import notifyRoutes from './routes/notify';
 import billsRoutes from './routes/bills';
 import entityManagersRoutes from './routes/entityManagers';
+import credentialsRoutes from './routes/credentials';
 import './services/scheduler';
 
 const app = express();
@@ -73,6 +74,7 @@ app.use('/subscriptions', subscriptionsRoutes);
 app.use('/notify', notifyRoutes);
 app.use('/bills', billsRoutes);
 app.use('/entity-managers', entityManagersRoutes);
+app.use('/credentials', credentialsRoutes);
 
 // 404 handler
 app.use((_req, res) => {

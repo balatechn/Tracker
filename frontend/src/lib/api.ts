@@ -148,4 +148,11 @@ export const entityManagersApi = {
   delete: (id: number) => api.delete(`/entity-managers/${id}`),
 };
 
+export const credentialsApi = {
+  list: () => api.get<Credential[]>('/credentials'),
+  create: (data: Partial<Credential>) => api.post<Credential>('/credentials', data),
+  update: (id: number, data: Partial<Credential>) => api.patch<Credential>(`/credentials/${id}`, data),
+  delete: (id: number) => api.delete(`/credentials/${id}`),
+};
+
 export default api;

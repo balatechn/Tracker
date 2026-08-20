@@ -240,6 +240,22 @@ export interface Bill {
 
 export type BillFormData = Omit<Bill, 'id' | 'attachments' | 'createdAt' | 'updatedAt'>;
 
+export interface Credential {
+  id: number;
+  srNo: number | null;
+  entity: string | null;
+  portalName: string;
+  url: string | null;
+  email: string | null;
+  mobile: string | null;
+  username: string | null;
+  password: string | null;
+  remarks: string | null;
+  lastUpdated: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface EntityManager {
   id: number;
   entityName: string;
