@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink, X, Save, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink, X, Save, Search, Download } from 'lucide-react';
 import { credentialsApi } from '@/lib/api';
 import { Credential } from '@/types';
+import * as XLSX from 'xlsx';
 
 const EMPTY: Partial<Credential> = {
   srNo: undefined, entity: '', portalName: '', url: '', email: '',
@@ -119,6 +120,26 @@ export default function CredentialsTab({ isAdmin }: { isAdmin: boolean }) {
 
   const togglePw = (id: number) => setVisiblePw(v => { const n = new Set(v); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
+  function exportExcel() {
+    const rows = filtered.map(c => ({
+      'S.No': c.srNo ?? '',
+      'Entity': c.entity ?? '',
+      'Portal / Website': c.portalName,
+      'URL': c.url ?? '',
+      'Email': c.email ?? '',
+      'Mobile': c.mobile ?? '',
+      'Username': c.username ?? '',
+      'Password': c.password ?? '',
+      'Remarks': c.remarks ?? '',
+      'Last Updated': c.lastUpdated ? new Date(c.lastUpdated).toLocaleDateString('en-IN') : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = Object.keys(rows[0] ?? {}).map(() => ({ wch: 22 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Credentials');
+    XLSX.writeFile(wb, `NGI-Credentials-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   const cols = ['#', 'Entity', 'Portal / Website', 'URL', 'Email', 'Mobile', 'Username', 'Password', 'Remarks', 'Updated', ''];
 
   return (
@@ -130,11 +151,16 @@ export default function CredentialsTab({ isAdmin }: { isAdmin: boolean }) {
           <input className="input pl-8 py-1.5 text-sm" placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <span className="text-xs text-gray-400">{filtered.length} records</span>
-        {isAdmin && (
-          <button onClick={() => setModal(EMPTY)} className="btn-primary ml-auto text-xs py-1.5">
-            <Plus size={13} /> Add
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={exportExcel} className="btn-secondary text-xs py-1.5 flex items-center gap-1">
+            <Download size={13} /> Export Excel
           </button>
-        )}
+          {isAdmin && (
+            <button onClick={() => setModal(EMPTY)} className="btn-primary text-xs py-1.5">
+              <Plus size={13} /> Add
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
