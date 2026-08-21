@@ -222,6 +222,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
             department: u.department || existing.department || 'General',
             designation: u.jobTitle || existing.designation,
             phone: u.mobilePhone || existing.phone,
+            msLicensed: true,
           },
         });
         updated++;
@@ -236,6 +237,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
             designation: u.jobTitle || null,
             phone: u.mobilePhone || null,
             status: 'Active',
+            msLicensed: true,
           },
         });
         added++;

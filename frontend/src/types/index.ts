@@ -60,6 +60,7 @@ export interface Employee {
   status: string;
   joiningDate: string | null;
   exitDate: string | null;
+  msLicensed: boolean | null;
   allocations?: {
     id: number;
     asset: { id: number; serviceName: string; category: string | null; assetTag: string | null };

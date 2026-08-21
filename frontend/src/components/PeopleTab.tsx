@@ -49,6 +49,7 @@ export default function PeopleTab() {
   const [search, setSearch]   = useState('');
   const [statusF, setStatusF] = useState('All');
   const [entityF, setEntityF] = useState('All');
+  const [licenseF, setLicenseF] = useState('All');
   const [modal, setModal]     = useState<'add' | 'edit' | 'delete' | null>(null);
   const [selected, setSelected] = useState<Employee | null>(null);
   const [form, setForm]       = useState<EmpForm>(EMPTY_FORM);
@@ -134,9 +135,13 @@ export default function PeopleTab() {
     else updateMut.mutate(form);
   }
 
-  const filtered = entityF === 'All'
-    ? employees
-    : employees.filter(e => getEntity(e.email) === entityF);
+  const filtered = employees.filter(e => {
+    if (entityF !== 'All' && getEntity(e.email) !== entityF) return false;
+    if (licenseF === 'Licensed' && e.msLicensed !== true) return false;
+    if (licenseF === 'Unlicensed' && e.msLicensed !== false) return false;
+    if (licenseF === 'Unknown' && e.msLicensed !== null) return false;
+    return true;
+  });
 
   const ENTITY_LABELS = ['All', ...Object.values(DOMAIN_ENTITY), 'Unknown'];
 
@@ -145,6 +150,7 @@ export default function PeopleTab() {
       'Emp ID':      e.empId,
       'Name':        e.name,
       'Entity':      getEntity(e.email),
+      'License':     e.msLicensed === true ? 'Licensed' : '—',
       'Department':  e.department,
       'Designation': e.designation ?? '',
       'Email':       e.email,
@@ -201,6 +207,11 @@ export default function PeopleTab() {
           {Object.values(DOMAIN_ENTITY).map(v => <option key={v}>{v}</option>)}
           <option value="Unknown">Unknown</option>
         </select>
+        <select className="input w-40 text-sm" value={licenseF} onChange={e => setLicenseF(e.target.value)}>
+          <option value="All">All Licenses</option>
+          <option value="Licensed">Licensed</option>
+          <option value="Unknown">Unknown</option>
+        </select>
         <div className="ml-auto flex items-center gap-2">
           {syncResult && (
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -240,7 +251,7 @@ export default function PeopleTab() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                {['Emp ID','Name','Entity','Department','Designation','Email','Phone','Status','Assets','Joined',''].map(h => (
+                {['Emp ID','Name','Entity','License','Department','Designation','Email','Phone','Status','Assets','Joined',''].map(h => (
                   <th key={h} className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap border-b border-gray-200">{h}</th>
                 ))}
               </tr>
@@ -253,6 +264,11 @@ export default function PeopleTab() {
                     <td className="px-3 py-2 font-medium whitespace-nowrap">{emp.name}</td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">{getEntity(emp.email)}</span>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {emp.msLicensed === true
+                        ? <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700">Licensed</span>
+                        : <span className="text-gray-400 text-xs">—</span>}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">{emp.department}</td>
                     <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{emp.designation || '—'}</td>
@@ -290,7 +306,7 @@ export default function PeopleTab() {
                 if (expandedEmpId === emp.id && emp.allocations && emp.allocations.length > 0) {
                   rows.push(
                     <tr key={`${emp.id}-assets`} className="bg-blue-50/60 border-b border-blue-100">
-                      <td colSpan={11} className="px-6 py-2">
+                      <td colSpan={12} className="px-6 py-2">
                         <div className="flex flex-wrap gap-2">
                           {emp.allocations.map((a) => (
                             <div key={a.id} className="flex items-center gap-2 bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-xs shadow-sm">
