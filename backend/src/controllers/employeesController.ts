@@ -182,34 +182,40 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   const { access_token } = await tokenRes.json() as { access_token: string };
   const graphHeaders = { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' };
 
-  // Build SKU ID → friendly name map from subscribedSkus
-  const SKU_FRIENDLY: Record<string, string> = {
-    'SPB': 'Microsoft 365 Business Premium',
-    'O365_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
-    'SMB_BUSINESS': 'Microsoft 365 Business Basic',
-    'O365_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
-    'SMB_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
-    'ENTERPRISEPACK': 'Office 365 E3',
-    'ENTERPRISEPREMIUM': 'Office 365 E5',
-    'FLOW_FREE': 'Power Automate Free',
-    'POWER_BI_STANDARD': 'Power BI Free',
-    'Microsoft_Teams_Exploratory': 'Microsoft Teams Exploratory',
-    'MICROSOFT_BUSINESS_CENTER': 'Microsoft Business Center',
-    'TEAMS_FREE': 'Microsoft Teams Free',
-    'DEVELOPERPACK_E5': 'Microsoft 365 E5 Developer',
-    'SMB_APPS': 'Microsoft 365 Apps for Business',
-    'OFFICESUBSCRIPTION': 'Microsoft 365 Apps for Enterprise',
+  // SKU ID → friendly name (covers common M365 licenses by GUID)
+  const skuMap: Record<string, string> = {
+    // Business
+    '3b555118-da6a-4418-894f-7dccda4c1dcc': 'Microsoft 365 Business Basic',
+    'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46': 'Microsoft 365 Business Premium',
+    'f245ecc8-75af-4f8e-b61f-27d8114de5f3': 'Microsoft 365 Business Standard',
+    'b214fe43-f19a-4248-b4f1-7a6ed994b559': 'Microsoft 365 Apps for Business',
+    // Enterprise
+    '6fd2c87f-b296-42f0-b197-1e91e994b900': 'Office 365 E3',
+    'c7df2760-2c81-4ef7-b578-5b5392b571df': 'Office 365 E5',
+    '18181a46-0d4e-45cd-891e-60aabd171b4e': 'Office 365 E1',
+    '26d45bd9-adf1-46cd-a9e1-51e9a5524128': 'Office 365 E3',
+    'c2273bd0-dff7-4215-9ef5-2c7bcfb06425': 'Microsoft 365 F1',
+    '66b55226-6b4f-492c-910c-a3b7a3c9d993': 'Microsoft 365 F3',
+    '05e9a617-0261-4cee-bb44-138d3ef5d965': 'Microsoft 365 E3',
+    '06ebc4ee-1bb5-47dd-8120-11324bc54e06': 'Microsoft 365 E5',
+    // Free / addons (will be filtered out)
+    'f30db892-07e9-47e9-837c-80ede0e8b1d3': 'Power Automate Free',
+    'a403ebcc-fae0-4ca2-8c8c-7a907fd6c235': 'Power BI Free',
+    'bc946dac-7877-4271-b2f7-99d2db13cd2c': 'Microsoft Fabric (Free)',
+    '710779e8-3d4a-4c88-adb9-386c958d1fdf': 'Microsoft Teams Exploratory',
+    '16ddbbfc-09ea-4de2-b1d7-312db6112d70': 'Azure AD Premium P2',
+    '078d2b04-f1bd-4111-bbd4-b4b1b354cef4': 'Azure AD Premium P1',
   };
-  const skuMap: Record<string, string> = {};
+  // Also try subscribedSkus for any unlisted SKUs
   try {
-    const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus', { headers: graphHeaders });
+    const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus?$select=skuId,skuPartNumber', { headers: graphHeaders });
     if (skuRes.ok) {
-      const skuData = await skuRes.json() as { value: Array<{ skuId: string; skuPartNumber: string; }> };
+      const skuData = await skuRes.json() as { value: Array<{ skuId: string; skuPartNumber: string }> };
       for (const sku of skuData.value) {
-        skuMap[sku.skuId] = SKU_FRIENDLY[sku.skuPartNumber] ?? sku.skuPartNumber;
+        if (!skuMap[sku.skuId]) skuMap[sku.skuId] = sku.skuPartNumber;
       }
     }
-  } catch { /* use fallback */ }
+  } catch { /* use hardcoded map only */ }
 
   // Fetch all users from Graph API (paginate)
   let added = 0, updated = 0, skipped = 0;
