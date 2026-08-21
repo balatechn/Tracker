@@ -162,10 +162,10 @@ export default function PeopleTab() {
     XLSX.writeFile(wb, `NGI-Employees-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
-  const total      = employees.length;
-  const active     = employees.filter(e => e.status === 'Active').length;
-  const resigned   = employees.filter(e => e.status === 'Resigned').length;
-  const onLeave    = employees.filter(e => e.status === 'On Leave').length;
+  const total      = filtered.length;
+  const active     = filtered.filter(e => e.status === 'Active').length;
+  const resigned   = filtered.filter(e => e.status === 'Resigned').length;
+  const onLeave    = filtered.filter(e => e.status === 'On Leave').length;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
