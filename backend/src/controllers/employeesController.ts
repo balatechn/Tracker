@@ -180,16 +180,44 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   }
 
   const { access_token } = await tokenRes.json() as { access_token: string };
+  const graphHeaders = { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' };
+
+  // Build SKU ID → friendly name map from subscribedSkus
+  const SKU_FRIENDLY: Record<string, string> = {
+    'SPB': 'Microsoft 365 Business Premium',
+    'O365_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
+    'SMB_BUSINESS': 'Microsoft 365 Business Basic',
+    'O365_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
+    'SMB_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
+    'ENTERPRISEPACK': 'Office 365 E3',
+    'ENTERPRISEPREMIUM': 'Office 365 E5',
+    'FLOW_FREE': 'Power Automate Free',
+    'POWER_BI_STANDARD': 'Power BI Free',
+    'Microsoft_Teams_Exploratory': 'Microsoft Teams Exploratory',
+    'MICROSOFT_BUSINESS_CENTER': 'Microsoft Business Center',
+    'TEAMS_FREE': 'Microsoft Teams Free',
+    'DEVELOPERPACK_E5': 'Microsoft 365 E5 Developer',
+    'SMB_APPS': 'Microsoft 365 Apps for Business',
+    'OFFICESUBSCRIPTION': 'Microsoft 365 Apps for Enterprise',
+  };
+  const skuMap: Record<string, string> = {};
+  try {
+    const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus', { headers: graphHeaders });
+    if (skuRes.ok) {
+      const skuData = await skuRes.json() as { value: Array<{ skuId: string; skuPartNumber: string; }> };
+      for (const sku of skuData.value) {
+        skuMap[sku.skuId] = SKU_FRIENDLY[sku.skuPartNumber] ?? sku.skuPartNumber;
+      }
+    }
+  } catch { /* use fallback */ }
 
   // Fetch all users from Graph API (paginate)
   let added = 0, updated = 0, skipped = 0;
   let nextUrl: string | null =
-    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation&$top=999';
+    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation,assignedLicenses&$top=999';
 
   while (nextUrl) {
-    const usersRes = await fetch(nextUrl, {
-      headers: { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' },
-    });
+    const usersRes = await fetch(nextUrl, { headers: graphHeaders });
 
     if (!usersRes.ok) {
       res.status(502).json({ error: 'Failed to fetch users from Microsoft Graph' });
@@ -201,6 +229,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
         id: string; displayName: string; mail?: string;
         userPrincipalName?: string; jobTitle?: string;
         department?: string; mobilePhone?: string; officeLocation?: string;
+        assignedLicenses?: Array<{ skuId: string }>;
       }>;
       '@odata.nextLink'?: string;
     };
@@ -211,6 +240,11 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
 
       // Skip service accounts / external guests
       if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
+
+      const licenseNames = (u.assignedLicenses ?? [])
+        .map(l => skuMap[l.skuId] ?? l.skuId)
+        .filter(n => !['Power Automate Free', 'Power BI Free', 'Microsoft Teams Free', 'Microsoft Fabric (Free)'].includes(n));
+      const msLicenseName = licenseNames.length > 0 ? licenseNames.join(', ') : null;
 
       const existing = await prisma.employee.findUnique({ where: { email } });
 
@@ -223,6 +257,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
             designation: u.jobTitle || existing.designation,
             phone: u.mobilePhone || existing.phone,
             msLicensed: true,
+            msLicenseName,
           },
         });
         updated++;
@@ -238,6 +273,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
             phone: u.mobilePhone || null,
             status: 'Active',
             msLicensed: true,
+            msLicenseName,
           },
         });
         added++;

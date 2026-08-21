@@ -55,6 +55,7 @@ model Employee {
   joiningDate   DateTime?
   exitDate      DateTime?
   msLicensed    Boolean?
+  msLicenseName String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   allocations   Allocation[]
