@@ -184,11 +184,11 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   // Fetch all users from Graph API (paginate)
   let added = 0, updated = 0, skipped = 0;
   let nextUrl: string | null =
-    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation&$top=999';
+    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation&$top=999';
 
   while (nextUrl) {
     const usersRes = await fetch(nextUrl, {
-      headers: { Authorization: `Bearer ${access_token}` },
+      headers: { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' },
     });
 
     if (!usersRes.ok) {
