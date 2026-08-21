@@ -4,10 +4,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeesApi, allocationsApi } from '@/lib/api';
 import { Employee } from '@/types';
 import toast from 'react-hot-toast';
-import { Users, Plus, Pencil, Trash2, X, UserCheck, UserX, Clock, Briefcase, ChevronDown, ChevronRight, RotateCcw, RefreshCw } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, X, UserCheck, UserX, Clock, Briefcase, ChevronDown, ChevronRight, RotateCcw, RefreshCw, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 'Management', 'Admin'];
 const STATUSES = ['Active', 'Resigned', 'On Leave', 'Probation'];
+
+const DOMAIN_ENTITY: Record<string, string> = {
+  'nationalgroupindia.com': 'NCPL',
+  'rainlandautocorp.com':   'RAINLAND',
+  'iskytransport.com':      'ISKY TRANSPORT',
+};
+
+function getEntity(email: string): string {
+  const domain = email?.split('@')[1]?.toLowerCase() ?? '';
+  return DOMAIN_ENTITY[domain] ?? (domain ? `Unknown (${domain})` : '—');
+}
 
 const STATUS_COLORS: Record<string, string> = {
   Active:    'bg-green-100 text-green-700',
@@ -36,6 +48,7 @@ export default function PeopleTab() {
   const qc = useQueryClient();
   const [search, setSearch]   = useState('');
   const [statusF, setStatusF] = useState('All');
+  const [entityF, setEntityF] = useState('All');
   const [modal, setModal]     = useState<'add' | 'edit' | 'delete' | null>(null);
   const [selected, setSelected] = useState<Employee | null>(null);
   const [form, setForm]       = useState<EmpForm>(EMPTY_FORM);
@@ -121,6 +134,34 @@ export default function PeopleTab() {
     else updateMut.mutate(form);
   }
 
+  const filtered = entityF === 'All'
+    ? employees
+    : employees.filter(e => getEntity(e.email) === entityF);
+
+  const ENTITY_LABELS = ['All', ...Object.values(DOMAIN_ENTITY), 'Unknown'];
+
+  function exportExcel() {
+    const rows = filtered.map(e => ({
+      'Emp ID':      e.empId,
+      'Name':        e.name,
+      'Entity':      getEntity(e.email),
+      'Department':  e.department,
+      'Designation': e.designation ?? '',
+      'Email':       e.email,
+      'Phone':       e.phone ?? '',
+      'Manager':     e.manager ?? '',
+      'Status':      e.status,
+      'Joining Date': e.joiningDate ? new Date(e.joiningDate).toLocaleDateString('en-IN') : '',
+      'Exit Date':   e.exitDate ? new Date(e.exitDate).toLocaleDateString('en-IN') : '',
+      'Assets':      e.allocations?.length ?? 0,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = Object.keys(rows[0] ?? {}).map(() => ({ wch: 22 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+    XLSX.writeFile(wb, `NGI-Employees-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   const total      = employees.length;
   const active     = employees.filter(e => e.status === 'Active').length;
   const resigned   = employees.filter(e => e.status === 'Resigned').length;
@@ -155,12 +196,20 @@ export default function PeopleTab() {
           <option value="All">All Statuses</option>
           {STATUSES.map(s => <option key={s}>{s}</option>)}
         </select>
+        <select className="input w-40 text-sm" value={entityF} onChange={e => setEntityF(e.target.value)}>
+          <option value="All">All Entities</option>
+          {Object.values(DOMAIN_ENTITY).map(v => <option key={v}>{v}</option>)}
+          <option value="Unknown">Unknown</option>
+        </select>
         <div className="ml-auto flex items-center gap-2">
           {syncResult && (
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
               Last sync: <span className="text-green-600 font-semibold">{syncResult.added} added</span>, {syncResult.updated} updated, {syncResult.skipped} skipped
             </span>
           )}
+          <button onClick={exportExcel} className="btn-secondary flex items-center gap-1.5 text-sm">
+            <Download className="w-4 h-4" /> Export Excel
+          </button>
           {isAdmin && (
             <button
               className="btn-secondary flex items-center gap-1.5 text-sm"
@@ -182,7 +231,7 @@ export default function PeopleTab() {
       <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-32 text-gray-500">Loading…</div>
-        ) : employees.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-2 text-gray-400">
             <Briefcase className="w-12 h-12 opacity-30" />
             <p>No employees found</p>
@@ -191,17 +240,20 @@ export default function PeopleTab() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                {['Emp ID','Name','Department','Designation','Email','Phone','Status','Assets','Joined',''].map(h => (
+                {['Emp ID','Name','Entity','Department','Designation','Email','Phone','Status','Assets','Joined',''].map(h => (
                   <th key={h} className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap border-b border-gray-200">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {employees.flatMap((emp, i) => {
+              {filtered.flatMap((emp, i) => {
                 const rows = [
                   <tr key={emp.id} className={`border-b border-gray-100 hover:bg-blue-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
                     <td className="px-3 py-2 font-mono text-xs text-gray-600 whitespace-nowrap">{emp.empId}</td>
                     <td className="px-3 py-2 font-medium whitespace-nowrap">{emp.name}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">{getEntity(emp.email)}</span>
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap">{emp.department}</td>
                     <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{emp.designation || '—'}</td>
                     <td className="px-3 py-2 text-gray-600 whitespace-nowrap max-w-[180px] truncate">{emp.email}</td>
@@ -238,7 +290,7 @@ export default function PeopleTab() {
                 if (expandedEmpId === emp.id && emp.allocations && emp.allocations.length > 0) {
                   rows.push(
                     <tr key={`${emp.id}-assets`} className="bg-blue-50/60 border-b border-blue-100">
-                      <td colSpan={10} className="px-6 py-2">
+                      <td colSpan={11} className="px-6 py-2">
                         <div className="flex flex-wrap gap-2">
                           {emp.allocations.map((a) => (
                             <div key={a.id} className="flex items-center gap-2 bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-xs shadow-sm">
@@ -275,6 +327,11 @@ export default function PeopleTab() {
               <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {form.email && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded text-sm text-indigo-700 font-semibold">
+                  Entity: {getEntity(form.email)}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Emp ID" required>
                   <input
