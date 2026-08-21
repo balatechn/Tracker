@@ -132,6 +132,8 @@ export async function deleteEmployee(req: AuthRequest, res: Response): Promise<v
     return;
   }
 
+  // Remove historical allocations before deleting to avoid FK constraint
+  await prisma.allocation.deleteMany({ where: { employeeId: id } });
   await prisma.employee.delete({ where: { id } });
 
   await prisma.auditLog.create({
