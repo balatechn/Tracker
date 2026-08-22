@@ -136,16 +136,23 @@ export default function PeopleTab() {
     else updateMut.mutate(form);
   }
 
-  // Unique license names present in the data for the filter dropdown
+  // Individual license names (split comma-separated strings) for the filter dropdown
   const licenseOptions = Array.from(new Set(
-    employees.map(e => e.msLicenseName ?? '—').filter(n => n !== '—')
+    employees.flatMap(e =>
+      e.msLicenseName
+        ? e.msLicenseName.split(',').map((l: string) => l.trim()).filter(Boolean)
+        : []
+    )
   )).sort();
 
   const filtered = employees.filter(e => {
     if (entityF !== 'All' && getEntity(e.email) !== entityF) return false;
     if (licenseF !== 'All') {
       if (licenseF === '—' && e.msLicenseName) return false;
-      if (licenseF !== '—' && e.msLicenseName !== licenseF) return false;
+      if (licenseF !== '—') {
+        const empLicenses = (e.msLicenseName ?? '').split(',').map((l: string) => l.trim());
+        if (!empLicenses.includes(licenseF)) return false;
+      }
     }
     return true;
   });
