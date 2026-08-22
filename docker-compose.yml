@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-trackerdb}
-      POSTGRES_USER: ${POSTGRES_USER:-trackeruser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trackerpass}
+      POSTGRES_DB: ${POSTGRES_DB:-jhdb}
+      POSTGRES_USER: ${POSTGRES_USER:-jhuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jhpass2026}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - tracker-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trackeruser} -d ${POSTGRES_DB:-trackerdb}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jhuser} -d ${POSTGRES_DB:-jhdb}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,20 +22,16 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-trackeruser}:${POSTGRES_PASSWORD:-trackerpass}@db:5432/${POSTGRES_DB:-trackerdb}
-      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jhuser}:${POSTGRES_PASSWORD:-jhpass2026}@db:5432/${POSTGRES_DB:-jhdb}
+      JWT_SECRET: ${JWT_SECRET:-jh-tracker-jwt-secret-2026}
       PORT: 4000
       NODE_ENV: production
-      N8N_WEBHOOK_BASE_URL: http://n8n:5678
-      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
-      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET:-}
       MAIL_FROM: ${MAIL_FROM:-connect@junobohotels.com}
-      APP_BASE_URL: ${APP_BASE_URL:-https://itasset.junobohotels.com}
+      APP_BASE_URL: ${APP_BASE_URL:-https://jh-tracker.vercel.app}
       N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-jh-n8n-secret-2026}
-      CORS_ORIGIN: ${CORS_ORIGIN:-https://itasset.junobohotels.com}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://jh-tracker.vercel.app}
     ports:
-      - "4001:4000"
+      - "4002:4000"
     depends_on:
       db:
         condition: service_healthy
@@ -53,103 +47,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
-      # HTTP
-      - "traefik.http.routers.jh-api-http.rule=Host(`api.itasset.junobohotels.com`)"
-      - "traefik.http.routers.jh-api-http.entrypoints=http"
+      - "traefik.http.routers.jh-api.rule=Host(`jh-api.187.127.134.246.sslip.io`)"
+      - "traefik.http.routers.jh-api.entrypoints=http"
       - "traefik.http.services.jh-api.loadbalancer.server.port=4000"
-      # HTTPS
-      - "traefik.http.routers.jh-api-https.rule=Host(`api.itasset.junobohotels.com`)"
-      - "traefik.http.routers.jh-api-https.entrypoints=https"
-      - "traefik.http.routers.jh-api-https.tls=true"
-      - "traefik.http.routers.jh-api-https.service=jh-api"
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_APP_NAME: "JH Tracker"
-        NEXT_PUBLIC_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-        NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      BACKEND_URL: http://backend:4000
-    ports:
-      - "3001:3000"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - tracker-network
-      - coolify
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 120s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=coolify"
-      # HTTP
-      - "traefik.http.routers.jh-frontend-http.rule=Host(`itasset.junobohotels.com`)"
-      - "traefik.http.routers.jh-frontend-http.entrypoints=http"
-      - "traefik.http.services.jh-frontend.loadbalancer.server.port=3000"
-      # HTTPS
-      - "traefik.http.routers.jh-frontend-https.rule=Host(`itasset.junobohotels.com`)"
-      - "traefik.http.routers.jh-frontend-https.entrypoints=https"
-      - "traefik.http.routers.jh-frontend-https.tls=true"
-      - "traefik.http.routers.jh-frontend-https.service=jh-frontend"
-
-  # One-shot: writes Traefik file-based config for API and frontend subdomains.
-  # File-based routers survive Coolify deploys; container labels may reset.
-  traefik-config:
-    image: alpine:3.20
-    restart: "no"
-    volumes:
-      - /data/coolify/proxy/dynamic:/dynamic
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        cat > /dynamic/jh-tracker.yaml <<'EOF'
-        http:
-          routers:
-            jh-api-http:
-              rule: Host(`api.itasset.junobohotels.com`)
-              entryPoints:
-                - http
-              service: jh-api
-            jh-api-https:
-              rule: Host(`api.itasset.junobohotels.com`)
-              entryPoints:
-                - https
-              tls:
-                certResolver: letsencrypt
-              service: jh-api
-            jh-frontend-http:
-              rule: Host(`itasset.junobohotels.com`)
-              entryPoints:
-                - http
-              service: jh-frontend
-            jh-frontend-https:
-              rule: Host(`itasset.junobohotels.com`)
-              entryPoints:
-                - https
-              tls:
-                certResolver: letsencrypt
-              service: jh-frontend
-          services:
-            jh-api:
-              loadBalancer:
-                servers:
-                  - url: "http://187.127.134.246:4001"
-            jh-frontend:
-              loadBalancer:
-                servers:
-                  - url: "http://187.127.134.246:3001"
-        EOF
-        echo "Traefik JH config written."
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
@@ -157,17 +57,16 @@ services:
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
-      - WEBHOOK_URL=http://n8n.itasset.junobohotels.com
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-n8n-encryption-key-change-me-32ch}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-jh-n8n-encryption-key-2026}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-Admin@123}
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-trackerdb}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER:-trackeruser}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-trackerpass}
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-jhdb}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-jhuser}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-jhpass2026}
       - DB_POSTGRESDB_SCHEMA=n8n
       - GENERIC_TIMEZONE=Asia/Kolkata
     volumes:
@@ -178,12 +77,6 @@ services:
     networks:
       - tracker-network
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.jh-n8n.rule=Host(`n8n.itasset.junobohotels.com`)"
-      - "traefik.http.routers.jh-n8n.entrypoints=http"
-      - "traefik.http.services.jh-n8n.loadbalancer.server.port=5678"
-      - "traefik.docker.network=coolify"
 
 volumes:
   postgres_data:

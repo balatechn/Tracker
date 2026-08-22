@@ -12,15 +12,7 @@ const nextConfig = {
     ];
     return config;
   },
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://api.itasset.junobohotels.com';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${backendUrl}/:path*`,
-      },
-    ];
-  },
+  // API proxy handled by src/app/api/[...slug]/route.ts serverless function
 };
 
 module.exports = nextConfig;
