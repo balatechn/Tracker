@@ -190,7 +190,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   const skuMap: Record<string, string> = {
     // Business (confirmed tenant UUIDs first)
     '3b555118-da6a-4418-894f-7df1e2096870': 'Microsoft 365 Business Basic',
-    'f30db892-07e9-47e9-837c-80727f46fd3d': 'Microsoft 365 Apps for Business',
+    'f30db892-07e9-47e9-837c-80727f46fd3d': 'Power Automate Free',
     // Standard MS published GUIDs
     '3b555118-da6a-4418-894f-7dccda4c1dcc': 'Microsoft 365 Business Basic',
     'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46': 'Microsoft 365 Business Premium',
