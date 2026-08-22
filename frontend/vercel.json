@@ -4,7 +4,7 @@
   "outputDirectory": ".next",
   "env": {
     "BACKEND_URL": "http://187.127.134.246:4002",
-    "NEXT_PUBLIC_AZURE_CLIENT_ID": "2b20a887-0260-4199-b6b0-ebca15d4475a",
-    "NEXT_PUBLIC_AZURE_TENANT_ID": "944d20e2-8841-46b8-9ba6-b0b8d086757b"
+    "NEXT_PUBLIC_AZURE_CLIENT_ID": "2b635c55-04f8-4349-9bd4-daf1efed031f",
+    "NEXT_PUBLIC_AZURE_TENANT_ID": "8f221015-1469-44a0-aaa3-59d3e7938b2e"
   }
 }
