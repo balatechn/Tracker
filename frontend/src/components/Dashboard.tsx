@@ -296,25 +296,24 @@ export default function Dashboard() {
               </div>
 
               {/* Hardware KPI row */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
-                <StatCard label="Total Hardware"    value={entries.length}                                                                                                           color="blue"   icon={<Package size={14} />} />
-                <StatCard label="NCPL HO Total"     value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('NCPL')).length}                                      color="blue"   icon={<Monitor size={14} />} />
-                <StatCard label="Rainland Total"    value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                  color="green"  icon={<Monitor size={14} />} />
-                <StatCard label="Available Total"   value={entries.filter(e => e.assetStatus === 'Available').length}                                                                color="gray"   icon={<CheckCircle2 size={14} />} />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
+                <StatCard label="Total Hardware"     value={entries.length}                                                                                                          color="blue"   icon={<Package size={14} />} />
+                <StatCard label="Rainland Total"     value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                 color="green"  icon={<Monitor size={14} />} />
+                <StatCard label="Available Total"    value={entries.filter(e => e.assetStatus === 'Available').length}                                                               color="gray"   icon={<CheckCircle2 size={14} />} />
                 <StatCard label="Active Allocations" value={activeAllocCount}                                                                                                        color="purple" icon={<ArrowLeftRight size={14} />} />
-                <StatCard label="Total Employees"   value={employees.length}                                                                                                         color="blue"   icon={<Users size={14} />} />
+                <StatCard label="Total Employees"    value={employees.length}                                                                                                        color="blue"   icon={<Users size={14} />} />
               </div>
 
-              {/* Hardware 3-panel lists */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3" style={{ minHeight: 200 }}>
+              {/* Hardware 2-panel lists */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3" style={{ minHeight: 200 }}>
 
-                {/* Panel 1: Available — NCPL HO */}
+                {/* Panel 1: Available */}
                 {(() => {
-                  const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('NCPL'));
+                  const list = entries.filter(e => e.assetStatus === 'Available');
                   return (
                     <div className="rounded-xl shadow-sm flex flex-col overflow-hidden" style={{ border: '1px solid #2e75b6' }}>
                       <div className="px-3 py-1.5 flex items-center justify-between flex-shrink-0" style={{ background: '#2e75b6' }}>
-                        <p className="text-xs font-bold text-white uppercase tracking-wide">Available — NCPL HO</p>
+                        <p className="text-xs font-bold text-white uppercase tracking-wide">Available</p>
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#1f4e79', color: '#fff' }}>{list.length}</span>
                       </div>
                       <div className="flex-1 overflow-y-auto min-h-0 bg-white">
@@ -327,43 +326,6 @@ export default function Dashboard() {
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Previous User</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Product</th>
                                 <th className="px-2 py-1 text-left font-bold border-b border-[#2e75b6]" style={{ color: '#1f3864' }}>Make</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {list.map((e, i) => (
-                                <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f2f2]'}>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.owner ?? '—'}</td>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-800 font-medium">{e.category ?? e.serviceName}</td>
-                                  <td className="px-2 py-[2px] border-b border-[#e8e8e8] text-gray-600">{e.vendor ?? '—'}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Panel 2: Available — RAINLAND */}
-                {(() => {
-                  const list = entries.filter(e => e.assetStatus === 'Available' && (e.billingCompany ?? '').toUpperCase().includes('RAINLAND'));
-                  return (
-                    <div className="rounded-xl shadow-sm flex flex-col overflow-hidden" style={{ border: '1px solid #375623' }}>
-                      <div className="px-3 py-1.5 flex items-center justify-between flex-shrink-0" style={{ background: '#375623' }}>
-                        <p className="text-xs font-bold text-white uppercase tracking-wide">Available — RAINLAND</p>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#1e3a12', color: '#fff' }}>{list.length}</span>
-                      </div>
-                      <div className="flex-1 overflow-y-auto min-h-0 bg-white">
-                        {list.length === 0 ? (
-                          <div className="flex items-center justify-center h-full text-xs text-gray-400">No available assets</div>
-                        ) : (
-                          <table className="w-full text-[10.5px]" style={{ fontFamily: "'Calibri','Arial',sans-serif" }}>
-                            <thead className="sticky top-0" style={{ background: '#e2efda' }}>
-                              <tr>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Previous User</th>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Product</th>
-                                <th className="px-2 py-1 text-left font-bold border-b border-[#375623]" style={{ color: '#1e3a12' }}>Make</th>
                               </tr>
                             </thead>
                             <tbody>
