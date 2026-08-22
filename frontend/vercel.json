@@ -3,7 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "env": {
-    "BACKEND_URL": "http://api.itasset.junobohotels.com",
+    "BACKEND_URL": "http://187.127.134.246:4001",
     "NEXT_PUBLIC_AZURE_CLIENT_ID": "2b20a887-0260-4199-b6b0-ebca15d4475a",
     "NEXT_PUBLIC_AZURE_TENANT_ID": "944d20e2-8841-46b8-9ba6-b0b8d086757b"
   }
