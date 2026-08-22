@@ -183,8 +183,15 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   const graphHeaders = { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' };
 
   // SKU ID → friendly name (covers common M365 licenses by GUID)
+  const FREE_LICENSES = new Set([
+    'Power Automate Free', 'Power BI Free', 'Microsoft Fabric (Free)',
+    'Microsoft Teams Exploratory', 'Microsoft Teams Free',
+  ]);
   const skuMap: Record<string, string> = {
-    // Business
+    // Business (confirmed tenant UUIDs first)
+    '3b555118-da6a-4418-894f-7df1e2096870': 'Microsoft 365 Business Basic',
+    'f30db892-07e9-47e9-837c-80727f46fd3d': 'Microsoft 365 Apps for Business',
+    // Standard MS published GUIDs
     '3b555118-da6a-4418-894f-7dccda4c1dcc': 'Microsoft 365 Business Basic',
     'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46': 'Microsoft 365 Business Premium',
     'f245ecc8-75af-4f8e-b61f-27d8114de5f3': 'Microsoft 365 Business Standard',
@@ -198,7 +205,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
     '66b55226-6b4f-492c-910c-a3b7a3c9d993': 'Microsoft 365 F3',
     '05e9a617-0261-4cee-bb44-138d3ef5d965': 'Microsoft 365 E3',
     '06ebc4ee-1bb5-47dd-8120-11324bc54e06': 'Microsoft 365 E5',
-    // Free / addons (will be filtered out)
+    // Free / addons (filtered out below)
     'f30db892-07e9-47e9-837c-80ede0e8b1d3': 'Power Automate Free',
     'a403ebcc-fae0-4ca2-8c8c-7a907fd6c235': 'Power BI Free',
     'bc946dac-7877-4271-b2f7-99d2db13cd2c': 'Microsoft Fabric (Free)',
@@ -248,8 +255,8 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
       if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
 
       const licenseNames = (u.assignedLicenses ?? [])
-        .map(l => skuMap[l.skuId] ?? l.skuId)
-        .filter(n => !['Power Automate Free', 'Power BI Free', 'Microsoft Teams Free', 'Microsoft Fabric (Free)'].includes(n));
+        .map(l => skuMap[l.skuId] ?? 'M365 License')
+        .filter(n => !FREE_LICENSES.has(n));
       const msLicenseName = licenseNames.length > 0 ? licenseNames.join(', ') : null;
 
       const existing = await prisma.employee.findUnique({ where: { email } });
