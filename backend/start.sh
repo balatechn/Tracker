@@ -16,13 +16,18 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function seed() {
-  const count = await prisma.user.count();
-  if (count > 0) {
-    console.log('Admin already exists, skipping.');
+  const existing = await prisma.user.findFirst({ where: { username: 'admin' } });
+  if (existing) {
+    if (existing.role !== 'admin') {
+      await prisma.user.update({ where: { id: existing.id }, data: { role: 'admin' } });
+      console.log('Fixed admin role to admin.');
+    } else {
+      console.log('Admin already exists, skipping.');
+    }
     return;
   }
   const hash = await bcrypt.hash('Admin@123', 12);
-  await prisma.user.create({ data: { username: 'admin', password: hash } });
+  await prisma.user.create({ data: { username: 'admin', password: hash, role: 'admin' } });
   console.log('Seeded: admin / Admin@123');
 }
 
