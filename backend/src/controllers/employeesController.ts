@@ -180,7 +180,10 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   }
 
   const { access_token } = await tokenRes.json() as { access_token: string };
-  const graphHeaders = { Authorization: `Bearer ${access_token}` };
+  const graphHeaders = {
+    Authorization: `Bearer ${access_token}`,
+    'ConsistencyLevel': 'eventual',
+  };
 
   // skuPartNumber → exact display name (as shown in M365 admin center)
   const FREE_SKU_PARTS = new Set([
@@ -227,86 +230,92 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
     'POWERAPPS_DEV':                'Microsoft Power Apps for Developer',
   };
 
-  // Fetch all active users with licenseDetails expanded — filter licensed ones client-side
-  // Note: $expand=licenseDetails is NOT compatible with $count/$filter on collections,
-  // so we fetch all accountEnabled users and skip those with no paid licenses.
+  // Step 1: fetch all licensed+enabled users (this URL combination is confirmed working)
   let added = 0, updated = 0, skipped = 0;
+  const allUsers: Array<{
+    id: string; displayName: string; mail?: string;
+    userPrincipalName?: string; jobTitle?: string;
+    department?: string; mobilePhone?: string; officeLocation?: string;
+  }> = [];
+
   let nextUrl: string | null =
-    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true' +
+    'https://graph.microsoft.com/v1.0/users' +
+    '?$filter=accountEnabled eq true and assignedLicenses/$count ne 0' +
+    '&$count=true' +
     '&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation' +
-    '&$expand=licenseDetails&$top=100';
+    '&$top=100';
 
   while (nextUrl) {
     const usersRes = await fetch(nextUrl, { headers: graphHeaders });
-
     if (!usersRes.ok) {
       const errBody = await usersRes.text();
       console.error('[sync] Graph users error', usersRes.status, errBody);
       res.status(502).json({ error: 'Failed to fetch users from Microsoft Graph', detail: errBody });
       return;
     }
-
-    const data = await usersRes.json() as {
-      value: Array<{
-        id: string; displayName: string; mail?: string;
-        userPrincipalName?: string; jobTitle?: string;
-        department?: string; mobilePhone?: string; officeLocation?: string;
-        licenseDetails?: Array<{ skuId: string; skuPartNumber: string }>;
-      }>;
-      '@odata.nextLink'?: string;
-    };
-
-    for (const u of data.value) {
-      const email = (u.mail ?? u.userPrincipalName ?? '').toLowerCase();
-      if (!email || !u.displayName) { skipped++; continue; }
-
-      // Skip service accounts / external guests
-      if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
-
-      const licenseNames = (u.licenseDetails ?? [])
-        .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
-        .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
-
-      const hasPaidLicense = licenseNames.length > 0;
-      const msLicenseName = hasPaidLicense ? licenseNames.join(', ') : null;
-
-      const existing = await prisma.employee.findUnique({ where: { email } });
-
-      if (existing) {
-        await prisma.employee.update({
-          where: { email },
-          data: {
-            name: u.displayName,
-            department: u.department || existing.department || 'General',
-            designation: u.jobTitle || existing.designation,
-            phone: u.mobilePhone || existing.phone,
-            msLicensed: hasPaidLicense,
-            msLicenseName,
-          },
-        });
-        updated++;
-      } else {
-        // Don't add new employees who have no paid license
-        if (!hasPaidLicense) { skipped++; continue; }
-        const empId = await nextEmpId();
-        await prisma.employee.create({
-          data: {
-            empId,
-            name: u.displayName,
-            email,
-            department: u.department || 'General',
-            designation: u.jobTitle || null,
-            phone: u.mobilePhone || null,
-            status: 'Active',
-            msLicensed: true,
-            msLicenseName,
-          },
-        });
-        added++;
-      }
-    }
-
+    const data = await usersRes.json() as { value: typeof allUsers; '@odata.nextLink'?: string };
+    allUsers.push(...data.value);
     nextUrl = data['@odata.nextLink'] ?? null;
+  }
+
+  // Step 2: for each user fetch licenseDetails individually (expand not permitted on list endpoint)
+  for (const u of allUsers) {
+    const email = (u.mail ?? u.userPrincipalName ?? '').toLowerCase();
+    if (!email || !u.displayName) { skipped++; continue; }
+    if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
+
+    let licenseDetails: Array<{ skuPartNumber: string }> = [];
+    try {
+      const ldRes = await fetch(
+        `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(u.id)}/licenseDetails`,
+        { headers: graphHeaders }
+      );
+      if (ldRes.ok) {
+        const ldData = await ldRes.json() as { value: Array<{ skuPartNumber: string }> };
+        licenseDetails = ldData.value;
+      }
+    } catch { /* skip license lookup, will show no name */ }
+
+    const licenseNames = licenseDetails
+      .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
+      .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
+
+    const hasPaidLicense = licenseNames.length > 0;
+    const msLicenseName = hasPaidLicense ? licenseNames.join(', ') : null;
+
+    const existing = await prisma.employee.findUnique({ where: { email } });
+
+    if (existing) {
+      await prisma.employee.update({
+        where: { email },
+        data: {
+          name: u.displayName,
+          department: u.department || existing.department || 'General',
+          designation: u.jobTitle || existing.designation,
+          phone: u.mobilePhone || existing.phone,
+          msLicensed: hasPaidLicense,
+          msLicenseName,
+        },
+      });
+      updated++;
+    } else {
+      if (!hasPaidLicense) { skipped++; continue; }
+      const empId = await nextEmpId();
+      await prisma.employee.create({
+        data: {
+          empId,
+          name: u.displayName,
+          email,
+          department: u.department || 'General',
+          designation: u.jobTitle || null,
+          phone: u.mobilePhone || null,
+          status: 'Active',
+          msLicensed: true,
+          msLicenseName,
+        },
+      });
+      added++;
+    }
   }
 
   res.json({ added, updated, skipped, total: added + updated + skipped });
