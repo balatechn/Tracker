@@ -225,38 +225,14 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
     'POWERAPPS_DEV':                'Microsoft Power Apps for Developer',
   };
 
-  // Build skuId → friendly name map (null = free/filtered) from one user's licenseDetails
-  const skuIdMap: Record<string, string | null> = {};
-  try {
-    const sampleRes = await fetch(
-      'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=mail,userPrincipalName&$top=1',
-      { headers: graphHeaders }
-    );
-    if (sampleRes.ok) {
-      const sampleData = await sampleRes.json() as { value: Array<{ mail?: string; userPrincipalName?: string }> };
-      const sampleEmail = sampleData.value[0]?.mail ?? sampleData.value[0]?.userPrincipalName;
-      if (sampleEmail) {
-        const detailRes = await fetch(
-          `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sampleEmail)}/licenseDetails`,
-          { headers: graphHeaders }
-        );
-        if (detailRes.ok) {
-          const detailData = await detailRes.json() as { value: Array<{ skuId: string; skuPartNumber: string }> };
-          for (const d of detailData.value) {
-            // null means free — will be filtered out
-            skuIdMap[d.skuId] = FREE_SKU_PARTS.has(d.skuPartNumber)
-              ? null
-              : (SKU_NAMES[d.skuPartNumber] ?? d.skuPartNumber);
-          }
-        }
-      }
-    }
-  } catch { /* use SKU_NAMES map only */ }
-
-  // Fetch all users from Graph API (paginate)
+  // Fetch all active users with licenseDetails expanded — filter licensed ones client-side
+  // Note: $expand=licenseDetails is NOT compatible with $count/$filter on collections,
+  // so we fetch all accountEnabled users and skip those with no paid licenses.
   let added = 0, updated = 0, skipped = 0;
   let nextUrl: string | null =
-    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation,assignedLicenses&$top=999';
+    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true' +
+    '&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation' +
+    '&$expand=licenseDetails($select=skuId,skuPartNumber)&$top=999';
 
   while (nextUrl) {
     const usersRes = await fetch(nextUrl, { headers: graphHeaders });
@@ -271,7 +247,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
         id: string; displayName: string; mail?: string;
         userPrincipalName?: string; jobTitle?: string;
         department?: string; mobilePhone?: string; officeLocation?: string;
-        assignedLicenses?: Array<{ skuId: string }>;
+        licenseDetails?: Array<{ skuId: string; skuPartNumber: string }>;
       }>;
       '@odata.nextLink'?: string;
     };
@@ -283,13 +259,14 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
       // Skip service accounts / external guests
       if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
 
-      const licenseNames = (u.assignedLicenses ?? [])
-        .map(l => {
-          if (l.skuId in skuIdMap) return skuIdMap[l.skuId]; // null = free
-          return null; // unknown UUID — skip
-        })
-        .filter((n): n is string => typeof n === 'string');
-      const msLicenseName = licenseNames.length > 0 ? licenseNames.join(', ') : null;
+      const licenseNames = (u.licenseDetails ?? [])
+        .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
+        .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
+
+      // Skip users with no paid licenses
+      if (licenseNames.length === 0) { skipped++; continue; }
+
+      const msLicenseName = licenseNames.join(', ');
 
       const existing = await prisma.employee.findUnique({ where: { email } });
 
