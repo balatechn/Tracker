@@ -131,7 +131,7 @@ export default function TaskFormModal({ task, allTasks, defaultProject, onClose,
             </div>
             <div>
               <label className="label">Project Name</label>
-              <input className="input" value={form.projectName} onChange={e => set('projectName', e.target.value)} placeholder="e.g. NGI IT Infrastructure 2026" />
+              <input className="input" value={form.projectName} onChange={e => set('projectName', e.target.value)} placeholder="e.g. JH IT Infrastructure 2026" />
             </div>
             <div>
               <label className="label">Department</label>

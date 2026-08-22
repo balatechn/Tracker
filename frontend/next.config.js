@@ -12,7 +12,7 @@ const nextConfig = {
     return config;
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://api.itasset.nationalgroupindia.com';
+    const backendUrl = process.env.BACKEND_URL || 'http://api.itasset.junobohotels.com';
     return [
       {
         source: '/api/:path*',

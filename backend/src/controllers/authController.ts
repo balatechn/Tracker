@@ -78,7 +78,7 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
     const displayName = (payload.name ?? email) as string;
     const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
 
-    const ADMIN_EMAIL = 'bala@nationalgroupindia.com';
+    const ADMIN_EMAIL = 'bala@junobohotels.com';
     const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
     let user = await prisma.user.findUnique({ where: { msOid } });

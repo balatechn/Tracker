@@ -338,7 +338,7 @@ function EntityManagersModal({ onClose }: { onClose: () => void }) {
         </div>
         <div style={{ padding: '14px 16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, alignItems: 'end', marginBottom: 12 }}>
-            <Field label="Entity Name">{inp(form.entityName, v => setForm(f => ({ ...f, entityName: v })), 'text', 'e.g. NGI Pvt Ltd')}</Field>
+            <Field label="Entity Name">{inp(form.entityName, v => setForm(f => ({ ...f, entityName: v })), 'text', 'e.g. Junobo Hotels Pvt Ltd')}</Field>
             <Field label="Manager Name">{inp(form.managerName, v => setForm(f => ({ ...f, managerName: v })), 'text', 'Full name')}</Field>
             <Field label="Manager Email">{inp(form.managerEmail, v => setForm(f => ({ ...f, managerEmail: v })), 'email', 'manager@example.com')}</Field>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -389,7 +389,7 @@ function EntityManagersModal({ onClose }: { onClose: () => void }) {
 export default function BillsTab() {
   const qc = useQueryClient();
   const username = typeof window !== 'undefined' ? (localStorage.getItem('username') ?? 'Admin') : 'Admin';
-  const userEmail = 'bala@nationalgroupindia.com';
+  const userEmail = 'bala@junobohotels.com';
 
   const { data: bills = [], isLoading } = useQuery({ queryKey: ['bills'], queryFn: () => billsApi.list().then(r => r.data) });
   const { data: managers = [] } = useQuery({ queryKey: ['entity-managers'], queryFn: () => entityManagersApi.list().then(r => r.data) });
@@ -468,7 +468,7 @@ export default function BillsTab() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `NGI-Bills-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.download = `JH-Bills-${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(url);
       toast.dismiss(loadingToast);

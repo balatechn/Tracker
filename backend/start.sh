@@ -23,7 +23,7 @@ async function seed() {
   const entries = [
     { srNo: 1, serviceName: 'iskytransport.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2027-04-28'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, remarks: 'Renewed & Moved Domain to CloudFlare-27-4-2026' },
     { srNo: 2, serviceName: 'nationalconsultingindia.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2027-05-17'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, remarks: '17 May 2026 (Renewed)' },
-    { srNo: 3, serviceName: 'nationalgroupindia.com', category: 'Domain', vendor: 'GoDaddy.com, LLC', expiryDate: new Date('2026-09-03'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, annualCost: 1617, remarks: 'Renewed & Moved Domain to CloudFlare' },
+    { srNo: 3, serviceName: 'junobohotels.com', category: 'Domain', vendor: 'GoDaddy.com, LLC', expiryDate: new Date('2026-09-03'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, annualCost: 1617, remarks: 'Renewed & Moved Domain to CloudFlare' },
     { srNo: 4, serviceName: 'nationalresourcesindia.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2027-05-17'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, remarks: 'Renewed & Moved Domain to CloudFlare' },
     { srNo: 5, serviceName: 'reinlandautocorp.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2027-05-17'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, remarks: 'Renewed & Moved Domain to CloudFlare' },
     { srNo: 6, serviceName: 'spa.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2026-06-18'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'Low' },
@@ -148,46 +148,46 @@ async function seedHO() {
   }
 
   const emps = [
-    {empId:'HO-001',name:'Real Estate Dept',email:'realestate.dept@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-002',name:'Shruthi D',email:'shruthi.d@nationalgroupindia.com',department:'HO-HR',status:'Active'},
-    {empId:'HO-003',name:'Armaan',email:'armaan@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
-    {empId:'HO-004',name:'Suresh N',email:'suresh.n@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
-    {empId:'HO-005',name:'Babu Puttanna',email:'babu.puttanna@nationalgroupindia.com',department:'HO-LEGAL',status:'Active'},
-    {empId:'HO-006',name:'Jegan',email:'jegan@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
-    {empId:'HO-007',name:'Deepti',email:'deepti@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-008',name:'Gupta',email:'gupta@nationalgroupindia.com',department:'ISKY',status:'Active'},
-    {empId:'HO-009',name:'Lincy Chandra',email:'lincy.chandra@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-010',name:'Madan M',email:'madan.m@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-011',name:'Abhiram',email:'abhiram@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
-    {empId:'HO-012',name:'Harsdeep',email:'harsdeep@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
-    {empId:'HO-013',name:'Deepanshi',email:'deepanshi@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
-    {empId:'HO-014',name:'Aadityaa',email:'aadityaa@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
-    {empId:'HO-015',name:'Yahya',email:'yahya@nationalgroupindia.com',department:'SOFTWARE DEVOPS',status:'Active'},
-    {empId:'HO-016',name:'Sanjay',email:'sanjay@nationalgroupindia.com',department:'ISKY',status:'Active'},
-    {empId:'HO-017',name:'Munavar',email:'munavar@nationalgroupindia.com',department:'HO-BD',status:'Active'},
-    {empId:'HO-018',name:'ESSL',email:'essl@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
-    {empId:'HO-019',name:'Atique',email:'atique@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
-    {empId:'HO-020',name:'Prasanna H',email:'prasanna.h@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
-    {empId:'HO-021',name:'Jaykrishnan',email:'jaykrishnan@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-022',name:'Nirup',email:'nirup@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-023',name:'Anil',email:'anil@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
-    {empId:'HO-024',name:'Manish',email:'manish@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
-    {empId:'HO-025',name:'Mahesh',email:'mahesh@nationalgroupindia.com',department:'HO-NIPL',status:'Active'},
-    {empId:'HO-026',name:'Siddharth',email:'siddharth@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-027',name:'Neehar',email:'neehar@nationalgroupindia.com',department:'REAL ESTATE',status:'Active'},
-    {empId:'HO-028',name:'Intern 1',email:'intern1@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-029',name:'Intern 2',email:'intern2@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-030',name:'Shwetha',email:'shwetha@nationalgroupindia.com',department:'HO MARKETING',status:'Active'},
-    {empId:'HO-031',name:'Siri',email:'siri@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-032',name:'Balasubramanian',email:'balasubramanian@nationalgroupindia.com',department:'HO-IT INFRA',status:'Active'},
-    {empId:'HO-033',name:'Salman',email:'salman@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-034',name:'Farooq',email:'farooq@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-035',name:'Rajeev',email:'rajeev@nationalgroupindia.com',department:'HO-HR',status:'Active'},
-    {empId:'HO-036',name:'Meeting Room 4th',email:'meetingroom4th@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-037',name:'Meeting Room 7th',email:'meetingroom7th@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-038',name:'IT Infra',email:'itinfra@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
-    {empId:'HO-039',name:'Kartik',email:'kartik@nationalgroupindia.com',department:'HO-FINANCE',status:'Active'},
-    {empId:'HO-040',name:'Srikanath',email:'srikanath@nationalgroupindia.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-001',name:'Real Estate Dept',email:'realestate.dept@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-002',name:'Shruthi D',email:'shruthi.d@junobohotels.com',department:'HO-HR',status:'Active'},
+    {empId:'HO-003',name:'Armaan',email:'armaan@junobohotels.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-004',name:'Suresh N',email:'suresh.n@junobohotels.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-005',name:'Babu Puttanna',email:'babu.puttanna@junobohotels.com',department:'HO-LEGAL',status:'Active'},
+    {empId:'HO-006',name:'Jegan',email:'jegan@junobohotels.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-007',name:'Deepti',email:'deepti@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-008',name:'Gupta',email:'gupta@junobohotels.com',department:'ISKY',status:'Active'},
+    {empId:'HO-009',name:'Lincy Chandra',email:'lincy.chandra@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-010',name:'Madan M',email:'madan.m@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-011',name:'Abhiram',email:'abhiram@junobohotels.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-012',name:'Harsdeep',email:'harsdeep@junobohotels.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-013',name:'Deepanshi',email:'deepanshi@junobohotels.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-014',name:'Aadityaa',email:'aadityaa@junobohotels.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-015',name:'Yahya',email:'yahya@junobohotels.com',department:'SOFTWARE DEVOPS',status:'Active'},
+    {empId:'HO-016',name:'Sanjay',email:'sanjay@junobohotels.com',department:'ISKY',status:'Active'},
+    {empId:'HO-017',name:'Munavar',email:'munavar@junobohotels.com',department:'HO-BD',status:'Active'},
+    {empId:'HO-018',name:'ESSL',email:'essl@junobohotels.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-019',name:'Atique',email:'atique@junobohotels.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-020',name:'Prasanna H',email:'prasanna.h@junobohotels.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-021',name:'Jaykrishnan',email:'jaykrishnan@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-022',name:'Nirup',email:'nirup@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-023',name:'Anil',email:'anil@junobohotels.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-024',name:'Manish',email:'manish@junobohotels.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-025',name:'Mahesh',email:'mahesh@junobohotels.com',department:'HO-NIPL',status:'Active'},
+    {empId:'HO-026',name:'Siddharth',email:'siddharth@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-027',name:'Neehar',email:'neehar@junobohotels.com',department:'REAL ESTATE',status:'Active'},
+    {empId:'HO-028',name:'Intern 1',email:'intern1@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-029',name:'Intern 2',email:'intern2@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-030',name:'Shwetha',email:'shwetha@junobohotels.com',department:'HO MARKETING',status:'Active'},
+    {empId:'HO-031',name:'Siri',email:'siri@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-032',name:'Balasubramanian',email:'balasubramanian@junobohotels.com',department:'HO-IT INFRA',status:'Active'},
+    {empId:'HO-033',name:'Salman',email:'salman@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-034',name:'Farooq',email:'farooq@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-035',name:'Rajeev',email:'rajeev@junobohotels.com',department:'HO-HR',status:'Active'},
+    {empId:'HO-036',name:'Meeting Room 4th',email:'meetingroom4th@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-037',name:'Meeting Room 7th',email:'meetingroom7th@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-038',name:'IT Infra',email:'itinfra@junobohotels.com',department:'HO-NCPL',status:'Active'},
+    {empId:'HO-039',name:'Kartik',email:'kartik@junobohotels.com',department:'HO-FINANCE',status:'Active'},
+    {empId:'HO-040',name:'Srikanath',email:'srikanath@junobohotels.com',department:'HO-NCPL',status:'Active'},
   ];
 
   const ids = {};
@@ -254,7 +254,7 @@ async function seedHO() {
       });
     }
   }
-  console.log('Seeded: 40 NGI HO employees + 40 assets + allocations');
+  console.log('Seeded: 40 JH employees + 40 assets + allocations');
 }
 
 seedHO()
@@ -314,7 +314,7 @@ async function seedTasks() {
   ];
 
   for (const {id: _id, duration: _d, ...t} of tasks) {
-    await prisma.task.create({ data: { ...t, projectName: 'NGI IT Infrastructure & CCTV Project 2026' } });
+    await prisma.task.create({ data: { ...t, projectName: 'JH IT Infrastructure & CCTV Project 2026' } });
   }
   console.log('Seeded: 40 IT project tasks');
 }

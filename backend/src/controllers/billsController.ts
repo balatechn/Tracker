@@ -4,8 +4,8 @@ import { sendMail } from '../services/emailService';
 
 const prisma = new PrismaClient();
 
-const SUBMITTER_CC = process.env.BILL_SUBMITTER_CC ?? 'bala@nationalgroupindia.com';
-const BASE_URL = process.env.APP_BASE_URL ?? 'https://itasset.nationalgroupindia.com';
+const SUBMITTER_CC = process.env.BILL_SUBMITTER_CC ?? 'bala@junobohotels.com';
+const BASE_URL = process.env.APP_BASE_URL ?? 'https://itasset.junobohotels.com';
 
 function billEmailHtml(bill: {
   vendorName: string; invoiceNumber: string | null; invoiceDate: Date | null;
@@ -46,7 +46,7 @@ function billEmailHtml(bill: {
   <a href="${BASE_URL}" class="btn">View in IT Tracker →</a>
 </div>
 <div style="padding:14px 24px;border-top:1px solid #eee;font-size:12px;color:#444">Regards,<br><strong>IT Asset Tracker</strong></div>
-<div class="footer">National Group India — IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>
+<div class="footer">Junobo Hotels — IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>
 </div></body></html>`;
 }
 

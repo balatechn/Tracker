@@ -27,7 +27,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <div className="text-left">
-            <p className="text-white text-xs opacity-80 uppercase tracking-widest">National Group India</p>
+            <p className="text-white text-xs opacity-80 uppercase tracking-widest">Junobo Hotels</p>
             <h1 className="text-white text-xl font-semibold leading-none">IT Asset Tracker</h1>
           </div>
         </div>
@@ -36,7 +36,7 @@ export default function LoginPage() {
       <LoginForm />
 
       <p className="mt-6 text-brand-100 text-xs opacity-60">
-        © 2026 National Group India · IT Department
+        © 2026 Junobo Hotels · IT Department
       </p>
     </div>
   );

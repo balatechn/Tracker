@@ -137,7 +137,7 @@ export default function CredentialsTab({ isAdmin }: { isAdmin: boolean }) {
     ws['!cols'] = Object.keys(rows[0] ?? {}).map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Credentials');
-    XLSX.writeFile(wb, `NGI-Credentials-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `JH-Credentials-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
   const cols = ['#', 'Entity', 'Portal / Website', 'URL', 'Email', 'Mobile', 'Username', 'Password', 'Remarks', 'Updated', ''];

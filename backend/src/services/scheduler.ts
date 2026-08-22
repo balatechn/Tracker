@@ -10,10 +10,9 @@ import {
 
 const prisma = new PrismaClient();
 
-const ADMIN = { address: 'bala@nationalgroupindia.com', name: 'Bala — IT Admin' };
+const ADMIN = { address: 'bala@junobohotels.com', name: 'Bala — IT Admin' };
 const FINANCE = [
-  { address: 'atique@nationalgroupindia.com', name: 'Atique' },
-  { address: 'prasanna.h@nationalgroupindia.com', name: 'Prasanna H' },
+  { address: 'admin@junobohotels.com', name: 'Finance Admin' },
 ];
 
 function daysFromNow(date: Date | null): number | null {

@@ -2,7 +2,7 @@ name: Verify Site After Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, junobo-hotels]
   workflow_dispatch:
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Verify site is up
         run: |
           for i in $(seq 1 30); do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://itasset.nationalgroupindia.com --max-time 10)
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://187.127.134.246:3001 --max-time 10)
             echo "Attempt $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
               echo "Site is UP."

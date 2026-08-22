@@ -213,7 +213,7 @@ export default function SubscriptionsTab() {
       ws['!cols'] = Object.keys(rows[0] || {}).map(() => ({ wch: 22 }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Subscriptions');
-      XLSX.writeFile(wb, `NGI-Subscriptions-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.writeFile(wb, `JH-Subscriptions-${new Date().toISOString().slice(0, 10)}.xlsx`);
       toast.success('Exported to Excel');
     } catch { toast.error('Export failed'); }
   }

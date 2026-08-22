@@ -11,7 +11,7 @@ const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 
 const STATUSES = ['Active', 'Resigned', 'On Leave', 'Probation'];
 
 const DOMAIN_ENTITY: Record<string, string> = {
-  'nationalgroupindia.com': 'NCPL',
+  'junobohotels.com': 'HOTELS',
   'rainlandautocorp.com':   'RAINLAND',
   'iskytransport.com':      'ISKY TRANSPORT',
 };
@@ -171,7 +171,7 @@ export default function PeopleTab() {
     ws['!cols'] = Object.keys(rows[0] ?? {}).map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-    XLSX.writeFile(wb, `NGI-Employees-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `JH-Employees-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
   const total      = filtered.length;

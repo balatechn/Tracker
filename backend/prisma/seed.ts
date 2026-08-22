@@ -18,7 +18,7 @@ async function main() {
     },
   });
 
-  // Seed entries from National Group India tracker
+  // Seed entries for Junobo Hotels tracker
   const entries = [
     {
       srNo: 1,
@@ -46,7 +46,7 @@ async function main() {
     },
     {
       srNo: 3,
-      serviceName: 'nationalgroupindia.com',
+      serviceName: 'junobohotels.com',
       category: 'Domain',
       vendor: 'GoDaddy.com, LLC',
       expiryDate: new Date('2026-09-03'),

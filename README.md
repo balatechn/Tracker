@@ -1,6 +1,6 @@
-# NGI IT Asset Tracker
+# Junobo Hotels IT Asset Tracker
 
-Domain / SaaS / AMC Renewal Tracker for National Group India.
+Domain / SaaS / AMC Renewal Tracker for Junobo Hotels.
 
 ## Stack
 - **Frontend**: Next.js 14 + Tailwind CSS

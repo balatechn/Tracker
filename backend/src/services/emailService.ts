@@ -1,7 +1,7 @@
 const TENANT_ID = process.env.AZURE_TENANT_ID ?? '';
 const CLIENT_ID = process.env.AZURE_CLIENT_ID ?? '';
 const CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET ?? '';
-const SENDER = process.env.MAIL_FROM ?? 'connect@nationalgroupindia.com';
+const SENDER = process.env.MAIL_FROM ?? 'connect@junobohotels.com';
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
@@ -71,7 +71,7 @@ export async function sendMail(opts: {
 
 // ── HTML email templates ─────────────────────────────────────────────────────
 
-const BASE_URL = process.env.APP_BASE_URL ?? 'https://itasset.nationalgroupindia.com';
+const BASE_URL = process.env.APP_BASE_URL ?? 'https://itasset.junobohotels.com';
 
 function baseLayout(title: string, body: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -97,7 +97,7 @@ function baseLayout(title: string, body: string): string {
   .month-header td { background:#e8f0fe; font-weight:700; color:#1a56db; font-size:13px; padding:10px; }
 </style>
 </head><body><div class="card">
-<div class="header"><h1>🏢 National Group India — IT Asset Tracker</h1><p>${title}</p></div>
+<div class="header"><h1>🏢 Junobo Hotels — IT Asset Tracker</h1><p>${title}</p></div>
 <div class="body">${body}</div>
 <div style="padding:16px 24px; border-top:1px solid #eee; font-size:12px; color:#444;">Regards,<br><strong>Bala</strong></div>
 <div class="footer">This is an automated alert from the IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>

@@ -74,7 +74,7 @@ export default function TaskGanttView({ tasks, onTaskClick, onTaskEdit, location
     ws['!cols'] = Object.keys(rows[0]).map(() => ({ wch: 18 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
-    XLSX.writeFile(wb, `NGI-Tasks-${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.writeFile(wb, `JH-Tasks-${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
   async function exportPDF() {
@@ -84,7 +84,7 @@ export default function TaskGanttView({ tasks, onTaskClick, onTaskEdit, location
     ]);
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(14);
-    doc.text(`NGI IT Infrastructure Tasks${locationFilter !== 'All Locations' ? ` — ${locationFilter}` : ''}`, 14, 14);
+    doc.text(`JH IT Infrastructure Tasks${locationFilter !== 'All Locations' ? ` — ${locationFilter}` : ''}`, 14, 14);
     doc.setFontSize(9);
     doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 20);
 
@@ -101,7 +101,7 @@ export default function TaskGanttView({ tasks, onTaskClick, onTaskEdit, location
       headStyles: { fillColor: [0, 120, 212] },
     });
 
-    doc.save(`NGI-Tasks-${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.save(`JH-Tasks-${new Date().toISOString().slice(0,10)}.pdf`);
   }
 
   if (!ganttTasks.length) {

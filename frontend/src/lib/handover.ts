@@ -44,7 +44,7 @@ export function printHandover(allocation: Allocation): void {
 </head>
 <body>
   <div class="logo-bar">
-    <img src="https://nationalgroupindia.com/logo_full.webp" alt="National Group" style="height:50px">
+    <img src="https://junobohotels.com/logo_full.webp" alt="Junobo Hotels" style="height:50px">
   </div>
 
   <div class="report-title">Asset Handover Report</div>

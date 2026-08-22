@@ -213,7 +213,7 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
 
           {/* Tag Number + Serial Number + Invoice + Invoice Date */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
-            <Field label="Tag Number">{inp('assetTag', 'text', 'e.g. NGI-LT-001')}</Field>
+            <Field label="Tag Number">{inp('assetTag', 'text', 'e.g. JH-LT-001')}</Field>
             <Field label="Serial Number">{inp('serialNumber')}</Field>
             <Field label="Invoice">{inp('invoiceRef')}</Field>
             <Field label="Invoice Date">{inp('purchaseDate', 'date')}</Field>
@@ -224,7 +224,7 @@ export default function AddEditModal({ entry, onClose, allocatedUser }: Props) {
             <div style={{ fontSize: '8.5pt', fontWeight: 700, color: '#2b579a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Additional Details</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-              <Field label="Asset Tag">{inp('assetTag', 'text', 'e.g. NGI-LT-001')}</Field>
+              <Field label="Asset Tag">{inp('assetTag', 'text', 'e.g. JH-LT-001')}</Field>
               <Field label="Serial Number">{inp('serialNumber')}</Field>
               <Field label="Location">{inp('location', 'text', 'Office / Floor')}</Field>
             </div>

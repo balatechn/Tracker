@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 4000;
 app.use(helmet());
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
-  : ['https://itasset.nationalgroupindia.com', 'https://ngi-tracker.vercel.app'];
+  : ['https://itasset.junobohotels.com'];
 
 app.use(cors({
   origin: (origin, cb) => {

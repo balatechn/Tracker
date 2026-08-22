@@ -29,15 +29,15 @@ services:
       PORT: 4000
       NODE_ENV: production
       N8N_WEBHOOK_BASE_URL: http://n8n:5678
-      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-944d20e2-8841-46b8-9ba6-b0b8d086757b}
-      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-2b20a887-0260-4199-b6b0-ebca15d4475a}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
       AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET:-}
-      MAIL_FROM: ${MAIL_FROM:-connect@nationalgroupindia.com}
-      APP_BASE_URL: https://itasset.nationalgroupindia.com
-      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-ngi-n8n-secret-2026}
-      CORS_ORIGIN: https://itasset.nationalgroupindia.com,https://ngi-tracker.vercel.app
+      MAIL_FROM: ${MAIL_FROM:-connect@junobohotels.com}
+      APP_BASE_URL: ${APP_BASE_URL:-https://itasset.junobohotels.com}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-jh-n8n-secret-2026}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://itasset.junobohotels.com}
     ports:
-      - "4000:4000"
+      - "4001:4000"
     depends_on:
       db:
         condition: service_healthy
@@ -54,16 +54,55 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       # HTTP
-      - "traefik.http.routers.ngi-api-http.rule=Host(`api.itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-api-http.entrypoints=http"
-      - "traefik.http.services.ngi-api.loadbalancer.server.port=4000"
+      - "traefik.http.routers.jh-api-http.rule=Host(`api.itasset.junobohotels.com`)"
+      - "traefik.http.routers.jh-api-http.entrypoints=http"
+      - "traefik.http.services.jh-api.loadbalancer.server.port=4000"
       # HTTPS
-      - "traefik.http.routers.ngi-api-https.rule=Host(`api.itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-api-https.entrypoints=https"
-      - "traefik.http.routers.ngi-api-https.tls=true"
-      - "traefik.http.routers.ngi-api-https.service=ngi-api"
+      - "traefik.http.routers.jh-api-https.rule=Host(`api.itasset.junobohotels.com`)"
+      - "traefik.http.routers.jh-api-https.entrypoints=https"
+      - "traefik.http.routers.jh-api-https.tls=true"
+      - "traefik.http.routers.jh-api-https.service=jh-api"
 
-  # One-shot: writes Traefik file-based config for API subdomain.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_NAME: "JH Tracker"
+        NEXT_PUBLIC_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
+        NEXT_PUBLIC_AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BACKEND_URL: http://backend:4000
+    ports:
+      - "3001:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - tracker-network
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      # HTTP
+      - "traefik.http.routers.jh-frontend-http.rule=Host(`itasset.junobohotels.com`)"
+      - "traefik.http.routers.jh-frontend-http.entrypoints=http"
+      - "traefik.http.services.jh-frontend.loadbalancer.server.port=3000"
+      # HTTPS
+      - "traefik.http.routers.jh-frontend-https.rule=Host(`itasset.junobohotels.com`)"
+      - "traefik.http.routers.jh-frontend-https.entrypoints=https"
+      - "traefik.http.routers.jh-frontend-https.tls=true"
+      - "traefik.http.routers.jh-frontend-https.service=jh-frontend"
+
+  # One-shot: writes Traefik file-based config for API and frontend subdomains.
   # File-based routers survive Coolify deploys; container labels may reset.
   traefik-config:
     image: alpine:3.20
@@ -73,28 +112,44 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        cat > /dynamic/ngi-tracker.yaml <<'EOF'
+        cat > /dynamic/jh-tracker.yaml <<'EOF'
         http:
           routers:
-            ngi-api-http:
-              rule: Host(`api.itasset.nationalgroupindia.com`)
+            jh-api-http:
+              rule: Host(`api.itasset.junobohotels.com`)
               entryPoints:
                 - http
-              service: ngi-api
-            ngi-api-https:
-              rule: Host(`api.itasset.nationalgroupindia.com`)
+              service: jh-api
+            jh-api-https:
+              rule: Host(`api.itasset.junobohotels.com`)
               entryPoints:
                 - https
               tls:
                 certResolver: letsencrypt
-              service: ngi-api
+              service: jh-api
+            jh-frontend-http:
+              rule: Host(`itasset.junobohotels.com`)
+              entryPoints:
+                - http
+              service: jh-frontend
+            jh-frontend-https:
+              rule: Host(`itasset.junobohotels.com`)
+              entryPoints:
+                - https
+              tls:
+                certResolver: letsencrypt
+              service: jh-frontend
           services:
-            ngi-api:
+            jh-api:
               loadBalancer:
                 servers:
-                  - url: "http://187.127.134.246:4000"
+                  - url: "http://187.127.134.246:4001"
+            jh-frontend:
+              loadBalancer:
+                servers:
+                  - url: "http://187.127.134.246:3001"
         EOF
-        echo "Traefik API config written."
+        echo "Traefik JH config written."
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
@@ -102,7 +157,7 @@ services:
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
-      - WEBHOOK_URL=http://n8n.itasset.nationalgroupindia.com
+      - WEBHOOK_URL=http://n8n.itasset.junobohotels.com
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-n8n-encryption-key-change-me-32ch}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
@@ -125,9 +180,9 @@ services:
       - coolify
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ngi-n8n.rule=Host(`n8n.itasset.nationalgroupindia.com`)"
-      - "traefik.http.routers.ngi-n8n.entrypoints=http"
-      - "traefik.http.services.ngi-n8n.loadbalancer.server.port=5678"
+      - "traefik.http.routers.jh-n8n.rule=Host(`n8n.itasset.junobohotels.com`)"
+      - "traefik.http.routers.jh-n8n.entrypoints=http"
+      - "traefik.http.services.jh-n8n.loadbalancer.server.port=5678"
       - "traefik.docker.network=coolify"
 
 volumes:
