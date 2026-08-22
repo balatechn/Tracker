@@ -135,10 +135,13 @@ export default function PeopleTab() {
     else updateMut.mutate(form);
   }
 
-  // Unique license names present in the data for the filter dropdown
-  const licenseOptions = Array.from(new Set(
-    employees.map(e => e.msLicenseName ?? '—').filter(n => n !== '—')
-  )).sort();
+  // License options with counts for the filter dropdown
+  const licenseCounts = employees.reduce<Record<string, number>>((acc, e) => {
+    const k = e.msLicenseName ?? '—';
+    if (k !== '—') acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {});
+  const licenseOptions = Object.keys(licenseCounts).sort();
 
   const filtered = employees.filter(e => {
     if (entityF !== 'All' && getEntity(e.email) !== entityF) return false;
@@ -215,7 +218,7 @@ export default function PeopleTab() {
         </select>
         <select className="input w-48 text-sm" value={licenseF} onChange={e => setLicenseF(e.target.value)}>
           <option value="All">All Licenses</option>
-          {licenseOptions.map(l => <option key={l} value={l}>{l}</option>)}
+          {licenseOptions.map(l => <option key={l} value={l}>{l} ({licenseCounts[l]})</option>)}
           <option value="—">No License</option>
         </select>
         <div className="ml-auto flex items-center gap-2">

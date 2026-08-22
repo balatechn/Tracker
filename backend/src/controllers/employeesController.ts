@@ -200,8 +200,17 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
     'SMB_BUSINESS_PREMIUM':         'Microsoft 365 Business Standard',
     'O365_BUSINESS_PREMIUM_NOEMS':  'Microsoft 365 Business Standard (no Teams)',
     'SPB':                          'Microsoft 365 Business Premium',
-    'SMB_APPS':                     'Microsoft 365 Apps for Business',
+    'SMB_APPS':                     'Microsoft 365 Apps for business',
+    'O365_BUSINESS':                'Microsoft 365 Apps for business',
     'OFFICESUBSCRIPTION':           'Microsoft 365 Apps for Enterprise',
+    // Project / Planner
+    'PROJECTPROFESSIONAL':          'Project Plan 3',
+    'PROJECTESSENTIALS':            'Project Plan 1',
+    'PROJECTPREMIUM':               'Project Plan 5',
+    'PLANNERP3':                    'Planner and Project Plan 3',
+    'PROJECT_P3':                   'Planner and Project Plan 3',
+    'PROJECT_PLAN3_FACULTY':        'Planner and Project Plan 3',
+    'PLANNER_P1':                   'Planner Plan 1',
     // Office 365
     'STANDARDPACK':                 'Office 365 E1',
     'ENTERPRISEPACK':               'Office 365 E3',
