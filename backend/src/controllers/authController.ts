@@ -78,7 +78,7 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
     const displayName = (payload.name ?? email) as string;
     const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
 
-    const ADMIN_EMAIL = 'bala@junobohotels.com';
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'bala@sohohospitality.in';
     const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
     let user = await prisma.user.findUnique({ where: { msOid } });
@@ -91,8 +91,26 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
       });
     }
 
+    // Auto-activate users already synced from Azure AD (they're verified org members)
+    if (user && user.status === 'pending') {
+      const syncedEmployee = await prisma.employee.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+      });
+      if (syncedEmployee) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { status: 'active' },
+        });
+      }
+    }
+
     if (!user) {
       const isAdmin = isAdminEmail;
+      // Check if this email was already synced from Azure AD — auto-activate them
+      const syncedEmployee = await prisma.employee.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+      });
+      const autoActive = isAdmin || !!syncedEmployee;
       user = await prisma.user.create({
         data: {
           username: username + '_ms',
@@ -101,7 +119,7 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
           msOid,
           authProvider: 'microsoft',
           role: isAdmin ? 'admin' : 'viewer',
-          status: isAdmin ? 'active' : 'pending',
+          status: autoActive ? 'active' : 'pending',
         },
       });
 
