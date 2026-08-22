@@ -90,7 +90,7 @@ jobs:
       - name: Wait and verify site
         run: |
           if [ "${{ github.ref_name }}" = "junobo-hotels" ]; then
-            CHECK_URL="http://187.127.134.246:3001"
+            CHECK_URL="http://187.127.134.246:4002/health"
           else
             CHECK_URL="https://itasset.nationalgroupindia.com"
           fi
