@@ -36,5 +36,26 @@ seed()
   .finally(() => prisma.\$disconnect());
 "
 
+echo "Cleaning up legacy Rainland/NCPL data..."
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+async function cleanup() {
+  const delEmp = await prisma.employee.deleteMany({
+    where: { OR: [
+      { email: { contains: 'rainlandautocorp.com' } },
+      { company: { in: ['RAINLAND', 'Rainland', 'NCPL', 'National Consulting Private Limited'] } },
+    ]},
+  });
+  const delAsset = await prisma.hardwareAsset.updateMany({
+    where: { billingCompany: { in: ['RAINLAND', 'Rainland', 'NCPL'] } },
+    data: { billingCompany: null },
+  });
+  if (delEmp.count > 0) console.log('Removed ' + delEmp.count + ' legacy employees.');
+  if (delAsset.count > 0) console.log('Cleared billingCompany on ' + delAsset.count + ' assets.');
+}
+cleanup().catch(e => console.error('Cleanup error:', e.message)).finally(() => prisma.\$disconnect());
+"
+
 echo "Starting API server..."
 exec node dist/index.js

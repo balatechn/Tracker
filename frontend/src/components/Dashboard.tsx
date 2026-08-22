@@ -296,12 +296,11 @@ export default function Dashboard() {
               </div>
 
               {/* Hardware KPI row */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
-                <StatCard label="Total Hardware"     value={entries.length}                                                                                                          color="blue"   icon={<Package size={14} />} />
-                <StatCard label="Rainland Total"     value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                 color="green"  icon={<Monitor size={14} />} />
-                <StatCard label="Available Total"    value={entries.filter(e => e.assetStatus === 'Available').length}                                                               color="gray"   icon={<CheckCircle2 size={14} />} />
-                <StatCard label="Active Allocations" value={activeAllocCount}                                                                                                        color="purple" icon={<ArrowLeftRight size={14} />} />
-                <StatCard label="Total Employees"    value={employees.length}                                                                                                        color="blue"   icon={<Users size={14} />} />
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+                <StatCard label="Total Hardware"     value={entries.length}                                            color="blue"   icon={<Package size={14} />} />
+                <StatCard label="Available Total"    value={entries.filter(e => e.assetStatus === 'Available').length} color="gray"   icon={<CheckCircle2 size={14} />} />
+                <StatCard label="Active Allocations" value={activeAllocCount}                                          color="purple" icon={<ArrowLeftRight size={14} />} />
+                <StatCard label="Total Employees"    value={employees.length}                                          color="blue"   icon={<Users size={14} />} />
               </div>
 
               {/* Hardware 2-panel lists */}

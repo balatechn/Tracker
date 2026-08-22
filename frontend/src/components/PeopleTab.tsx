@@ -11,9 +11,8 @@ const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 
 const STATUSES = ['Active', 'Resigned', 'On Leave', 'Probation'];
 
 const DOMAIN_ENTITY: Record<string, string> = {
-  'junobohotels.com': 'HOTELS',
-  'rainlandautocorp.com':   'RAINLAND',
-  'iskytransport.com':      'ISKY TRANSPORT',
+  'junobohotels.com':  'HOTELS',
+  'iskytransport.com': 'ISKY TRANSPORT',
 };
 
 function getEntity(email: string): string {

@@ -45,7 +45,7 @@ function CredentialModal({ cred, onClose, isAdmin }: { cred: Partial<Credential>
           </div>
           <div>
             <label className="label">Entity</label>
-            <input className="input" value={form.entity ?? ''} onChange={f('entity')} placeholder="NCPL" />
+            <input className="input" value={form.entity ?? ''} onChange={f('entity')} placeholder="e.g. Hotels" />
           </div>
           <div className="col-span-2">
             <label className="label">Website / Portal Name *</label>
