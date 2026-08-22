@@ -182,52 +182,53 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   const { access_token } = await tokenRes.json() as { access_token: string };
   const graphHeaders = { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' };
 
-  // SKU ID → friendly name (covers common M365 licenses by GUID)
-  const FREE_LICENSES = new Set([
-    'Power Automate Free', 'Power BI Free', 'Microsoft Fabric (Free)',
-    'Microsoft Teams Exploratory', 'Microsoft Teams Free',
+  // skuPartNumber → exact display name (as shown in M365 admin center)
+  const FREE_SKU_PARTS = new Set([
+    'FLOW_FREE', 'POWER_BI_STANDARD', 'TEAMS_FREE', 'Microsoft_Teams_Exploratory',
+    'MICROSOFT_FABRIC_FREE', 'POWERAPPS_DEV', 'RMSBASIC',
   ]);
-  const skuMap: Record<string, string> = {
-    // Business (confirmed tenant UUIDs first)
-    '3b555118-da6a-4418-894f-7df1e2096870': 'Microsoft 365 Business Basic',
-    'f30db892-07e9-47e9-837c-80727f46fd3d': 'Power Automate Free',
-    // Standard MS published GUIDs
-    '3b555118-da6a-4418-894f-7dccda4c1dcc': 'Microsoft 365 Business Basic',
-    'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46': 'Microsoft 365 Business Premium',
-    'f245ecc8-75af-4f8e-b61f-27d8114de5f3': 'Microsoft 365 Business Standard',
-    'b214fe43-f19a-4248-b4f1-7a6ed994b559': 'Microsoft 365 Apps for Business',
-    // Enterprise
-    '6fd2c87f-b296-42f0-b197-1e91e994b900': 'Office 365 E3',
-    'c7df2760-2c81-4ef7-b578-5b5392b571df': 'Office 365 E5',
-    '18181a46-0d4e-45cd-891e-60aabd171b4e': 'Office 365 E1',
-    '26d45bd9-adf1-46cd-a9e1-51e9a5524128': 'Office 365 E3',
-    'c2273bd0-dff7-4215-9ef5-2c7bcfb06425': 'Microsoft 365 F1',
-    '66b55226-6b4f-492c-910c-a3b7a3c9d993': 'Microsoft 365 F3',
-    '05e9a617-0261-4cee-bb44-138d3ef5d965': 'Microsoft 365 E3',
-    '06ebc4ee-1bb5-47dd-8120-11324bc54e06': 'Microsoft 365 E5',
-    // Free / addons (filtered out below)
-    'f30db892-07e9-47e9-837c-80ede0e8b1d3': 'Power Automate Free',
-    'a403ebcc-fae0-4ca2-8c8c-7a907fd6c235': 'Power BI Free',
-    'bc946dac-7877-4271-b2f7-99d2db13cd2c': 'Microsoft Fabric (Free)',
-    '710779e8-3d4a-4c88-adb9-386c958d1fdf': 'Microsoft Teams Exploratory',
-    '16ddbbfc-09ea-4de2-b1d7-312db6112d70': 'Azure AD Premium P2',
-    '078d2b04-f1bd-4111-bbd4-b4b1b354cef4': 'Azure AD Premium P1',
+  const SKU_NAMES: Record<string, string> = {
+    // Business
+    'O365_BUSINESS_ESSENTIALS':     'Microsoft 365 Business Basic',
+    'SMB_BUSINESS':                 'Microsoft 365 Business Basic',
+    'O365_BUSINESS_PREMIUM':        'Microsoft 365 Business Standard',
+    'SMB_BUSINESS_PREMIUM':         'Microsoft 365 Business Standard',
+    'O365_BUSINESS_PREMIUM_NOEMS':  'Microsoft 365 Business Standard (no Teams)',
+    'SPB':                          'Microsoft 365 Business Premium',
+    'SMB_APPS':                     'Microsoft 365 Apps for Business',
+    'OFFICESUBSCRIPTION':           'Microsoft 365 Apps for Enterprise',
+    // Office 365
+    'STANDARDPACK':                 'Office 365 E1',
+    'ENTERPRISEPACK':               'Office 365 E3',
+    'ENTERPRISEPREMIUM':            'Office 365 E5',
+    'STANDARDWOFFPACK':             'Office 365 F3',
+    'EXCHANGESTANDARD':             'Exchange Online (Plan 1)',
+    'EXCHANGEENTERPRISE':           'Exchange Online (Plan 2)',
+    // Microsoft 365 Enterprise
+    'SPE_E3':                       'Microsoft 365 E3',
+    'SPE_E5':                       'Microsoft 365 E5',
+    'M365_F1':                      'Microsoft 365 F1',
+    'M365_F3':                      'Microsoft 365 F3',
+    // Security / Defender
+    'ATP_ENTERPRISE':               'Microsoft Defender for Office 365 (Plan 1)',
+    'THREAT_INTELLIGENCE':          'Microsoft Defender for Office 365 (Plan 2)',
+    'EMS':                          'Enterprise Mobility + Security E3',
+    'EMSPREMIUM':                   'Enterprise Mobility + Security E5',
+    'AAD_PREMIUM':                  'Azure AD Premium P1',
+    'AAD_PREMIUM_P2':               'Azure AD Premium P2',
+    // Free (filtered out)
+    'FLOW_FREE':                    'Power Automate Free',
+    'POWER_BI_STANDARD':            'Power BI Free',
+    'MICROSOFT_FABRIC_FREE':        'Microsoft Fabric (Free)',
+    'Microsoft_Teams_Exploratory':  'Microsoft Teams Exploratory',
+    'TEAMS_FREE':                   'Microsoft Teams Free',
+    'POWERAPPS_DEV':                'Microsoft Power Apps for Developer',
   };
-  // Also try subscribedSkus for any unlisted SKUs
-  try {
-    const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus?$select=skuId,skuPartNumber', { headers: graphHeaders });
-    if (skuRes.ok) {
-      const skuData = await skuRes.json() as { value: Array<{ skuId: string; skuPartNumber: string }> };
-      for (const sku of skuData.value) {
-        if (!skuMap[sku.skuId]) skuMap[sku.skuId] = sku.skuPartNumber;
-      }
-    }
-  } catch { /* use hardcoded map only */ }
 
-  // Fetch all users from Graph API (paginate)
+  // Fetch all users from Graph API (paginate) — use licenseDetails expand for exact skuPartNumber
   let added = 0, updated = 0, skipped = 0;
   let nextUrl: string | null =
-    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation,assignedLicenses&$top=999';
+    'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and assignedLicenses/$count ne 0&$count=true&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation&$expand=licenseDetails($select=skuId,skuPartNumber)&$top=100';
 
   while (nextUrl) {
     const usersRes = await fetch(nextUrl, { headers: graphHeaders });
@@ -242,7 +243,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
         id: string; displayName: string; mail?: string;
         userPrincipalName?: string; jobTitle?: string;
         department?: string; mobilePhone?: string; officeLocation?: string;
-        assignedLicenses?: Array<{ skuId: string }>;
+        licenseDetails?: Array<{ skuId: string; skuPartNumber: string }>;
       }>;
       '@odata.nextLink'?: string;
     };
@@ -254,9 +255,9 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
       // Skip service accounts / external guests
       if (email.includes('#EXT#') || email.endsWith('.onmicrosoft.com')) { skipped++; continue; }
 
-      const licenseNames = (u.assignedLicenses ?? [])
-        .map(l => skuMap[l.skuId] ?? 'M365 License')
-        .filter(n => !FREE_LICENSES.has(n));
+      const licenseNames = (u.licenseDetails ?? [])
+        .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
+        .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
       const msLicenseName = licenseNames.length > 0 ? licenseNames.join(', ') : null;
 
       const existing = await prisma.employee.findUnique({ where: { email } });
