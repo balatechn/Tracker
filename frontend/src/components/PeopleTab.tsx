@@ -227,17 +227,15 @@ export default function PeopleTab() {
           <button onClick={exportExcel} className="btn-secondary flex items-center gap-1.5 text-sm">
             <Download className="w-4 h-4" /> Export Excel
           </button>
-          {isAdmin && (
-            <button
-              className="btn-secondary flex items-center gap-1.5 text-sm"
-              onClick={handleMicrosoftSync}
-              disabled={syncing}
-              title="Sync employees from Microsoft Azure AD"
-            >
-              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing…' : 'Sync Microsoft'}
-            </button>
-          )}
+          <button
+            className="btn-secondary flex items-center gap-1.5 text-sm"
+            onClick={handleMicrosoftSync}
+            disabled={syncing}
+            title="Sync employees from Microsoft Azure AD"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing…' : 'Sync Microsoft'}
+          </button>
           <button className="btn-primary flex items-center gap-1.5 text-sm" onClick={openAdd}>
             <Plus className="w-4 h-4" /> Add Employee
           </button>
