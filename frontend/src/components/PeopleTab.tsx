@@ -271,9 +271,9 @@ export default function PeopleTab() {
                     <td className="px-3 py-2 whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">{getEntity(emp.email)}</span>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap max-w-[180px]">
+                    <td className="px-3 py-2 max-w-[180px] overflow-hidden">
                       {emp.msLicensed === true
-                        ? <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 truncate block" title={emp.msLicenseName ?? 'Licensed'}>{emp.msLicenseName ?? 'Licensed'}</span>
+                        ? <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 truncate block" title={emp.msLicenseName ?? undefined}>{emp.msLicenseName ?? '—'}</span>
                         : <span className="text-gray-400 text-xs">—</span>}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">{emp.department}</td>

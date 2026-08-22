@@ -184,8 +184,10 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
 
   // skuPartNumber → exact display name (as shown in M365 admin center)
   const FREE_SKU_PARTS = new Set([
-    'FLOW_FREE', 'POWER_BI_STANDARD', 'TEAMS_FREE', 'Microsoft_Teams_Exploratory',
-    'MICROSOFT_FABRIC_FREE', 'POWERAPPS_DEV', 'RMSBASIC',
+    'FLOW_FREE', 'MICROSOFT_FLOW_FREE', 'POWER_BI_STANDARD', 'POWER_BI_STANDARD_FACULTY',
+    'TEAMS_FREE', 'TEAMS_EXPLORATORY', 'Microsoft_Teams_Exploratory',
+    'MICROSOFT_FABRIC_FREE', 'POWERAPPS_DEV', 'POWERAPPS_VIRAL', 'POWERAPPS_P2_VIRAL',
+    'RMSBASIC', 'RIGHTSMANAGEMENT_ADHOC', 'SPZA_IW',
   ]);
   const SKU_NAMES: Record<string, string> = {
     // Business
@@ -263,10 +265,8 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
         .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
         .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
 
-      // Skip users with no paid licenses
-      if (licenseNames.length === 0) { skipped++; continue; }
-
-      const msLicenseName = licenseNames.join(', ');
+      const hasPaidLicense = licenseNames.length > 0;
+      const msLicenseName = hasPaidLicense ? licenseNames.join(', ') : null;
 
       const existing = await prisma.employee.findUnique({ where: { email } });
 
@@ -278,12 +278,14 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
             department: u.department || existing.department || 'General',
             designation: u.jobTitle || existing.designation,
             phone: u.mobilePhone || existing.phone,
-            msLicensed: true,
+            msLicensed: hasPaidLicense,
             msLicenseName,
           },
         });
         updated++;
       } else {
+        // Don't add new employees who have no paid license
+        if (!hasPaidLicense) { skipped++; continue; }
         const empId = await nextEmpId();
         await prisma.employee.create({
           data: {
