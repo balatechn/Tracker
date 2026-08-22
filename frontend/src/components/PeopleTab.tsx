@@ -135,11 +135,17 @@ export default function PeopleTab() {
     else updateMut.mutate(form);
   }
 
+  // Unique license names present in the data for the filter dropdown
+  const licenseOptions = Array.from(new Set(
+    employees.map(e => e.msLicenseName ?? '—').filter(n => n !== '—')
+  )).sort();
+
   const filtered = employees.filter(e => {
     if (entityF !== 'All' && getEntity(e.email) !== entityF) return false;
-    if (licenseF === 'Licensed' && e.msLicensed !== true) return false;
-    if (licenseF === 'Unlicensed' && e.msLicensed !== false) return false;
-    if (licenseF === 'Unknown' && e.msLicensed !== null) return false;
+    if (licenseF !== 'All') {
+      if (licenseF === '—' && e.msLicenseName) return false;
+      if (licenseF !== '—' && e.msLicenseName !== licenseF) return false;
+    }
     return true;
   });
 
@@ -207,10 +213,10 @@ export default function PeopleTab() {
           {Object.values(DOMAIN_ENTITY).map(v => <option key={v}>{v}</option>)}
           <option value="Unknown">Unknown</option>
         </select>
-        <select className="input w-40 text-sm" value={licenseF} onChange={e => setLicenseF(e.target.value)}>
+        <select className="input w-48 text-sm" value={licenseF} onChange={e => setLicenseF(e.target.value)}>
           <option value="All">All Licenses</option>
-          <option value="Licensed">Licensed</option>
-          <option value="Unknown">Unknown</option>
+          {licenseOptions.map(l => <option key={l} value={l}>{l}</option>)}
+          <option value="—">No License</option>
         </select>
         <div className="ml-auto flex items-center gap-2">
           {syncResult && (
