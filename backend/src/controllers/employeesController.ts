@@ -290,9 +290,10 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
       .filter(l => !FREE_SKU_PARTS.has(l.skuPartNumber))
       .map(l => SKU_NAMES[l.skuPartNumber] ?? l.skuPartNumber);
 
-    const hasPaidLicense = licenseNames.length > 0;
-    const msLicenseName = hasPaidLicense ? licenseNames.join(', ') : null;
+    // Skip users with no paid license entirely — don't add or update them
+    if (licenseNames.length === 0) { skipped++; continue; }
 
+    const msLicenseName = licenseNames.join(', ');
     const existing = await prisma.employee.findUnique({ where: { email } });
 
     if (existing) {
@@ -303,13 +304,12 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
           department: u.department || existing.department || 'General',
           designation: u.jobTitle || existing.designation,
           phone: u.mobilePhone || existing.phone,
-          msLicensed: hasPaidLicense,
+          msLicensed: true,
           msLicenseName,
         },
       });
       updated++;
     } else {
-      if (!hasPaidLicense) { skipped++; continue; }
       const empId = await nextEmpId();
       await prisma.employee.create({
         data: {
