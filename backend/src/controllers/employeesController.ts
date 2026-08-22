@@ -180,7 +180,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   }
 
   const { access_token } = await tokenRes.json() as { access_token: string };
-  const graphHeaders = { Authorization: `Bearer ${access_token}`, 'ConsistencyLevel': 'eventual' };
+  const graphHeaders = { Authorization: `Bearer ${access_token}` };
 
   // skuPartNumber → exact display name (as shown in M365 admin center)
   const FREE_SKU_PARTS = new Set([
@@ -234,7 +234,7 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
   let nextUrl: string | null =
     'https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true' +
     '&$select=id,displayName,mail,userPrincipalName,jobTitle,department,mobilePhone,officeLocation' +
-    '&$expand=licenseDetails($select=skuId,skuPartNumber)&$top=999';
+    '&$expand=licenseDetails&$top=100';
 
   while (nextUrl) {
     const usersRes = await fetch(nextUrl, { headers: graphHeaders });
