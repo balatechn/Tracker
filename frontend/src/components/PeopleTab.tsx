@@ -15,7 +15,6 @@ const DOMAIN_ENTITY: Record<string, string> = {
   'sohohospitalityindia.com':'JHPL',
   'sohoindia.in':            'JHPL',
   'junobohotels.com':        'JHPL',
-  'iskytransport.com':       'ISKY TRANSPORT',
 };
 
 function getEntity(email: string): string {
