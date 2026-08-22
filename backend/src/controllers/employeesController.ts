@@ -240,7 +240,9 @@ export async function syncMicrosoftDirectory(req: AuthRequest, res: Response): P
     const usersRes = await fetch(nextUrl, { headers: graphHeaders });
 
     if (!usersRes.ok) {
-      res.status(502).json({ error: 'Failed to fetch users from Microsoft Graph' });
+      const errBody = await usersRes.text();
+      console.error('[sync] Graph users error', usersRes.status, errBody);
+      res.status(502).json({ error: 'Failed to fetch users from Microsoft Graph', detail: errBody });
       return;
     }
 
