@@ -4,21 +4,26 @@ set -e
 echo "Pushing database schema..."
 npx prisma db push --accept-data-loss
 
-echo "Checking if seeding is needed..."
+echo "Ensuring admin user exists with correct password..."
 node -e "
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function seed() {
+  const hash = await bcrypt.hash('Admin@123', 12);
+  await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: { password: hash, role: 'admin', status: 'active' },
+    create: { username: 'admin', password: hash, role: 'admin', status: 'active' },
+  });
+  console.log('Admin user ensured: admin / Admin@123');
+
   const count = await prisma.user.count();
-  if (count > 0) {
-    console.log('Database already seeded, skipping.');
+  if (count > 1) {
+    console.log('Additional users present, skipping entry seed.');
     return;
   }
-
-  const hash = await bcrypt.hash('Admin@123', 12);
-  await prisma.user.create({ data: { username: 'admin', password: hash } });
 
   const entries = [
     { srNo: 1, serviceName: 'iskytransport.com', category: 'Domain', vendor: 'CloudFlare', expiryDate: new Date('2027-04-28'), autoRenewal: false, owner: 'Balasubramanian P', criticality: 'High', renewalPeriod: 1, remarks: 'Renewed & Moved Domain to CloudFlare-27-4-2026' },
