@@ -24,7 +24,9 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-trackeruser}:${POSTGRES_PASSWORD:-trackerpass}@db:5432/${POSTGRES_DB:-trackerdb}
+      DATABASE_URL: ${NEW_DATABASE_URL:-postgres://da50298401697f7e39bd47c9815929e42896a73bc106007e9eb5d53af3854218:sk_qHi0l4sVUXyCnHPi5stDr@db.prisma.io:5432/postgres?sslmode=require}
+      OLD_DATABASE_URL: postgresql://${POSTGRES_USER:-trackeruser}:${POSTGRES_PASSWORD:-trackerpass}@db:5432/${POSTGRES_DB:-trackerdb}
+      MIGRATE_SECRET: ${MIGRATE_SECRET:-ngi-migrate-secret-2026}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
       PORT: 4000
       NODE_ENV: production

@@ -1,82 +1,59 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// One-time migration endpoint: copies data from OLD_DATABASE_URL to current DATABASE_URL
+// Remove this file after migration is complete
 
-const HARDWARE_CATEGORIES = new Set([
-  'Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor',
-  'Printer', 'Scanner', 'Server', 'Networking', 'UPS',
-  'Projector', 'Camera', 'Other Hardware',
-]);
-
-const TYPE_MAP: Record<string, string> = {
-  'Domain': 'Domain',
-  'SAAS': 'SAAS',
-  'AMC': 'AMC',
-  'Software': 'Software',
-  'License': 'License',
-  'Microsoft 365': 'Microsoft 365',
-  'Microsoft365': 'Microsoft 365',
-  'Antivirus': 'Antivirus',
-  'Cloud': 'Cloud',
-  'Email Service': 'Email Service',
-  'Security': 'Security',
-  'ERP/CRM': 'ERP/CRM',
-};
-
-export async function migrateSoftwareToSubscriptions(_req: Request, res: Response): Promise<void> {
-  const softwareEntries = await prisma.entry.findMany({
-    where: {
-      OR: [
-        { category: null },
-        { category: { notIn: [...HARDWARE_CATEGORIES] } },
-      ],
-    },
-  });
-
-  let migrated = 0;
-  let skipped = 0;
-  const results: string[] = [];
-
-  for (const entry of softwareEntries) {
-    const existing = await prisma.subscription.findFirst({
-      where: { name: entry.serviceName },
-    });
-
-    if (existing) {
-      skipped++;
-      results.push(`SKIP: ${entry.serviceName}`);
-      continue;
-    }
-
-    const type = entry.category ? (TYPE_MAP[entry.category] ?? 'Other') : 'Other';
-
-    await prisma.subscription.create({
-      data: {
-        srNo: entry.srNo,
-        name: entry.serviceName,
-        type,
-        billingCompany: entry.billingCompany,
-        registrar: entry.vendor,
-        expiryDate: entry.expiryDate,
-        autoRenewal: entry.autoRenewal,
-        owner: entry.owner,
-        criticality: entry.criticality,
-        lastRenewalDate: entry.lastRenewalDate,
-        renewalPeriod: entry.renewalPeriod,
-        annualCost: entry.annualCost,
-        paymentMethod: entry.paymentMethod,
-        invoiceRef: entry.invoiceRef,
-        financeEmail: entry.financeEmail,
-        adminEmail: entry.adminEmail,
-        vendorEmail: entry.vendorEmail,
-        remarks: entry.remarks,
-      },
-    });
-
-    migrated++;
-    results.push(`MIGRATED: ${entry.serviceName} → ${type}`);
+export async function migrateData(req: Request, res: Response): Promise<void> {
+  const secret = req.headers['x-migrate-secret'];
+  if (secret !== process.env.MIGRATE_SECRET) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
   }
 
-  res.json({ migrated, skipped, total: softwareEntries.length, results });
+  const oldUrl = process.env.OLD_DATABASE_URL;
+  if (!oldUrl) {
+    res.status(400).json({ error: 'OLD_DATABASE_URL not set' });
+    return;
+  }
+
+  const newPrisma = new PrismaClient();
+  const oldPrisma = new PrismaClient({ datasources: { db: { url: oldUrl } } });
+
+  try {
+    // Entries
+    const entries = await oldPrisma.entry.findMany();
+    let entryCount = 0;
+    for (const e of entries) {
+      await newPrisma.entry.upsert({ where: { id: e.id }, update: e, create: e });
+      entryCount++;
+    }
+
+    // Employees
+    const employees = await oldPrisma.employee.findMany();
+    let empCount = 0;
+    for (const emp of employees) {
+      await newPrisma.employee.upsert({ where: { id: emp.id }, update: emp, create: emp });
+      empCount++;
+    }
+
+    // Users
+    const users = await oldPrisma.user.findMany();
+    let userCount = 0;
+    for (const u of users) {
+      await newPrisma.user.upsert({ where: { id: u.id }, update: u, create: u });
+      userCount++;
+    }
+
+    res.json({
+      success: true,
+      migrated: { entries: entryCount, employees: empCount, users: userCount },
+    });
+  } catch (err: any) {
+    console.error('Migration error:', err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    await oldPrisma.$disconnect();
+    await newPrisma.$disconnect();
+  }
 }
