@@ -78,17 +78,28 @@ export async function microsoftLogin(req: Request, res: Response): Promise<void>
     const displayName = (payload.name ?? email) as string;
     const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
 
-    const ADMIN_EMAIL = 'bala@nationalgroupindia.com';
-    const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'bala@nationalgroupindia.com,balasubramanian.p@nationalgroupindia.com')
+      .split(',').map(e => e.trim().toLowerCase());
+    const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
 
     let user = await prisma.user.findUnique({ where: { msOid } });
 
-    // If admin email logs in but was previously created as pending/viewer, fix it
-    if (user && isAdminEmail && (user.role !== 'admin' || user.status !== 'active')) {
+    // If admin email logs in but was previously created as pending/viewer, promote to admin
+    if (isAdminEmail && user && (user.role !== 'admin' || user.status !== 'active')) {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { role: 'admin', status: 'active' },
       });
+    }
+    // Also check by email in case msOid lookup missed it
+    if (!user && isAdminEmail) {
+      const byEmail = await prisma.user.findUnique({ where: { email } });
+      if (byEmail) {
+        user = await prisma.user.update({
+          where: { id: byEmail.id },
+          data: { msOid, role: 'admin', status: 'active' },
+        });
+      }
     }
 
     if (!user) {
