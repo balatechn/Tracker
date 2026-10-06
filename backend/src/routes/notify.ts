@@ -3,8 +3,6 @@ import {
   expiringSubscriptions, expiredSubscriptions,
   overdueTasks, unallocatedAssets, accruals, pendingUsers,
 } from '../controllers/notifyController';
-import { migrateSoftwareToSubscriptions } from '../controllers/migrateController';
-
 const router = Router();
 
 // Internal endpoints called by n8n — secured by a shared secret header
@@ -23,6 +21,4 @@ router.get('/overdue-tasks', overdueTasks);
 router.get('/unallocated', unallocatedAssets);
 router.get('/accruals', accruals);
 router.get('/pending-users', pendingUsers);
-router.post('/migrate-software', migrateSoftwareToSubscriptions);
-
 export default router;
