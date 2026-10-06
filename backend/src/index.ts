@@ -16,12 +16,11 @@ import billsRoutes from './routes/bills';
 import entityManagersRoutes from './routes/entityManagers';
 import credentialsRoutes from './routes/credentials';
 import { migrateData } from './controllers/migrateController';
-import './services/scheduler';
+import { runDailyAlerts, runWeeklyAlerts, runMonthlyAlerts } from './services/scheduler';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Security middleware
 app.use(helmet());
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
@@ -29,31 +28,16 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 app.use(cors({
   origin: (origin, cb) => {
-    // allow no-origin (curl, Postman, server-to-server) and any allowed origin
-    if (!origin || allowedOrigins.some(o => origin === o || o === '*')) {
-      cb(null, true);
-    } else {
-      cb(null, false);
-    }
+    if (!origin || allowedOrigins.some(o => origin === o || o === '*')) cb(null, true);
+    else cb(null, false);
   },
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: true, legacyHeaders: false });
 app.use(limiter);
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -78,10 +62,36 @@ app.use('/entity-managers', entityManagersRoutes);
 app.use('/credentials', credentialsRoutes);
 app.post('/internal/migrate', migrateData);
 
-// 404 handler
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Not found' });
+// Vercel Cron endpoints — secured by CRON_SECRET
+function verifyCron(req: express.Request, res: express.Response): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers['authorization'] !== `Bearer ${secret}`) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return false;
+  }
+  return true;
+}
+
+app.get('/internal/cron/daily', async (req, res) => {
+  if (!verifyCron(req, res)) return;
+  try { await runDailyAlerts(); res.json({ ok: true }); }
+  catch (err: any) { console.error(err); res.status(500).json({ error: err.message }); }
 });
+
+app.get('/internal/cron/weekly-monday', async (req, res) => {
+  if (!verifyCron(req, res)) return;
+  try { await runWeeklyAlerts(); res.json({ ok: true }); }
+  catch (err: any) { console.error(err); res.status(500).json({ error: err.message }); }
+});
+
+app.get('/internal/cron/monthly', async (req, res) => {
+  if (!verifyCron(req, res)) return;
+  try { await runMonthlyAlerts(); res.json({ ok: true }); }
+  catch (err: any) { console.error(err); res.status(500).json({ error: err.message }); }
+});
+
+// 404 handler
+app.use((_req, res) => { res.status(404).json({ error: 'Not found' }); });
 
 // Error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -89,8 +99,9 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Tracker API running on port ${PORT}`);
-});
+// Local dev: start server. Vercel imports this file as a module (no listen needed).
+if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true') {
+  app.listen(PORT, () => console.log(`🚀 Tracker API running on port ${PORT}`));
+}
 
 export default app;
