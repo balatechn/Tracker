@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "prisma generate",
+  "installCommand": "npm install",
+  "outputDirectory": "",
   "functions": {
     "api/index.ts": {
       "memory": 1024,
