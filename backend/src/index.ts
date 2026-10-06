@@ -15,7 +15,6 @@ import notifyRoutes from './routes/notify';
 import billsRoutes from './routes/bills';
 import entityManagersRoutes from './routes/entityManagers';
 import credentialsRoutes from './routes/credentials';
-import { migrateData } from './controllers/migrateController';
 import { runDailyAlerts, runWeeklyAlerts, runMonthlyAlerts } from './services/scheduler';
 
 const app = express();
@@ -60,7 +59,6 @@ app.use('/notify', notifyRoutes);
 app.use('/bills', billsRoutes);
 app.use('/entity-managers', entityManagersRoutes);
 app.use('/credentials', credentialsRoutes);
-app.post('/internal/migrate', migrateData);
 
 // Vercel Cron endpoints — secured by CRON_SECRET
 function verifyCron(req: express.Request, res: express.Response): boolean {
