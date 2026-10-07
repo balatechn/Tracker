@@ -214,8 +214,7 @@ export default function Dashboard() {
               <rect x="9" y="9" width="6" height="6" fill="#2b579a" opacity="0.4" />
             </svg>
           </div>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: '11pt' }}>National Group India</span>
-          <span className="hidden sm:inline" style={{ color: '#c7d8f0', fontSize: '9pt', opacity: 0.9 }}>IT Asset Tracker</span>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: '11pt' }}>IT Asset Tracker</span>
           <div className="hidden md:flex" style={{ alignItems: 'center', gap: 4, marginLeft: 4 }}>
             <FolderKanban size={12} style={{ color: '#c7d8f0' }} />
             <span style={{ color: '#c7d8f0', fontSize: '9pt' }}>Project:</span>

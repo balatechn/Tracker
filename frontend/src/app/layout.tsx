@@ -4,7 +4,7 @@ import Providers from './providers';
 
 export const metadata: Metadata = {
   title: 'NGI Tracker — Domain & SaaS Management',
-  description: 'National Group India — IT Asset Renewal Tracker',
+  description: 'IT Asset Renewal Tracker',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
