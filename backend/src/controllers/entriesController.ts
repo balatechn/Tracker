@@ -1,8 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
-const prisma = new PrismaClient();
 
 export async function getEntries(req: AuthRequest, res: Response): Promise<void> {
   const { search, category, criticality } = req.query;

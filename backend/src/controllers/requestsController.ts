@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { triggerN8n } from '../lib/webhook';
 
-const prisma = new PrismaClient();
 
 const APPROVAL_STAGES = ['Manager', 'IT', 'Finance', 'Done'];
 

@@ -2,11 +2,10 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { alertNewPendingUser } from '../services/scheduler';
 
-const prisma = new PrismaClient();
 
 function signToken(userId: number, role: string): string {
   const secret = process.env.JWT_SECRET!;

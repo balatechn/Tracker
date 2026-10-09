@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 
 export async function listCredentials(_req: Request, res: Response) {
   const creds = await prisma.credential.findMany({ orderBy: [{ srNo: 'asc' }, { id: 'asc' }] });

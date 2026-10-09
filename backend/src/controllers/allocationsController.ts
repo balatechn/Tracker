@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { triggerN8n } from '../lib/webhook';
 
-const prisma = new PrismaClient();
 
 const ASSET_SEL = { select: { id: true, serviceName: true, category: true, assetTag: true, serialNumber: true, location: true } };
 const EMP_SEL   = { select: { id: true, name: true, empId: true, department: true, email: true } };

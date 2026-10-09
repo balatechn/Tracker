@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import {
   sendMail,
   buildExpiryEmail, buildExpiredEmail, buildOverdueTasksEmail,
@@ -7,7 +7,6 @@ import {
   buildWeeklyRenewalEmail, buildMonthlyCostSummaryEmail,
 } from './emailService';
 
-const prisma = new PrismaClient();
 
 const ADMIN = { address: 'bala@nationalgroupindia.com', name: 'Bala — IT Admin' };
 const FINANCE = [

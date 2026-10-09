@@ -76,9 +76,15 @@ export default function LoginForm() {
       localStorage.setItem('username', data.username);
       localStorage.setItem('role', data.role);
       router.replace('/dashboard');
-    } catch {
-      setError('Invalid username or password');
-      toast.error('Login failed');
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } }).response?.status;
+      const msg = status === 401 || status === 400
+        ? 'Invalid username or password'
+        : status === 429
+          ? 'Too many login attempts. Please wait a few minutes.'
+          : 'Server unreachable. Please try again shortly.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

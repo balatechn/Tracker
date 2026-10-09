@@ -117,7 +117,7 @@ export default function AllocationsTab() {
       allocatedAt: form.allocatedAt || undefined,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['allocations'] }); qc.invalidateQueries({ queryKey: ['entries'] }); toast.success('Asset allocated'); closeModal(); },
-    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Allocation failed'),
+    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Allocation failed', { id: 'allocate-error' }),
   });
 
   const editMut = useMutation({
@@ -127,13 +127,13 @@ export default function AllocationsTab() {
       notes: editForm.notes,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['allocations'] }); toast.success('Allocation updated'); closeModal(); },
-    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Update failed'),
+    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Update failed', { id: 'alloc-update-error' }),
   });
 
   const returnMut = useMutation({
     mutationFn: () => allocationsApi.return(selected!.id, { returnNotes: returnNote || undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['allocations'] }); qc.invalidateQueries({ queryKey: ['entries'] }); toast.success('Asset returned'); closeModal(); },
-    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Return failed'),
+    onError: (e: { response?: { data?: { error?: string } } }) => toast.error(e.response?.data?.error || 'Return failed', { id: 'return-error' }),
   });
 
   function openAllocate() { setForm({ assetId: '', employeeId: '', notes: '', allocatedAt: '' }); setModal('allocate'); }

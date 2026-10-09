@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
 import toast from 'react-hot-toast';
 import { Plus, Download, LogOut, RefreshCw, Key, LayoutDashboard, Table2, Package, CheckCircle2, Clock, AlertTriangle, MinusCircle, IndianRupee, Users, ArrowLeftRight, ClipboardList, ScrollText, UserPlus, Monitor, X, ListTodo, FolderKanban, ChevronDown, Globe, Shield, Receipt } from 'lucide-react';
 import { entriesApi, employeesApi, allocationsApi, requestsApi, tasksApi, subscriptionsApi } from '@/lib/api';
@@ -12,19 +14,22 @@ import StatCard from './StatCard';
 import TrackerTable from './TrackerTable';
 import AddEditModal from './AddEditModal';
 import ChangePasswordModal from './ChangePasswordModal';
-import PeopleTab from './PeopleTab';
-import AllocationsTab from './AllocationsTab';
-import RequestsTab from './RequestsTab';
-import AuditTab from './AuditTab';
-import TaskMgtTab from './TaskMgtTab';
-import TaskDashboardTab from './TaskDashboardTab';
-import SubscriptionsTab from './SubscriptionsTab';
-import UsersTab from './UsersTab';
-import BillsTab from './BillsTab';
-import CredentialsTab from './CredentialsTab';
-import ReportModal from './ReportModal';
+const PeopleTab = dynamic(() => import('./PeopleTab'), { loading: TabLoading });
+const AllocationsTab = dynamic(() => import('./AllocationsTab'), { loading: TabLoading });
+const RequestsTab = dynamic(() => import('./RequestsTab'), { loading: TabLoading });
+const AuditTab = dynamic(() => import('./AuditTab'), { loading: TabLoading });
+const TaskMgtTab = dynamic(() => import('./TaskMgtTab'), { loading: TabLoading });
+const TaskDashboardTab = dynamic(() => import('./TaskDashboardTab'), { loading: TabLoading });
+const SubscriptionsTab = dynamic(() => import('./SubscriptionsTab'), { loading: TabLoading });
+const UsersTab = dynamic(() => import('./UsersTab'), { loading: TabLoading });
+const BillsTab = dynamic(() => import('./BillsTab'), { loading: TabLoading });
+const CredentialsTab = dynamic(() => import('./CredentialsTab'), { loading: TabLoading });
+const ReportModal = dynamic(() => import('./ReportModal'));
 import { Entry } from '@/types';
-import * as XLSX from 'xlsx';
+
+function TabLoading() {
+  return <div className="p-8 text-center text-sm text-gray-500">Loading…</div>;
+}
 
 type Tab = 'overview' | 'tracker' | 'subscriptions' | 'people' | 'allocations' | 'requests' | 'audit' | 'task-dashboard' | 'tasks' | 'bills' | 'credentials' | 'users';
 
@@ -50,12 +55,19 @@ export default function Dashboard() {
 
   const HARDWARE_CATEGORIES = ['Laptop', 'Desktop', 'Phone/Mobile', 'Tablet', 'Monitor', 'Printer', 'Scanner', 'Server', 'Networking', 'UPS', 'Projector', 'Camera', 'Other Hardware'];
 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const { data: allEntries = [], isLoading, isFetching } = useQuery({
-    queryKey: ['entries', search, category, criticality],
+    queryKey: ['entries', debouncedSearch, category, criticality],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       entriesApi
         .list({
-          search: search || undefined,
+          search: debouncedSearch || undefined,
           category: category !== 'All' ? category : undefined,
           criticality: criticality !== 'All' ? criticality : undefined,
         })
@@ -73,12 +85,12 @@ export default function Dashboard() {
   });
 
   const { data: activeAllocCount = 0 } = useQuery({
-    queryKey: ['alloc-count'],
+    queryKey: ['allocations', 'active-count'],
     queryFn: () => allocationsApi.list({ status: 'Active' }).then((r) => r.data.length),
   });
 
   const { data: pendingReqCount = 0 } = useQuery({
-    queryKey: ['req-count'],
+    queryKey: ['requests', 'pending-count'],
     queryFn: () => requestsApi.list({ status: 'Pending' }).then((r) => r.data.length),
   });
 
@@ -93,16 +105,17 @@ export default function Dashboard() {
   }, [allTasksForProjects]);
 
   const allocateMut = useMutation({
-    mutationFn: (empId: number) =>
-      allocationsApi.create({ assetId: allocateEntry!.id, employeeId: empId }),
+    mutationFn: ({ assetId, empId }: { assetId: number; empId: number }) =>
+      allocationsApi.create({ assetId, employeeId: empId }),
     onSuccess: () => {
       toast.success('Asset allocated successfully');
       queryClient.invalidateQueries({ queryKey: ['entries'] });
-      queryClient.invalidateQueries({ queryKey: ['alloc-count'] });
+      queryClient.invalidateQueries({ queryKey: ['allocations'] });
       setAllocateEntry(null);
       setAllocEmpId('');
     },
-    onError: () => toast.error('Allocation failed'),
+    onError: (e: { response?: { data?: { error?: string } } }) =>
+      toast.error(e.response?.data?.error || 'Allocation failed', { id: 'allocate-error' }),
   });
 
   const stats = computeStats(entries);
@@ -167,7 +180,7 @@ export default function Dashboard() {
 
   async function handleExport() {
     try {
-      const { data } = await entriesApi.export();
+      const [{ data }, XLSX] = await Promise.all([entriesApi.export(), import('xlsx')]);
       const rows = data.map((e) => ({
         'Sr No': e.srNo ?? '',
         'Service / Domain Name': e.serviceName,
@@ -296,10 +309,10 @@ export default function Dashboard() {
 
               {/* Hardware KPI row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
-                <StatCard label="Total Hardware"    value={entries.length}                                                                                                           color="blue"   icon={<Package size={14} />} />
-                <StatCard label="NCPL HO Total"     value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('NCPL')).length}                                      color="blue"   icon={<Monitor size={14} />} />
-                <StatCard label="Rainland Total"    value={entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                  color="green"  icon={<Monitor size={14} />} />
-                <StatCard label="Available Total"   value={entries.filter(e => e.assetStatus === 'Available').length}                                                                color="gray"   icon={<CheckCircle2 size={14} />} />
+                <StatCard label="Total Hardware"    value={isLoading ? "…" : entries.length}                                                                                                           color="blue"   icon={<Package size={14} />} />
+                <StatCard label="NCPL HO Total"     value={isLoading ? "…" : entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('NCPL')).length}                                      color="blue"   icon={<Monitor size={14} />} />
+                <StatCard label="Rainland Total"    value={isLoading ? "…" : entries.filter(e => (e.billingCompany ?? '').toUpperCase().includes('RAINLAND')).length}                                  color="green"  icon={<Monitor size={14} />} />
+                <StatCard label="Available Total"   value={isLoading ? "…" : entries.filter(e => e.assetStatus === 'Available').length}                                                                color="gray"   icon={<CheckCircle2 size={14} />} />
                 <StatCard label="Active Allocations" value={activeAllocCount}                                                                                                        color="purple" icon={<ArrowLeftRight size={14} />} />
                 <StatCard label="Total Employees"   value={employees.length}                                                                                                         color="blue"   icon={<Users size={14} />} />
               </div>
@@ -729,7 +742,7 @@ export default function Dashboard() {
               <button
                 className="btn-primary text-sm py-1.5 px-3"
                 disabled={!allocEmpId || allocateMut.isPending}
-                onClick={() => allocateMut.mutate(Number(allocEmpId))}
+                onClick={() => allocateEntry && allocateMut.mutate({ assetId: allocateEntry.id, empId: Number(allocEmpId) })}
               >
                 {allocateMut.isPending ? 'Allocating…' : 'Allocate'}
               </button>

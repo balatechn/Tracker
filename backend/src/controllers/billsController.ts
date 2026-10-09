@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { sendMail } from '../services/emailService';
 
-const prisma = new PrismaClient();
 
 const SUBMITTER_CC = process.env.BILL_SUBMITTER_CC ?? 'bala@nationalgroupindia.com';
 const BASE_URL = process.env.APP_BASE_URL ?? 'https://itasset.nationalgroupindia.com';

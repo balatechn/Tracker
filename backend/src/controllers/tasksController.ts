@@ -1,8 +1,7 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
-const prisma = new PrismaClient();
 
 const TASK_INCLUDE = {
   comments:    { orderBy: { createdAt: 'asc' as const } },
