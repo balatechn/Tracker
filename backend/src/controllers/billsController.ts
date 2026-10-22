@@ -42,7 +42,6 @@ function billEmailHtml(bill: {
     <tr><th>Submitted By</th><td>${bill.submittedBy}</td></tr>
     <tr><th>Remarks</th><td>${bill.remarks ?? '—'}</td></tr>
   </table>
-  <a href="${BASE_URL}" class="btn">View in IT Tracker →</a>
 </div>
 <div style="padding:14px 24px;border-top:1px solid #eee;font-size:12px;color:#444">Regards,<br><strong>IT Asset Tracker</strong></div>
 <div class="footer">IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>
