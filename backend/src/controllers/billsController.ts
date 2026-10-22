@@ -58,7 +58,10 @@ async function sendBillEmail(billId: number, updated: boolean): Promise<boolean>
       ? [{ address: manager.managerEmail, name: manager.managerName }]
       : [{ address: SUBMITTER_CC }];
 
-    const ccList: { address: string; name?: string }[] = [{ address: SUBMITTER_CC }];
+    const ccList: { address: string; name?: string }[] = [
+      { address: SUBMITTER_CC },
+      { address: 'atique.a@nationalgroupindia.com', name: 'Atique' },
+    ];
     if (bill.submitterEmail && bill.submitterEmail !== SUBMITTER_CC) {
       ccList.push({ address: bill.submitterEmail, name: bill.submittedBy });
     }
