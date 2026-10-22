@@ -81,7 +81,7 @@ export async function createBill(req: Request, res: Response) {
   try {
     const {
       vendorName, invoiceNumber, invoiceDate, dueDate, amount, entity,
-      paymentMethod, submittedBy, submitterEmail, remarks,
+      paymentMethod, submittedBy, submitterEmail, remarks, attachment,
     } = req.body;
 
     if (!vendorName || !amount || !entity || !submittedBy || !submitterEmail) {
@@ -105,7 +105,15 @@ export async function createBill(req: Request, res: Response) {
       },
     });
 
-    // Send email notification
+    let file: { filename: string; mimetype: string | null; data: Buffer } | null = null;
+    if (attachment?.filename && attachment?.data) {
+      file = { filename: String(attachment.filename), mimetype: attachment.mimetype || null, data: Buffer.from(attachment.data, 'base64') };
+      await prisma.billAttachment.create({
+        data: { billId: bill.id, filename: file.filename, mimetype: file.mimetype, filesize: file.data.length, data: file.data },
+      });
+    }
+
+    let emailSent = false;
     try {
       const manager = await prisma.entityManager.findUnique({ where: { entityName: entity } });
       const toList = manager
@@ -128,13 +136,15 @@ export async function createBill(req: Request, res: Response) {
           amount: Number(amount), entity, paymentMethod: paymentMethod || null,
           submittedBy, remarks: remarks || null,
         }),
+        attachments: file ? [file] : undefined,
       });
+      emailSent = true;
     } catch (mailErr) {
       console.error('[bills] email send failed:', mailErr);
       // Don't fail the request if email fails
     }
 
-    res.status(201).json(bill);
+    res.status(201).json({ ...bill, emailSent });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to create bill' });

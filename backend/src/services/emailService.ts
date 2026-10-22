@@ -39,6 +39,7 @@ export async function sendMail(opts: {
   cc?: Recipient[];
   subject: string;
   html: string;
+  attachments?: { filename: string; mimetype?: string | null; data: Buffer }[];
 }): Promise<void> {
   if (!CLIENT_SECRET) {
     console.warn('[email] AZURE_CLIENT_SECRET not set — skipping email send');
@@ -52,6 +53,12 @@ export async function sendMail(opts: {
     body: { contentType: 'HTML', content: opts.html },
     toRecipients: opts.to.map(r => ({ emailAddress: { address: r.address, name: r.name ?? r.address } })),
     ccRecipients: (opts.cc ?? []).map(r => ({ emailAddress: { address: r.address, name: r.name ?? r.address } })),
+    attachments: (opts.attachments ?? []).map(a => ({
+      '@odata.type': '#microsoft.graph.fileAttachment',
+      name: a.filename,
+      contentType: a.mimetype || 'application/octet-stream',
+      contentBytes: a.data.toString('base64'),
+    })),
   };
 
   const resp = await fetch(

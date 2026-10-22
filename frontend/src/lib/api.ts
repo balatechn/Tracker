@@ -130,8 +130,8 @@ export const subscriptionsApi = {
 export const billsApi = {
   list: () => api.get<Bill[]>('/bills'),
   get: (id: number) => api.get<Bill>(`/bills/${id}`),
-  create: (data: Omit<BillFormData, 'status' | 'rejectionReason' | 'paidAt' | 'paidBy' | 'transactionRef'>) =>
-    api.post<Bill>('/bills', data),
+  create: (data: Omit<BillFormData, 'status' | 'rejectionReason' | 'paidAt' | 'paidBy' | 'transactionRef'> & { attachment?: { filename: string; mimetype?: string; data: string } }) =>
+    api.post<Bill & { emailSent?: boolean }>('/bills', data),
   update: (id: number, data: Partial<BillFormData>) => api.patch<Bill>(`/bills/${id}`, data),
   delete: (id: number) => api.delete(`/bills/${id}`),
   addAttachment: (billId: number, data: { filename: string; mimetype?: string; data: string }) =>

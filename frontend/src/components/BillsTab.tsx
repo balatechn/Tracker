@@ -95,6 +95,12 @@ function BillModal({ bill, entities, username, userEmail, onClose }: BillModalPr
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Vercel caps request bodies at 4.5 MB; base64 adds ~33%.
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error('File too large — maximum 3 MB');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const b64 = (reader.result as string).split(',')[1];
@@ -129,14 +135,12 @@ function BillModal({ bill, entities, username, userEmail, onClose }: BillModalPr
         const r = await billsApi.update(bill.id, payload);
         saved = r.data;
         toast.success('Bill updated');
+        if (attachment) await billsApi.addAttachment(saved.id, attachment);
       } else {
-        const r = await billsApi.create(payload);
+        const r = await billsApi.create({ ...payload, attachment: attachment ?? undefined });
         saved = r.data;
-        toast.success('Bill submitted — email sent');
-      }
-
-      if (attachment) {
-        await billsApi.addAttachment(saved.id, attachment);
+        if (r.data.emailSent) toast.success('Bill submitted — email sent');
+        else toast('Bill saved, but the email could not be sent', { icon: '⚠️', duration: 6000 });
       }
 
       qc.invalidateQueries({ queryKey: ['bills'] });
