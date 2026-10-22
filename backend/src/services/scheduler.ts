@@ -14,6 +14,12 @@ const FINANCE = [
   { address: 'prasanna.h@nationalgroupindia.com', name: 'Prasanna H' },
 ];
 
+function scheduledEmailsPaused(job: string): boolean {
+  if (process.env.SCHEDULED_EMAIL_DISABLED !== 'true') return false;
+  console.log(`[scheduler] SCHEDULED_EMAIL_DISABLED — skipped ${job}`);
+  return true;
+}
+
 function daysFromNow(date: Date | null): number | null {
   if (!date) return null;
   return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -27,6 +33,7 @@ async function getExpiringIn(days: number) {
 
 // ── Called by Vercel Cron: GET /internal/cron/daily (30 3 * * *) ─────────────
 export async function runDailyAlerts() {
+  if (scheduledEmailsPaused('daily alerts')) return;
   console.log('[scheduler] Running daily alerts...');
   for (const days of [30, 15, 7]) {
     const items = await getExpiringIn(days);
@@ -110,6 +117,7 @@ export async function runDailyAlerts() {
 
 // ── Called by Vercel Cron: GET /internal/cron/weekly-monday (0 3 * * 1) ───────
 export async function runWeeklyAlerts() {
+  if (scheduledEmailsPaused('weekly alerts')) return;
   console.log('[scheduler] Running weekly alerts...');
 
   const threshold = new Date(); threshold.setDate(threshold.getDate() - 30);
@@ -164,6 +172,7 @@ export async function runWeeklyAlerts() {
 
 // ── Called by Vercel Cron: GET /internal/cron/monthly (0 3 1 * *) ────────────
 export async function runMonthlyAlerts() {
+  if (scheduledEmailsPaused('monthly summary')) return;
   console.log('[scheduler] Running monthly cost summary...');
   const month = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
   const allSubs = await prisma.subscription.findMany({ where: { annualCost: { gt: 0 } } });
@@ -187,6 +196,7 @@ export async function runMonthlyAlerts() {
 
 // ── Immediate alert: new pending SSO user (called from authController) ────────
 export async function alertNewPendingUser(user: { displayName: string | null; email: string | null; createdAt: Date }) {
+  if (scheduledEmailsPaused('new user alert')) return;
   try {
     await sendMail({
       to: [ADMIN],

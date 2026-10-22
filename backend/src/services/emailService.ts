@@ -40,10 +40,6 @@ export async function sendMail(opts: {
   subject: string;
   html: string;
 }): Promise<void> {
-  if (process.env.EMAIL_DISABLED === 'true') {
-    console.log(`[email] EMAIL_DISABLED — skipped: ${opts.subject}`);
-    return;
-  }
   if (!CLIENT_SECRET) {
     console.warn('[email] AZURE_CLIENT_SECRET not set — skipping email send');
     return;
