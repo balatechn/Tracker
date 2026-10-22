@@ -134,8 +134,10 @@ function BillModal({ bill, entities, username, userEmail, onClose }: BillModalPr
       if (bill) {
         const r = await billsApi.update(bill.id, payload);
         saved = r.data;
-        toast.success('Bill updated');
         if (attachment) await billsApi.addAttachment(saved.id, attachment);
+        const { data: mail } = await billsApi.sendEmail(saved.id);
+        if (mail.emailSent) toast.success('Bill updated — email sent');
+        else toast('Bill updated, but the email could not be sent', { icon: '⚠️', duration: 6000 });
       } else {
         const r = await billsApi.create({ ...payload, attachment: attachment ?? undefined });
         saved = r.data;

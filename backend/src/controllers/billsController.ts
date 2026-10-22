@@ -48,6 +48,45 @@ function billEmailHtml(bill: {
 </div></body></html>`;
 }
 
+async function sendBillEmail(billId: number, updated: boolean): Promise<boolean> {
+  try {
+    const bill = await prisma.bill.findUnique({ where: { id: billId }, include: { attachments: true } });
+    if (!bill) return false;
+
+    const manager = await prisma.entityManager.findUnique({ where: { entityName: bill.entity } });
+    const toList = manager
+      ? [{ address: manager.managerEmail, name: manager.managerName }]
+      : [{ address: SUBMITTER_CC }];
+
+    const ccList: { address: string; name?: string }[] = [{ address: SUBMITTER_CC }];
+    if (bill.submitterEmail && bill.submitterEmail !== SUBMITTER_CC) {
+      ccList.push({ address: bill.submitterEmail, name: bill.submittedBy });
+    }
+
+    await sendMail({
+      to: toList,
+      cc: ccList,
+      subject: `Bill Payment Request${updated ? ' (Updated)' : ''} — ${bill.vendorName} — ₹${bill.amount.toLocaleString('en-IN')}`,
+      html: billEmailHtml(bill),
+      attachments: bill.attachments
+        .filter(a => a.data)
+        .map(a => ({ filename: a.filename, mimetype: a.mimetype, data: Buffer.from(a.data!) })),
+    });
+    return true;
+  } catch (err) {
+    console.error('[bills] email send failed:', err);
+    return false;
+  }
+}
+
+export async function resendBillEmail(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  const exists = await prisma.bill.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) { res.status(404).json({ error: 'Not found' }); return; }
+  const emailSent = await sendBillEmail(id, true);
+  res.json({ emailSent });
+}
+
 export async function getBills(req: Request, res: Response) {
   try {
     const bills = await prisma.bill.findMany({
@@ -104,45 +143,14 @@ export async function createBill(req: Request, res: Response) {
       },
     });
 
-    let file: { filename: string; mimetype: string | null; data: Buffer } | null = null;
     if (attachment?.filename && attachment?.data) {
-      file = { filename: String(attachment.filename), mimetype: attachment.mimetype || null, data: Buffer.from(attachment.data, 'base64') };
+      const data = Buffer.from(attachment.data, 'base64');
       await prisma.billAttachment.create({
-        data: { billId: bill.id, filename: file.filename, mimetype: file.mimetype, filesize: file.data.length, data: file.data },
+        data: { billId: bill.id, filename: String(attachment.filename), mimetype: attachment.mimetype || null, filesize: data.length, data },
       });
     }
 
-    let emailSent = false;
-    try {
-      const manager = await prisma.entityManager.findUnique({ where: { entityName: entity } });
-      const toList = manager
-        ? [{ address: manager.managerEmail, name: manager.managerName }]
-        : [{ address: SUBMITTER_CC }];
-
-      const ccList: { address: string; name?: string }[] = [{ address: SUBMITTER_CC }];
-      if (submitterEmail && submitterEmail !== SUBMITTER_CC) {
-        ccList.push({ address: submitterEmail, name: submittedBy });
-      }
-
-      await sendMail({
-        to: toList,
-        cc: ccList,
-        subject: `Bill Payment Request — ${vendorName} — ₹${Number(amount).toLocaleString('en-IN')}`,
-        html: billEmailHtml({
-          vendorName, invoiceNumber: invoiceNumber || null,
-          invoiceDate: invoiceDate ? new Date(invoiceDate) : null,
-          dueDate: dueDate ? new Date(dueDate) : null,
-          amount: Number(amount), entity, paymentMethod: paymentMethod || null,
-          submittedBy, remarks: remarks || null,
-        }),
-        attachments: file ? [file] : undefined,
-      });
-      emailSent = true;
-    } catch (mailErr) {
-      console.error('[bills] email send failed:', mailErr);
-      // Don't fail the request if email fails
-    }
-
+    const emailSent = await sendBillEmail(bill.id, false);
     res.status(201).json({ ...bill, emailSent });
   } catch (e) {
     console.error(e);

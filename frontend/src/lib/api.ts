@@ -136,6 +136,7 @@ export const billsApi = {
   delete: (id: number) => api.delete(`/bills/${id}`),
   addAttachment: (billId: number, data: { filename: string; mimetype?: string; data: string }) =>
     api.post<BillAttachment>(`/bills/${billId}/attachments`, data),
+  sendEmail: (id: number) => api.post<{ emailSent: boolean }>(`/bills/${id}/send-email`),
   getAttachmentUrl: (billId: number, attachId: number) => `/api/bills/${billId}/attachments/${attachId}`,
 };
 
