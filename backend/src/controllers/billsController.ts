@@ -43,7 +43,7 @@ function billEmailHtml(bill: {
     <tr><th>Remarks</th><td>${bill.remarks ?? '—'}</td></tr>
   </table>
 </div>
-<div style="padding:14px 24px;border-top:1px solid #eee;font-size:12px;color:#444">Regards,<br><strong>IT Asset Tracker</strong></div>
+<div style="padding:14px 24px;border-top:1px solid #eee;font-size:12px;color:#444">Regards,<br><strong>Balasubramanian</strong></div>
 <div class="footer">IT Asset Tracker · <a href="${BASE_URL}">${BASE_URL}</a></div>
 </div></body></html>`;
 }
