@@ -90,6 +90,73 @@ export async function resendBillEmail(req: Request, res: Response) {
   res.json({ emailSent });
 }
 
+const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface PaymentRow {
+  entity: string; vendorName: string; natureOfExpense: string;
+  invoiceNumber: string; invoiceDate: string; amount: number;
+  dueDate: string; paymentTerms: string; remarks: string;
+}
+
+function paymentRequestHtml(intro: string, rows: PaymentRow[]): string {
+  const th = 'border:1px solid #000;padding:6px 8px;font-weight:bold;text-align:center;background:#fff';
+  const td = 'border:1px solid #000;padding:6px 8px;text-align:center;vertical-align:middle';
+  const head = ['Sr. No.', 'Entity', 'Vendor / Payee Name', 'Nature of Expense', 'Invoice No. &amp; Date',
+    'Invoice Amount (Incl. GST)', 'Due Date', 'Payment Terms', 'Remarks if any'];
+  const body = rows.map((r, i) => `<tr>
+    <td style="${td}">${i + 1}</td>
+    <td style="${td}">${esc(r.entity)}</td>
+    <td style="${td}">${esc(r.vendorName)}</td>
+    <td style="${td}">${esc(r.natureOfExpense)}</td>
+    <td style="${td}">${esc(r.invoiceNumber)}${r.invoiceDate ? ' /<br>' + esc(r.invoiceDate) : ''}</td>
+    <td style="${td};white-space:nowrap">₹ ${Number(r.amount || 0).toLocaleString('en-IN')}</td>
+    <td style="${td};white-space:nowrap">${esc(r.dueDate)}</td>
+    <td style="${td}">${esc(r.paymentTerms)}</td>
+    <td style="${td}">${esc(r.remarks)}</td>
+  </tr>`).join('');
+
+  return `<div style="font-family:Calibri,Aptos,Arial,sans-serif;font-size:11pt;color:#000">
+<p>Dear Team,</p>
+<p>${esc(intro).replace(/\n/g, '<br>')}</p>
+<table style="border-collapse:collapse;font-size:11pt;margin:8px 0">
+  <tr>${head.map(h => `<th style="${th}">${h}</th>`).join('')}</tr>
+  ${body}
+</table>
+<p><br>Regards,</p>
+<p><strong>Balasubramanian</strong></p>
+</div>`;
+}
+
+export async function paymentRequest(req: Request, res: Response) {
+  const { to, cc, subject, intro, rows, preview } = req.body as {
+    to?: string[]; cc?: string[]; subject?: string; intro?: string; rows?: PaymentRow[]; preview?: boolean;
+  };
+  if (!Array.isArray(rows) || rows.length === 0) { res.status(400).json({ error: 'Select at least one bill' }); return; }
+  const html = paymentRequestHtml(intro ?? '', rows);
+  if (preview) { res.json({ html }); return; }
+
+  const toList = (to ?? []).map(s => s.trim()).filter(Boolean);
+  const ccList = (cc ?? []).map(s => s.trim()).filter(Boolean);
+  const bad = [...toList, ...ccList].filter(a => !EMAIL_RE.test(a));
+  if (toList.length === 0) { res.status(400).json({ error: 'Enter at least one To address' }); return; }
+  if (bad.length) { res.status(400).json({ error: `Invalid email: ${bad.join(', ')}` }); return; }
+  if (!subject?.trim()) { res.status(400).json({ error: 'Subject is required' }); return; }
+
+  try {
+    await sendMail({
+      to: toList.map(address => ({ address })),
+      cc: ccList.map(address => ({ address })),
+      subject: subject.trim(),
+      html,
+    });
+    res.json({ sent: true });
+  } catch (err) {
+    console.error('[bills] payment request email failed:', err);
+    res.status(502).json({ error: 'Email could not be sent' });
+  }
+}
+
 export async function getBills(req: Request, res: Response) {
   try {
     const bills = await prisma.bill.findMany({

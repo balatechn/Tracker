@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   getBills, getBill, createBill, updateBill, deleteBill,
-  addBillAttachment, getBillAttachment, resendBillEmail,
+  addBillAttachment, getBillAttachment, resendBillEmail, paymentRequest,
 } from '../controllers/billsController';
 import { authenticate } from '../middleware/auth';
 
@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/',                          getBills);
 router.get('/:id',                       getBill);
 router.post('/',                         createBill);
+router.post('/payment-request',          paymentRequest);
 router.patch('/:id',                     updateBill);
 router.delete('/:id',                    deleteBill);
 router.post('/:id/attachments',          addBillAttachment);

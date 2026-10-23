@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Plus, Settings, Trash2, Edit2, Paperclip, Download, X, CheckCircle, FileDown } from 'lucide-react';
+import { Plus, Settings, Trash2, Edit2, Paperclip, Download, X, CheckCircle, FileDown, Mail } from 'lucide-react';
+import PaymentRequestComposer from './PaymentRequestComposer';
 import { billsApi, entityManagersApi } from '@/lib/api';
 import { Bill, EntityManager } from '@/types';
 import * as XLSX from 'xlsx';
@@ -404,6 +405,7 @@ export default function BillsTab() {
   const [editBill, setEditBill] = useState<Bill | null>(null);
   const [statusBill, setStatusBill] = useState<Bill | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showComposer, setShowComposer] = useState(false);
   const [filterStatus, setFilterStatus] = useState('');
   const [filterEntity, setFilterEntity] = useState('');
 
@@ -511,6 +513,10 @@ export default function BillsTab() {
           <button onClick={() => setShowSettings(true)}
             style={{ background: '#f2f2f2', border: '1px solid #bfbfbf', padding: '4px 12px', fontSize: '10pt', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#1f1f1f', fontFamily: "'Calibri',Arial,sans-serif" }}>
             <Settings size={13} /> Entity Settings
+          </button>
+          <button onClick={() => setShowComposer(true)}
+            style={{ background: '#f2f2f2', border: '1px solid #bfbfbf', padding: '4px 12px', fontSize: '10pt', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#1f1f1f', fontFamily: "'Calibri',Arial,sans-serif" }}>
+            <Mail size={13} /> Payment Request
           </button>
           <button onClick={() => { setEditBill(null); setShowForm(true); }}
             style={{ background: '#2b579a', border: '1px solid #1f4278', color: '#fff', padding: '4px 14px', fontSize: '10pt', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Calibri',Arial,sans-serif" }}>
@@ -647,6 +653,7 @@ export default function BillsTab() {
       )}
       {statusBill && <StatusModal bill={statusBill} onClose={() => setStatusBill(null)} />}
       {showSettings && <EntityManagersModal onClose={() => setShowSettings(false)} />}
+      {showComposer && <PaymentRequestComposer bills={bills} onClose={() => setShowComposer(false)} />}
     </div>
   );
 }

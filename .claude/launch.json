@@ -6,7 +6,8 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "-p", "3001"],
       "port": 3001,
-      "cwd": "D:\\Tracker\\frontend"
+      "cwd": "D:\\Tracker\\frontend",
+      "env": { "BACKEND_URL": "https://ngi-tracker-api.vercel.app" }
     }
   ]
 }

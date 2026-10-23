@@ -127,7 +127,15 @@ export const subscriptionsApi = {
   export: () => api.get<Subscription[]>('/subscriptions/export'),
 };
 
+export interface PaymentRequestRow {
+  entity: string; vendorName: string; natureOfExpense: string;
+  invoiceNumber: string; invoiceDate: string; amount: number;
+  dueDate: string; paymentTerms: string; remarks: string;
+}
+
 export const billsApi = {
+  paymentRequest: (data: { to: string[]; cc: string[]; subject: string; intro: string; rows: PaymentRequestRow[]; preview?: boolean }) =>
+    api.post<{ html?: string; sent?: boolean }>('/bills/payment-request', data),
   list: () => api.get<Bill[]>('/bills'),
   get: (id: number) => api.get<Bill>(`/bills/${id}`),
   create: (data: Omit<BillFormData, 'status' | 'rejectionReason' | 'paidAt' | 'paidBy' | 'transactionRef'> & { attachment?: { filename: string; mimetype?: string; data: string } }) =>
